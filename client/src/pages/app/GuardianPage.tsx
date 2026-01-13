@@ -1,135 +1,177 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sun, Lock, Wind } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Sun, Shield } from "lucide-react";
+import { toast } from "sonner";
 
 export default function GuardianPage() {
-  const [isLit, setIsLit] = useState(false);
-  const [days, setDays] = useState(12);
-  const [timeLeft, setTimeLeft] = useState("23:59:59");
+  const [isActive, setIsActive] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(259200); // 72 hours
+  const [showWeather, setShowWeather] = useState(false);
 
-  // 模拟倒计时
   useEffect(() => {
     const timer = setInterval(() => {
-      const now = new Date();
-      const end = new Date();
-      end.setHours(23, 59, 59);
-      const diff = end.getTime() - now.getTime();
-      
-      const h = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
-      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-      const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
-      
-      setTimeLeft(`${h}:${m}:${s}`);
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
   }, []);
 
-  const handleLightUp = () => {
-    if (!isLit) {
-      setIsLit(true);
-      setDays(d => d + 1);
-    }
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const handleIgnite = () => {
+    setIsActive(true);
+    setTimeLeft(259200);
+    toast.success("命灯已点亮，平安信号已发送");
+    setTimeout(() => setIsActive(false), 2000); // Reset animation state
   };
 
   return (
-    <div className="h-full flex flex-col relative overflow-hidden bg-[#f9f9f7]">
-      {/* 顶部栏 */}
-      <div className="flex justify-between items-center p-6 pt-12">
-        <div className="flex flex-col">
-          <span className="text-xs text-stone-500 tracking-widest uppercase">Guardian</span>
-          <h1 className="text-2xl font-serif text-stone-800">守望</h1>
-        </div>
-        <div className="flex gap-3">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-stone-600 hover:bg-stone-200/50 rounded-full">
-                <Sun className="w-5 h-5" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-[#f9f9f7] border-none shadow-xl max-w-[320px]">
-              <DialogHeader>
-                <DialogTitle className="font-serif text-center text-xl">能量天气</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-stone-500">今日五行</span>
-                  <span className="font-medium text-blue-600">水旺木相</span>
-                </div>
-                <div className="h-2 bg-stone-200 rounded-full overflow-hidden flex">
-                  <div className="w-[40%] bg-blue-400" />
-                  <div className="w-[30%] bg-green-400" />
-                  <div className="w-[10%] bg-red-400" />
-                  <div className="w-[10%] bg-yellow-400" />
-                  <div className="w-[10%] bg-stone-400" />
-                </div>
-                <div className="bg-white/50 p-4 rounded-lg border border-stone-100">
-                  <p className="text-sm text-stone-600 leading-relaxed">
-                    <span className="font-bold text-stone-800 block mb-1">今日建议</span>
-                    宜静思，宜阅读，宜内观。<br/>
-                    忌冲动决策，忌远行，忌争执。
-                  </p>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+    <div className="h-full flex flex-col relative overflow-hidden font-serif text-[#4A4036]">
+      {/* 背景图 */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: 'url(/images/zen_bg.png)' }}
+      />
+      
+      {/* 顶部遮罩 */}
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#E8E2D2]/80 to-transparent z-10" />
 
-          <Button variant="ghost" size="icon" className="text-stone-600 hover:bg-stone-200/50 rounded-full">
-            <Lock className="w-5 h-5" />
-          </Button>
+      {/* 内容区域 */}
+      <div className="relative z-20 flex-1 flex flex-col px-8 pt-20 pb-8">
+        
+        {/* 顶部栏 */}
+        <div className="flex justify-between items-start mb-12">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <h1 className="text-3xl tracking-[0.2em] font-medium mb-2">守望</h1>
+            <p className="text-xs text-[#8C8478] tracking-[0.3em] uppercase">Guardian</p>
+          </motion.div>
+          
+          <button 
+            onClick={() => setShowWeather(true)}
+            className="p-3 rounded-full bg-[#F5E6C8]/20 backdrop-blur-sm border border-[#FFF8E7]/30 text-[#4A4036] hover:bg-[#F5E6C8]/40 transition-colors"
+          >
+            <Sun className="w-5 h-5" />
+          </button>
         </div>
-      </div>
 
-      {/* 核心交互区 */}
-      <div className="flex-1 flex flex-col items-center justify-center -mt-10">
-        <motion.div 
-          className="relative cursor-pointer"
-          onClick={handleLightUp}
-          whileTap={{ scale: 0.95 }}
-        >
+        {/* 命灯核心区 */}
+        <div className="flex-1 flex flex-col items-center justify-center relative">
           {/* 呼吸光环 */}
-          <AnimatePresence>
-            {isLit && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: [0.4, 0.8, 0.4], scale: [1, 1.1, 1] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute inset-0 bg-amber-200/30 rounded-full blur-2xl"
-              />
-            )}
-          </AnimatePresence>
+          <motion.div
+            animate={{
+              scale: [1, 1.05, 1],
+              opacity: [0.3, 0.6, 0.3],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute w-64 h-64 rounded-full bg-gradient-to-b from-[#F5E6C8] to-transparent blur-3xl opacity-40"
+          />
 
-          {/* 命灯主体 */}
-          <div className={`w-48 h-48 rounded-full border border-stone-200 flex items-center justify-center relative transition-all duration-1000 ${isLit ? 'bg-gradient-to-b from-amber-50 to-white shadow-[0_0_40px_rgba(251,191,36,0.2)]' : 'bg-white shadow-sm'}`}>
-            <div className={`w-40 h-40 rounded-full border border-stone-100 flex flex-col items-center justify-center transition-all duration-1000 ${isLit ? 'opacity-100' : 'opacity-60'}`}>
-              {isLit ? (
-                <>
-                  <span className="text-3xl font-serif text-amber-600 mb-1">长明</span>
-                  <span className="text-xs text-amber-800/60 tracking-widest">已守护 {days} 天</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-3xl font-serif text-stone-400 mb-1">点亮</span>
-                  <span className="text-xs text-stone-400 tracking-widest">命灯将熄</span>
-                </>
-              )}
+          {/* 交互按钮 */}
+          <button
+            onClick={handleIgnite}
+            className="relative w-48 h-48 rounded-full flex items-center justify-center group transition-transform duration-500 active:scale-95"
+          >
+            {/* 按钮背景 */}
+            <div className="absolute inset-0 rounded-full bg-[#F5E6C8]/10 backdrop-blur-md border border-[#FFF8E7]/40 shadow-[0_8px_32px_rgba(74,64,54,0.05)]" />
+            
+            {/* 内圈装饰 */}
+            <div className="absolute inset-2 rounded-full border border-[#4A4036]/5" />
+            
+            <div className="relative z-10 text-center">
+              <h2 className={`text-2xl font-medium tracking-[0.2em] mb-2 transition-colors duration-500 ${isActive ? 'text-[#4A4036]' : 'text-[#4A4036]/80'}`}>
+                {isActive ? "已点亮" : "点亮"}
+              </h2>
+              <p className="text-[10px] text-[#8C8478] tracking-[0.2em] uppercase">
+                {isActive ? "Ignited" : "Ignite"}
+              </p>
             </div>
-          </div>
-        </motion.div>
+          </button>
 
-        <div className="mt-12 text-center space-y-1">
-          <p className="text-xs text-stone-400 uppercase tracking-widest">Remaining Time</p>
-          <p className="text-xl font-mono text-stone-600">{timeLeft}</p>
+          {/* 倒计时 */}
+          <div className="mt-12 text-center">
+            <p className="text-[10px] text-[#8C8478] tracking-[0.3em] uppercase mb-3">Remaining Time</p>
+            <p className="text-3xl font-variant-numeric tabular-nums tracking-widest font-light text-[#4A4036]">
+              {formatTime(timeLeft)}
+            </p>
+          </div>
+        </div>
+
+        {/* 底部提示 */}
+        <div className="mt-auto text-center">
+          <p className="text-xs text-[#8C8478]/80 tracking-wider flex items-center justify-center gap-2">
+            <Shield className="w-3 h-3" />
+            若 72 小时未点亮，将触发遗泽锦囊
+          </p>
         </div>
       </div>
 
-      {/* 底部提示 */}
-      <div className="p-6 pb-8 text-center">
-        <p className="text-xs text-stone-400">
-          {isLit ? "命灯已点亮，遗泽锦囊处于安全状态" : "若 72 小时未点亮，将触发遗泽锦囊"}
-        </p>
-      </div>
+      {/* 能量天气弹窗 */}
+      <AnimatePresence>
+        {showWeather && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 bg-[#E8E2D2]/60 backdrop-blur-md flex items-center justify-center p-8"
+            onClick={() => setShowWeather(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full bg-[#F9F9F7] rounded-3xl p-8 shadow-2xl border border-[#FFF8E7] relative overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="absolute top-0 right-0 p-6 opacity-10">
+                <Sun className="w-32 h-32 text-[#4A4036]" />
+              </div>
+              
+              <h3 className="text-xl font-medium tracking-[0.2em] text-[#4A4036] mb-8">能量天气</h3>
+              
+              <div className="space-y-6">
+                {[
+                  { label: "木", value: 80, desc: "生机勃勃，宜创新" },
+                  { label: "火", value: 40, desc: "稍显沉寂，忌冲动" },
+                  { label: "土", value: 60, desc: "平稳厚重，宜守成" },
+                  { label: "金", value: 30, desc: "锐气不足，忌争执" },
+                  { label: "水", value: 90, desc: "智慧涌动，宜思考" },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-4">
+                    <span className="w-8 text-lg font-serif text-[#4A4036]">{item.label}</span>
+                    <div className="flex-1 h-1.5 bg-[#4A4036]/10 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${item.value}%` }}
+                        transition={{ duration: 1, delay: 0.2 }}
+                        className="h-full bg-[#4A4036]/60 rounded-full"
+                      />
+                    </div>
+                    <span className="text-xs text-[#8C8478] tracking-wider w-24 text-right">{item.desc}</span>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setShowWeather(false)}
+                className="mt-8 w-full py-4 text-xs tracking-[0.2em] text-[#8C8478] hover:text-[#4A4036] transition-colors border-t border-[#4A4036]/10"
+              >
+                关闭
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
