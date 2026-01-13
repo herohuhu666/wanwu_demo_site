@@ -1,92 +1,114 @@
-import { BottomNav } from "@/components/BottomNav";
-import { MobileSimulator } from "@/components/MobileSimulator";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { ArrowRight, Github } from "lucide-react";
 import { useState } from "react";
-import CheckInPage from "./app/CheckInPage";
+import { MobileSimulator } from "@/components/MobileSimulator";
+import BottomNav from "@/components/BottomNav";
+import GuardianPage from "./app/GuardianPage";
 import LingxiPage from "./app/LingxiPage";
+import RitualPage from "./app/RitualPage";
+import MeritPage from "./app/MeritPage";
 import MemberPage from "./app/MemberPage";
-import StatusPage from "./app/StatusPage";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("checkin");
+  const [activeTab, setActiveTab] = useState("guardian");
 
-  // No renderContent needed anymore
-
-  const getGuideText = () => {
+  const renderGuide = () => {
     switch (activeTab) {
-      case "checkin":
-        return {
-          title: "极简签到",
-          desc: "无压力的习惯养成。点击签到按钮，感受色彩的变化与成就感的累积。本地存储确保数据隐私。",
-          highlight: "尝试点击签到按钮"
-        };
-      case "lingxi":
-        return {
-          title: "每日灵犀",
-          desc: "每天 5 次灵感获取机会，创造稀缺感。Mock 数据展示了未来可能接入的 AI 推荐系统。",
-          highlight: "点击获取灵感，观察次数变化"
-        };
-      case "status":
-        return {
-          title: "状态记录",
-          desc: "三态记录（好/一般/差）+ 备注。颜色编码让情绪趋势一目了然。支持历史记录回溯。",
-          highlight: "选择状态并保存一条记录"
-        };
+      case "guardian":
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-serif font-bold text-stone-800">守望 (Guardian)</h3>
+            <p className="text-stone-600 leading-relaxed">
+              点击中央的命灯，向系统发送平安信号。
+              <br/><br/>
+              <span className="font-bold">演示要点：</span>
+              <br/>1. 命灯呼吸光效与倒计时。
+              <br/>2. 点击右上角太阳图标查看“能量天气”。
+              <br/>3. 解释“72小时未点亮触发遗泽锦囊”的安全逻辑。
+            </p>
+          </div>
+        );
+      case "insight":
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-serif font-bold text-stone-800">灵犀 (Insight)</h3>
+            <p className="text-stone-600 leading-relaxed">
+              输入当下观察到的细节，获取 AI 的即时指引。
+              <br/><br/>
+              <span className="font-bold">演示要点：</span>
+              <br/>1. 体验“外应速断”的三段式反馈。
+              <br/>2. 开启右上角“模拟会员”，展示分级反馈差异。
+              <br/>3. 强调“军师”角色的价值。
+            </p>
+          </div>
+        );
+      case "ritual":
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-serif font-bold text-stone-800">乾坤 (Ritual)</h3>
+            <p className="text-stone-600 leading-relaxed">
+              点击黑色圆环进行摇卦，体验数字化的仪式感。
+              <br/><br/>
+              <span className="font-bold">演示要点：</span>
+              <br/>1. 摇卦过程中的震动与动画。
+              <br/>2. 卦象生成后的“智慧语义”解读。
+              <br/>3. 说明未来将接入 3D 引擎以增强沉浸感。
+            </p>
+          </div>
+        );
+      case "merit":
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-serif font-bold text-stone-800">功德 (Merit)</h3>
+            <p className="text-stone-600 leading-relaxed">
+              记录善行，积累功德，建立内心的秩序。
+              <br/><br/>
+              <span className="font-bold">演示要点：</span>
+              <br/>1. 尝试记录不同类型的功德（如利他）。
+              <br/>2. 点击右上角爱心图标体验“回向”功能。
+              <br/>3. 解释功德值作为“精神资产”的意义。
+            </p>
+          </div>
+        );
       case "member":
-        return {
-          title: "会员体系",
-          desc: "清晰的商业模式展示。通过模拟开关体验免费与会员用户的界面差异。",
-          highlight: "切换订阅开关查看变化"
-        };
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-serif font-bold text-stone-800">我的 (Me)</h3>
+            <p className="text-stone-600 leading-relaxed">
+              管理会员状态与个人设置。
+              <br/><br/>
+              <span className="font-bold">演示要点：</span>
+              <br/>1. 展示会员权益对比。
+              <br/>2. 模拟订阅流程。
+            </p>
+          </div>
+        );
       default:
-        return { title: "", desc: "", highlight: "" };
+        return null;
     }
   };
 
-  const guide = getGuideText();
-
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Navbar */}
-      <nav className="w-full py-6 px-8 flex justify-between items-center z-50">
-        <div className="flex items-center gap-3">
-          <img src="/images/app_icon.png" alt="Wanwu Logo" className="w-10 h-10 rounded-xl shadow-sm" />
-          <span className="text-xl font-serif font-bold tracking-tight">Wanwu</span>
-        </div>
-        <a 
-          href="https://github.com/herohuhu666/wanwu-app" 
-          target="_blank" 
-          rel="noreferrer"
-          className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-black transition-colors"
-        >
-          <Github className="w-5 h-5" />
-          <span>GitHub</span>
-        </a>
-      </nav>
-
-      <main className="flex-1 container mx-auto flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 py-12 relative z-10">
+    <div className="min-h-screen bg-[#f0f0f0] flex items-center justify-center p-4 md:p-8 font-sans">
+      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         
-        {/* Left Side: Simulator */}
-        <div className="relative animate-in fade-in slide-in-from-bottom-8 duration-1000">
-          {/* Decorative Elements */}
-          <div className="absolute -left-20 top-20 w-40 h-40 bg-wanwu-green/10 rounded-full blur-3xl" />
-          <div className="absolute -right-20 bottom-20 w-40 h-40 bg-wanwu-orange/10 rounded-full blur-3xl" />
-          
-          <MobileSimulator className="shadow-2xl shadow-black/20">
-            <div className="flex flex-col h-full">
-              <div className="flex-1 overflow-hidden relative bg-white">
-                <div className={cn("w-full h-full", activeTab === "checkin" ? "block" : "hidden")}>
-                  <CheckInPage />
+        {/* 左侧：手机模拟器 */}
+        <div className="flex justify-center lg:justify-end">
+          <MobileSimulator>
+            <div className="h-full flex flex-col bg-white">
+              <div className="flex-1 overflow-hidden relative">
+                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'guardian' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+                  <GuardianPage />
                 </div>
-                <div className={cn("w-full h-full", activeTab === "lingxi" ? "block" : "hidden")}>
+                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'insight' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
                   <LingxiPage />
                 </div>
-                <div className={cn("w-full h-full", activeTab === "status" ? "block" : "hidden")}>
-                  <StatusPage />
+                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'ritual' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+                  <RitualPage />
                 </div>
-                <div className={cn("w-full h-full", activeTab === "member" ? "block" : "hidden")}>
+                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'merit' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+                  <MeritPage />
+                </div>
+                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'member' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
                   <MemberPage />
                 </div>
               </div>
@@ -95,55 +117,37 @@ export default function Home() {
           </MobileSimulator>
         </div>
 
-        {/* Right Side: Guide & Info */}
-        <div className="max-w-md text-center lg:text-left space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-600 mb-6">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              Interactive Demo
-            </div>
-            <h1 className="text-4xl lg:text-5xl font-serif font-medium leading-tight mb-6">
-              数字禅意<br/>
-              <span className="text-gray-400">记录万物</span>
-            </h1>
-            <p className="text-lg text-gray-600 leading-relaxed">
-              万物 App 是一个极简的生活记录工具。
-              <br/>
-              没有复杂的社交，没有焦虑的推送。
-              <br/>
-              只有你，和当下的状态。
-            </p>
+        {/* 右侧：动态引导 */}
+        <div className="hidden lg:block max-w-md">
+          <div className="mb-8">
+            <img src="/images/app_icon.png" alt="Wanwu Logo" className="w-16 h-16 rounded-2xl shadow-lg mb-6" />
+            <h1 className="text-4xl font-serif font-bold text-stone-900 mb-2">万物 Wanwu</h1>
+            <p className="text-stone-500 text-lg">见万物，见众生，见自己。</p>
           </div>
 
-          {/* Dynamic Guide Card */}
-          <div className="bg-white/80 backdrop-blur-sm border border-white/50 p-6 rounded-2xl shadow-sm transition-all duration-500">
-            <h3 className="text-xl font-serif font-medium mb-2 text-primary transition-all duration-300">
-              {guide.title}
-            </h3>
-            <p className="text-gray-600 mb-4 text-sm leading-relaxed transition-all duration-300 min-h-[3rem]">
-              {guide.desc}
-            </p>
-            <div className="flex items-center gap-2 text-sm font-medium text-wanwu-purple bg-wanwu-purple/5 px-4 py-3 rounded-lg">
-              <ArrowRight className="w-4 h-4 animate-bounce-x" />
-              {guide.highlight}
-            </div>
-          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white p-8 rounded-3xl shadow-xl border border-stone-100 relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-stone-50 rounded-bl-full -mr-8 -mt-8 z-0" />
+              <div className="relative z-10">
+                {renderGuide()}
+              </div>
+            </motion.div>
+          </AnimatePresence>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
-            <Button className="bg-black text-white hover:bg-gray-800 rounded-full px-8 h-12 text-base shadow-lg shadow-black/10 transition-transform hover:scale-105 active:scale-95">
-              下载 iOS 演示版
-            </Button>
-            <Button variant="outline" className="rounded-full px-8 h-12 text-base border-gray-300 hover:bg-gray-50 transition-transform hover:scale-105 active:scale-95">
-              查看技术文档
-            </Button>
+          <div className="mt-8 flex gap-4 text-sm text-stone-400">
+            <p>Interactive Demo V1.5</p>
+            <span>•</span>
+            <p>Press F11 for Fullscreen</p>
           </div>
         </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="w-full py-6 text-center text-sm text-gray-400 z-10">
-        <p>© 2026 Wanwu App. Designed with Zen.</p>
-      </footer>
+      </div>
     </div>
   );
 }

@@ -1,46 +1,34 @@
-import { cn } from "@/lib/utils";
-import { Calendar, Crown, Lightbulb, PenTool } from "lucide-react";
+import { Sun, Eye, Hexagon, BookOpen, User } from "lucide-react";
 
 interface BottomNavProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
 }
 
-export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
+export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const tabs = [
-    { id: "checkin", label: "签到", icon: Calendar },
-    { id: "lingxi", label: "灵犀", icon: Lightbulb },
-    { id: "status", label: "状态", icon: PenTool },
-    { id: "member", label: "会员", icon: Crown },
+    { id: 'guardian', icon: Sun, label: '守望' },
+    { id: 'insight', icon: Eye, label: '灵犀' },
+    { id: 'ritual', icon: Hexagon, label: '乾坤' },
+    { id: 'merit', icon: BookOpen, label: '功德' },
+    { id: 'member', icon: User, label: '我的' },
   ];
 
   return (
-    <div className="h-16 bg-white border-t border-gray-100 flex items-center justify-around px-2 pb-2">
+    <div className="h-20 bg-white border-t border-stone-100 flex items-center justify-around px-2 pb-4">
       {tabs.map((tab) => {
-        const isActive = activeTab === tab.id;
         const Icon = tab.icon;
-        
+        const isActive = activeTab === tab.id;
         return (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className="flex flex-col items-center justify-center w-16 h-full gap-1 transition-colors duration-200"
+            className={`flex flex-col items-center justify-center w-16 h-full transition-colors ${
+              isActive ? 'text-stone-900' : 'text-stone-400 hover:text-stone-600'
+            }`}
           >
-            <Icon
-              className={cn(
-                "w-6 h-6 transition-all duration-200",
-                isActive ? "text-black scale-110" : "text-gray-400"
-              )}
-              strokeWidth={isActive ? 2.5 : 2}
-            />
-            <span
-              className={cn(
-                "text-[10px] font-medium transition-colors duration-200",
-                isActive ? "text-black" : "text-gray-400"
-              )}
-            >
-              {tab.label}
-            </span>
+            <Icon className={`w-6 h-6 mb-1 ${isActive ? 'stroke-[2.5px]' : 'stroke-[1.5px]'}`} />
+            <span className="text-[10px] font-medium tracking-wide">{tab.label}</span>
           </button>
         );
       })}

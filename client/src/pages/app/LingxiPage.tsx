@@ -1,93 +1,179 @@
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Lightbulb, Loader2, Sparkles } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
-
-const QUOTES = [
-  "保持专注，好事在路上。",
-  "每一个不曾起舞的日子，都是对生命的辜负。",
-  "万物皆有裂痕，那是光照进来的地方。",
-  "种一棵树最好的时间是十年前，其次是现在。",
-  "生活不是等待风暴过去，而是学会在雨中跳舞。",
-  "你若盛开，清风自来。",
-  "心有猛虎，细嗅蔷薇。",
-  "知足且上进，温柔而坚定。"
-];
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, ArrowRight, Lock, Crown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export default function LingxiPage() {
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [quote, setQuote] = useState<string | null>(null);
-  const [count, setCount] = useState(5);
+  const [result, setResult] = useState<null | {
+    image: string;
+    hexagram: string;
+    judgment: string;
+    karma?: string;
+    action?: string;
+    risk?: string;
+  }>(null);
+  const [isMember, setIsMember] = useState(false); // 模拟会员状态
 
-  const handleGetInspiration = () => {
-    if (count <= 0) {
-      toast.info("今天的次数已用完，明天再来");
-      return;
-    }
-
+  const handleAsk = () => {
+    if (!input.trim()) return;
     setLoading(true);
+    setResult(null);
     
-    // Simulate network request
+    // Mock API call
     setTimeout(() => {
-      const randomQuote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
-      setQuote(randomQuote);
-      setCount(prev => prev - 1);
       setLoading(false);
-    }, 800);
+      setResult({
+        image: "离火之象",
+        hexagram: "火天大有",
+        judgment: "日丽中天，遍照万物。所求之事，如日中天，顺势而为即可。",
+        // 会员专属内容
+        karma: "因往日积累善缘，得今日之果。非一时之运，乃长久之功。",
+        action: "1. 保持谦逊，忌骄躁。\n2. 适宜公开展示成果。\n3. 可尝试跨界合作。",
+        risk: "盛极必衰，需防微杜渐。注意与周围人的关系平衡。"
+      });
+    }, 2000);
   };
 
   return (
-    <div className="h-full flex flex-col items-center p-6 bg-white relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-wanwu-purple/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-wanwu-purple/5 rounded-full blur-3xl pointer-events-none" />
-
-      <h2 className="text-2xl font-serif font-medium mb-8 mt-4 text-primary z-10">每日灵犀</h2>
-
-      <div className="flex-1 w-full flex flex-col items-center justify-center z-10">
-        {quote ? (
-          <div className="w-full aspect-[3/4] max-h-[400px] bg-wanwu-purple/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center relative animate-in fade-in slide-in-from-bottom-4 duration-700 border border-wanwu-purple/20 shadow-lg shadow-wanwu-purple/5">
-            <Sparkles className="w-8 h-8 text-wanwu-purple mb-6 opacity-50" />
-            <p className="text-xl font-serif leading-relaxed text-gray-800">
-              "{quote}"
-            </p>
-            <div className="absolute bottom-4 text-xs text-wanwu-purple/60 font-medium tracking-widest uppercase">
-              Wanwu Inspiration
-            </div>
-          </div>
-        ) : (
-          <div className="w-40 h-40 rounded-full bg-wanwu-purple/10 flex items-center justify-center mb-6 animate-pulse">
-            <Lightbulb className="w-16 h-16 text-wanwu-purple" />
-          </div>
-        )}
-        
-        {!quote && (
-          <p className="text-gray-500 text-center max-w-[200px]">
-            点击下方按钮<br/>获取今日份的灵感与指引
-          </p>
-        )}
+    <div className="h-full flex flex-col bg-[#f9f9f7] relative">
+      {/* 顶部栏 */}
+      <div className="flex justify-between items-center p-6 pt-12">
+        <div className="flex flex-col">
+          <span className="text-xs text-stone-500 tracking-widest uppercase">Insight</span>
+          <h1 className="text-2xl font-serif text-stone-800">灵犀</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="member-mode" className="text-xs text-stone-400">模拟会员</Label>
+          <Switch id="member-mode" checked={isMember} onCheckedChange={setIsMember} />
+        </div>
       </div>
 
-      <div className="w-full mt-8 z-10">
-        <p className="text-center text-sm text-gray-400 mb-4">
-          今天还可用 <span className="font-bold text-wanwu-purple">{count}</span> 次
-        </p>
-        
-        <Button 
-          onClick={handleGetInspiration}
-          disabled={loading}
-          className={cn(
-            "w-full bg-wanwu-purple hover:bg-wanwu-purple/90 text-white rounded-full h-12 text-base transition-all duration-300 shadow-lg shadow-wanwu-purple/20",
-            loading && "opacity-80"
-          )}
-        >
-          {loading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+      {/* 内容区 */}
+      <div className="flex-1 px-6 overflow-y-auto pb-20">
+        <AnimatePresence mode="wait">
+          {!result && !loading ? (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="h-full flex flex-col justify-center"
+            >
+              <p className="text-stone-500 text-center mb-8 font-serif italic text-lg">
+                "万物皆有象，<br/>在此刻，你看到了什么？"
+              </p>
+              <div className="relative">
+                <Input 
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="输入当下观察到的一个细节..."
+                  className="bg-white border-stone-200 h-14 pl-4 pr-12 rounded-xl shadow-sm focus-visible:ring-stone-400 text-base"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
+                />
+                <Button 
+                  size="icon"
+                  className="absolute right-2 top-2 h-10 w-10 rounded-lg bg-stone-800 hover:bg-stone-700"
+                  onClick={handleAsk}
+                  disabled={!input.trim()}
+                >
+                  <ArrowRight className="w-4 h-4 text-white" />
+                </Button>
+              </div>
+              <p className="text-xs text-center text-stone-400 mt-4">
+                今日剩余次数: <span className="font-mono">3/3</span>
+              </p>
+            </motion.div>
+          ) : loading ? (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="h-full flex flex-col items-center justify-center"
+            >
+              <div className="w-12 h-12 border-2 border-stone-200 border-t-stone-800 rounded-full animate-spin mb-4" />
+              <p className="text-stone-500 text-sm tracking-widest uppercase">Divining...</p>
+            </motion.div>
           ) : (
-            "获取灵感"
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4 py-4"
+            >
+              {/* 基础结果卡片 */}
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">Result</span>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <span className="text-xs text-stone-400 block mb-1">取象</span>
+                    <p className="font-serif text-lg text-stone-800">{result?.image}</p>
+                  </div>
+                  <div className="h-px bg-stone-100" />
+                  <div>
+                    <span className="text-xs text-stone-400 block mb-1">起卦</span>
+                    <p className="font-serif text-lg text-stone-800">{result?.hexagram}</p>
+                  </div>
+                  <div className="h-px bg-stone-100" />
+                  <div>
+                    <span className="text-xs text-stone-400 block mb-1">断事</span>
+                    <p className="text-stone-600 leading-relaxed">{result?.judgment}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 会员专属卡片 */}
+              {isMember ? (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-stone-900 p-6 rounded-2xl shadow-lg text-stone-300"
+                >
+                  <div className="flex items-center gap-2 mb-6">
+                    <Crown className="w-4 h-4 text-amber-400" />
+                    <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">Pro Insight</span>
+                  </div>
+                  <div className="space-y-6">
+                    <div>
+                      <span className="text-xs text-stone-500 block mb-1">因果推演</span>
+                      <p className="text-sm leading-relaxed text-stone-200">{result?.karma}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-stone-500 block mb-1">行动清单</span>
+                      <p className="text-sm leading-relaxed text-stone-200 whitespace-pre-line">{result?.action}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-stone-500 block mb-1">风险边界</span>
+                      <p className="text-sm leading-relaxed text-stone-200">{result?.risk}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <div className="bg-stone-100 p-6 rounded-2xl border border-stone-200 border-dashed flex flex-col items-center text-center">
+                  <Lock className="w-8 h-8 text-stone-300 mb-3" />
+                  <h3 className="font-serif text-stone-600 mb-1">深度洞察</h3>
+                  <p className="text-xs text-stone-400 mb-4">升级会员解锁因果推演、行动清单与风险边界</p>
+                  <Button variant="outline" size="sm" onClick={() => setIsMember(true)}>
+                    模拟升级会员
+                  </Button>
+                </div>
+              )}
+
+              <Button 
+                variant="ghost" 
+                className="w-full text-stone-400 hover:text-stone-600"
+                onClick={() => { setResult(null); setInput(""); }}
+              >
+                再次提问
+              </Button>
+            </motion.div>
           )}
-        </Button>
+        </AnimatePresence>
       </div>
     </div>
   );
