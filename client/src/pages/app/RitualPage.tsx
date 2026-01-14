@@ -1,11 +1,9 @@
-import { useState, lazy, Suspense } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Hexagon, ChevronRight, RefreshCw, Lock, Zap, Hand, Briefcase, Heart, Users } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 import { HEXAGRAMS } from "@/lib/hexagrams_data";
-
-const CoinTossScene = lazy(() => import("@/components/CoinTossScene"));
 
 // Yao type: 0 for Yin, 1 for Yang
 type Yao = 0 | 1;
@@ -28,36 +26,20 @@ export default function RitualPage() {
 
   const handleManualShake = () => {
     if (isShaking || yaos.length >= 6) return;
+    
     setIsShaking(true);
-    // The CoinTossScene will handle the duration and callback via onShakeEnd
-  };
+    
+    // Simulate shaking duration
+    setTimeout(() => {
+      setIsShaking(false);
+      const newYao: Yao = Math.random() > 0.5 ? 1 : 0;
+      const newYaos: Yao[] = [...yaos, newYao];
+      setYaos(newYaos);
 
-  const handleShakeEnd = (results: number[]) => {
-    setIsShaking(false);
-    
-    // Calculate Yao based on 3 coins
-    // Traditional method: 
-    // 3 Heads (3 Yang) = Old Yang (Moving) -> 9 -> Yang
-    // 3 Tails (3 Yin) = Old Yin (Moving) -> 6 -> Yin
-    // 2 Heads, 1 Tail = Young Yin -> 8 -> Yin
-    // 1 Head, 2 Tails = Young Yang -> 7 -> Yang
-    
-    // Simplified for this demo:
-    // Sum of heads (1) and tails (0)
-    // 3 Heads (3) -> Yang
-    // 0 Heads (0) -> Yin
-    // 2 Heads (2) -> Yin
-    // 1 Head (1) -> Yang
-    
-    const sum = results.reduce((a, b) => a + b, 0);
-    const newYao: Yao = (sum === 1 || sum === 3) ? 1 : 0;
-    
-    const newYaos: Yao[] = [...yaos, newYao];
-    setYaos(newYaos);
-
-    if (newYaos.length === 6) {
-      setTimeout(() => generateResult(newYaos), 500);
-    }
+      if (newYaos.length === 6) {
+        generateResult(newYaos);
+      }
+    }, 1500);
   };
 
   const handleAutoShake = () => {
@@ -214,25 +196,17 @@ export default function RitualPage() {
                 </div>
 
                 {mode === 'manual' && (
-                  <div className="w-full h-64 relative flex items-center justify-center">
-                    <Suspense fallback={<div className="text-white/50">Loading 3D Scene...</div>}>
-                      <div 
-                        className="w-full h-full cursor-pointer"
-                        onClick={handleManualShake}
-                      >
-                        <CoinTossScene 
-                          isShaking={isShaking} 
-                          onShakeEnd={handleShakeEnd} 
-                        />
-                      </div>
-                    </Suspense>
-                    
-                    {!isShaking && (
-                      <div className="absolute bottom-4 text-xs text-white/40 pointer-events-none">
-                        点击摇卦
-                      </div>
-                    )}
-                  </div>
+                  <motion.div
+                    animate={isShaking ? {
+                      x: [-5, 5, -5, 5, 0],
+                      rotate: [-2, 2, -2, 2, 0],
+                    } : {}}
+                    transition={{ duration: 0.5, repeat: isShaking ? Infinity : 0 }}
+                    onClick={handleManualShake}
+                    className="w-32 h-32 bg-white/5 rounded-full border border-[#FFD700]/30 flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors shadow-[0_0_20px_rgba(255,215,0,0.1)] backdrop-blur-sm"
+                  >
+                    <Hexagon className="w-10 h-10 text-[#FFD700] opacity-80" strokeWidth={1} />
+                  </motion.div>
                 )}
                 
                 <div className="mt-8 text-center">
