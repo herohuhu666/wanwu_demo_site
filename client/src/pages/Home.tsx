@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("guardian");
+  const [showIntro, setShowIntro] = useState(true);
 
   const renderGuide = () => {
     switch (activeTab) {
@@ -96,7 +97,38 @@ export default function Home() {
         {/* 左侧：手机模拟器 */}
         <div className="flex justify-center lg:justify-end w-full h-full">
           <MobileSimulator>
-            <div className="h-full flex flex-col bg-white overflow-hidden">
+            <div className="h-full flex flex-col bg-white overflow-hidden relative">
+              {/* Video Intro Overlay */}
+              <AnimatePresence>
+                {showIntro && (
+                  <motion.div
+                    initial={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="absolute inset-0 z-[100] bg-black flex items-center justify-center"
+                  >
+                    <video
+                      autoPlay
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                      onEnded={() => setShowIntro(false)}
+                      onClick={() => setShowIntro(false)} // Allow skipping on click
+                    >
+                      <source src="/videos/intro.mp4" type="video/mp4" />
+                    </video>
+                    
+                    {/* Skip Button (Optional, for better UX) */}
+                    <button 
+                      onClick={() => setShowIntro(false)}
+                      className="absolute bottom-8 right-8 text-white/50 text-xs tracking-widest uppercase hover:text-white transition-colors z-10"
+                    >
+                      Skip
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <div className="flex-1 overflow-hidden relative">
                 <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'guardian' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <GuardianPage />
