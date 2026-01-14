@@ -92,9 +92,9 @@ export default function Home() {
       <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         
         {/* 左侧：手机模拟器 */}
-        <div className="flex justify-center lg:justify-end">
+        <div className="flex justify-center lg:justify-end w-full h-full">
           <MobileSimulator>
-            <div className="h-full flex flex-col bg-white">
+            <div className="h-full flex flex-col bg-white overflow-hidden">
               <div className="flex-1 overflow-hidden relative">
                 <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'guardian' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
                   <GuardianPage />
