@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Crown, Check, Lock, User, Calendar, MapPin, ChevronRight, LogOut, Sparkles, ArrowRight, Book, Hexagon, Heart, TrendingUp } from "lucide-react";
+import { Crown, Check, Lock, User, Calendar, MapPin, ChevronRight, LogOut, Sparkles, ArrowRight, Book, Hexagon, Heart, TrendingUp, X } from "lucide-react";
 import { toast } from "sonner";
 import { useUser, UserProfile } from "@/contexts/UserContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -14,6 +14,7 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
   const { isLoggedIn, isMember, profile, login, logout, toggleMember, archives } = useUser();
   const [showLogin, setShowLogin] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const [tempProfile, setTempProfile] = useState<UserProfile>({
     name: "",
     birthDate: "",
@@ -26,8 +27,18 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
       setShowLogin(true);
       return;
     }
+    if (isMember) {
+      toggleMember();
+      toast.success("已取消订阅");
+    } else {
+      setShowUpgrade(true);
+    }
+  };
+
+  const confirmUpgrade = () => {
     toggleMember();
-    toast.success(isMember ? "已取消订阅" : "欢迎加入万物会员");
+    setShowUpgrade(false);
+    toast.success("欢迎加入万物会员");
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -427,6 +438,83 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
               >
                 开启今日修行 <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
               </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 升级会员弹窗 */}
+      <AnimatePresence>
+        {showUpgrade && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 bg-[#FAF9F6]/95 backdrop-blur-xl flex items-center justify-center p-6"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-full max-w-sm relative"
+            >
+              <button 
+                onClick={() => setShowUpgrade(false)}
+                className="absolute -top-12 right-0 p-2 rounded-full bg-[#2C2C2C]/5 text-[#2C2C2C]/60 hover:bg-[#2C2C2C]/10 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-medium tracking-[0.2em] text-[#2C2C2C] mb-2 font-kai">万物会员</h3>
+                <p className="text-xs text-[#8C8478] tracking-widest">Premium Membership</p>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <div className="p-4 rounded-2xl bg-[#FAF9F6] border border-[#789262]/20 relative overflow-hidden group hover:border-[#789262]/40 transition-colors cursor-pointer" onClick={confirmUpgrade}>
+                  <div className="flex justify-between items-center relative z-10">
+                    <div>
+                      <p className="text-lg font-medium text-[#2C2C2C] font-kai">月卡</p>
+                      <p className="text-xs text-[#8C8478] mt-1">30天无限畅享</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xl font-medium text-[#789262]">¥18</p>
+                      <p className="text-[10px] text-[#8C8478] line-through">¥28</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#2C2C2C] text-[#FAF9F6] relative overflow-hidden group cursor-pointer shadow-lg" onClick={confirmUpgrade}>
+                  <div className="absolute top-0 right-0 bg-[#789262] text-white text-[10px] px-2 py-1 rounded-bl-lg">推荐</div>
+                  <div className="flex justify-between items-center relative z-10">
+                    <div>
+                      <p className="text-lg font-medium font-kai">年卡</p>
+                      <p className="text-xs text-[#FAF9F6]/60 mt-1">365天深度陪伴</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xl font-medium text-[#E0C38C]">¥168</p>
+                      <p className="text-[10px] text-[#FAF9F6]/40 line-through">¥216</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#FAF9F6] border border-[#789262]/20 relative overflow-hidden group hover:border-[#789262]/40 transition-colors cursor-pointer" onClick={confirmUpgrade}>
+                  <div className="flex justify-between items-center relative z-10">
+                    <div>
+                      <p className="text-lg font-medium text-[#2C2C2C] font-kai">终身卡</p>
+                      <p className="text-xs text-[#8C8478] mt-1">永久解锁全部权益</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xl font-medium text-[#789262]">¥598</p>
+                      <p className="text-[10px] text-[#8C8478] line-through">¥998</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-[10px] text-[#8C8478] text-center leading-relaxed px-4">
+                订阅即代表同意《用户协议》与《隐私政策》<br/>
+                会员权益包含：无限灵犀问询、深度乾坤解读、多维态势分析
+              </p>
             </motion.div>
           </motion.div>
         )}
