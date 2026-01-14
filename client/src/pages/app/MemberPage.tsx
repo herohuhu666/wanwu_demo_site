@@ -45,7 +45,14 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
     e.preventDefault();
     login(tempProfile);
     setShowLogin(false);
-    setShowConfirmation(true);
+    
+    // 自动跳转到今日之象
+    if (onNavigate) {
+      onNavigate("today_image");
+      toast.success("资料已完善，正在生成今日之象...");
+    } else {
+      setShowConfirmation(true);
+    }
   };
 
   const handleLogout = () => {
@@ -134,23 +141,28 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
           </div>
         </div>
 
-          {/* 今日之象入口 */}
+          {/* 今日之象入口 (高亮显示) */}
           {isLoggedIn && (
             <div className="mb-8">
               <button 
                 onClick={() => onNavigate && onNavigate('today_image')}
-                className="w-full p-4 rounded-xl bg-gradient-to-r from-[#2C2C2C] to-[#4A4A4A] text-[#FAF9F6] flex items-center justify-between shadow-lg shadow-[#2C2C2C]/20 group"
+                className="w-full p-5 rounded-2xl bg-gradient-to-br from-[#2C2C2C] via-[#3E3E3E] to-[#2C2C2C] text-[#FAF9F6] flex items-center justify-between shadow-xl shadow-[#2C2C2C]/20 group relative overflow-hidden border border-[#FAF9F6]/10"
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-[#FAF9F6]/10 flex items-center justify-center border border-[#FAF9F6]/20">
-                    <Sparkles className="w-5 h-5 text-[#E0C38C]" />
+                {/* 动态光效 */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FAF9F6]/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                
+                <div className="flex items-center gap-5 relative z-10">
+                  <div className="w-12 h-12 rounded-full bg-[#FAF9F6]/10 flex items-center justify-center border border-[#FAF9F6]/20 shadow-inner">
+                    <Sparkles className="w-6 h-6 text-[#E0C38C]" />
                   </div>
                   <div className="text-left">
-                    <p className="text-sm font-medium tracking-widest font-kai">今日之象</p>
-                    <p className="text-[10px] text-[#FAF9F6]/60 tracking-wider mt-0.5">每日运势 · 五行能量</p>
+                    <p className="text-base font-medium tracking-[0.2em] font-kai text-[#E0C38C]">今日之象</p>
+                    <p className="text-xs text-[#FAF9F6]/70 tracking-wider mt-1">点击查看今日运势与五行能量</p>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-[#FAF9F6]/40 group-hover:translate-x-1 transition-transform" />
+                <div className="w-8 h-8 rounded-full bg-[#FAF9F6]/5 flex items-center justify-center group-hover:bg-[#FAF9F6]/10 transition-colors">
+                  <ChevronRight className="w-4 h-4 text-[#FAF9F6]/60 group-hover:translate-x-0.5 transition-transform" />
+                </div>
               </button>
             </div>
           )}
