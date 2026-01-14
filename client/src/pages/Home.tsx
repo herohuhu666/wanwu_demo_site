@@ -98,25 +98,25 @@ export default function Home() {
           <MobileSimulator>
             <div className="h-full flex flex-col bg-white overflow-hidden">
               <div className="flex-1 overflow-hidden relative">
-                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'guardian' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'guardian' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <GuardianPage />
                 </div>
-                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'insight' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'insight' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <LingxiPage />
                 </div>
-                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'ritual' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'ritual' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <RitualPage />
                 </div>
-                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'merit' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'merit' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <MeritPage />
                 </div>
-                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'member' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'member' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <MemberPage onNavigate={setActiveTab} />
                 </div>
-                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'today_image' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'today_image' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <TodayImagePage onBack={() => setActiveTab('member')} onNavigate={setActiveTab} />
                 </div>
-                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'library' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'library' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <LibraryPage onBack={() => setActiveTab('member')} />
                 </div>
               </div>
