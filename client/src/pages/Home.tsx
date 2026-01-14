@@ -6,6 +6,7 @@ import LingxiPage from "./app/LingxiPage";
 import RitualPage from "./app/RitualPage";
 import MeritPage from "./app/MeritPage";
 import MemberPage from "./app/MemberPage";
+import TodayImagePage from "./app/TodayImagePage";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
@@ -110,6 +111,9 @@ export default function Home() {
                 </div>
                 <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'member' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
                   <MemberPage onNavigate={setActiveTab} />
+                </div>
+                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'today_image' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+                  <TodayImagePage onBack={() => setActiveTab('member')} onNavigate={setActiveTab} />
                 </div>
               </div>
               <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />

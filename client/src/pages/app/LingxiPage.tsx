@@ -64,28 +64,52 @@ export default function LingxiPage() {
       let answer = "";
       const isDeep = isMember;
 
-      // Base answer logic
-      const baseAnswers = [
-        "心如止水，鉴常明。当下困惑，皆因心动。试着放下执念，退一步海阔天空。",
-        "风起于青萍之末。细微之处，藏着转机。留意身边的变化，顺势而为。",
-        "山重水复疑无路，柳暗花明又一村。坚持本心，静待花开。",
-        "静坐常思己过，闲谈莫论人非。内求诸己，外顺天时。",
-      ];
-      
-      answer = baseAnswers[Math.floor(Math.random() * baseAnswers.length)];
+      // 风格化回答库 (提示/映照/收敛/行动)
+      const answerStyles = {
+        hint: [
+          "风起于青萍之末。细微之处，藏着转机。留意身边的变化，顺势而为。",
+          "当局者迷。试着跳出当前的视角，以旁观者的心态重新审视。",
+        ],
+        reflect: [
+          "心如止水，鉴常明。当下困惑，皆因心动。试着放下执念，退一步海阔天空。",
+          "外境是内心的投射。你所抗拒的，往往是你需要接纳的。",
+        ],
+        converge: [
+          "静坐常思己过，闲谈莫论人非。内求诸己，外顺天时。",
+          "多言数穷，不如守中。与其向外驰求，不如向内安顿。",
+        ],
+        action: [
+          "知行合一。不要停留在思考层面，迈出第一步，路自然会显现。",
+          "君子以自强不息。既然认定了方向，就坚定地走下去。",
+        ]
+      };
 
-      // Deep answer logic for members
+      // 根据功德值决定回答清晰度 (模拟“诚则灵”)
+      // 功德越高，回答越倾向于具体的“行动”或深刻的“映照”
+      // 功德较低，回答倾向于模糊的“提示”或保守的“收敛”
+      let style: 'hint' | 'reflect' | 'converge' | 'action' = 'hint';
+      if (merit > 100) style = Math.random() > 0.5 ? 'action' : 'reflect';
+      else if (merit > 50) style = Math.random() > 0.5 ? 'reflect' : 'converge';
+      else style = Math.random() > 0.5 ? 'hint' : 'converge';
+
+      const selectedPool = answerStyles[style];
+      answer = selectedPool[Math.floor(Math.random() * selectedPool.length)];
+
+      // Deep answer logic for members (结构化解读)
       if (isDeep) {
         answer += "\n\n【深度解读】\n";
+        answer += `当前状态：${state === 'advance' ? '进（行）' : state === 'retreat' ? '收（省）' : '稳（守）'}\n`;
+        
         if (state === 'advance') {
-          answer += `鉴于今日势头为“进”，且${profile.name || '阁下'}精力充沛，此局大有可为。建议主动出击，整合资源，但需注意过犹不及，保持谦逊。`;
+          answer += `势头向上，能量充沛。${profile.name || '阁下'}可大胆尝试，但需注意节奏，避免急躁。`;
         } else if (state === 'retreat') {
-          answer += `鉴于今日势头为“收”，${profile.name || '阁下'}宜静不宜动。建议韬光养晦，积蓄力量，避免正面冲突，等待更好的时机。`;
+          answer += `势头收敛，能量内藏。${profile.name || '阁下'}宜静不宜动，韬光养晦是上策。`;
         } else {
-          answer += `鉴于今日势头为“稳”，${profile.name || '阁下'}心境平和。建议稳扎稳打，巩固现有成果，不急于求成，顺其自然。`;
+          answer += `势头平稳，能量均衡。${profile.name || '阁下'}适合巩固根基，徐徐图之。`;
         }
+        
         if (profile.birthCity) {
-          answer += `\n\n结合阁下生于${profile.birthCity}的地气，此时更应关注内心真实的渴望，不被外界喧嚣所扰。`;
+          answer += `\n\n地气加持：${profile.birthCity}的水土养育了你的直觉，请相信第一反应。`;
         }
       }
 

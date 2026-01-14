@@ -134,7 +134,28 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
           </div>
         </div>
 
-        {/* 档案归集 (Archives) */}
+          {/* 今日之象入口 */}
+          {isLoggedIn && (
+            <div className="mb-8">
+              <button 
+                onClick={() => onNavigate && onNavigate('today_image')}
+                className="w-full p-4 rounded-xl bg-gradient-to-r from-[#2C2C2C] to-[#4A4A4A] text-[#FAF9F6] flex items-center justify-between shadow-lg shadow-[#2C2C2C]/20 group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-[#FAF9F6]/10 flex items-center justify-center border border-[#FAF9F6]/20">
+                    <Sparkles className="w-5 h-5 text-[#E0C38C]" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-medium tracking-widest font-kai">今日之象</p>
+                    <p className="text-[10px] text-[#FAF9F6]/60 tracking-wider mt-0.5">每日运势 · 五行能量</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-[#FAF9F6]/40 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          )}
+
+          {/* 档案归集 (Archives) */}
         {isLoggedIn && (
           <div className="mb-8">
             <h3 className="text-sm font-medium text-[#2C2C2C] tracking-[0.2em] mb-4 font-kai">档案归集</h3>
