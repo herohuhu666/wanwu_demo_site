@@ -77,14 +77,17 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
   };
 
   return (
-    <div className="h-full flex flex-col relative overflow-hidden font-serif text-[#2C2C2C] bg-[#FAF9F6]">
-      {/* 背景纹理 */}
-      <div className="absolute inset-0 z-0 opacity-15 pointer-events-none" 
-           style={{ backgroundImage: 'url(/images/paper_texture.jpg)' }} />
-      <div className="absolute inset-0 z-0 opacity-5 pointer-events-none bg-[url('/images/zen_bg.png')] bg-no-repeat bg-center bg-cover" />
-      
-      {/* 顶部遮罩 */}
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#FAF9F6] to-transparent z-10" />
+    <div className="h-full flex flex-col relative overflow-hidden font-serif text-white/90 bg-black">
+      {/* 背景图片 */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="/images/member_bg.png" 
+          alt="Member Background" 
+          className="w-full h-full object-cover opacity-80"
+        />
+        {/* 渐变遮罩，确保文字可读性 */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
+      </div>
 
       {/* 内容区域 */}
       <div className="relative z-20 flex-1 flex flex-col px-8 pt-20 pb-24 overflow-y-auto scrollbar-hide">
@@ -96,15 +99,15 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
           className="mb-8 flex justify-between items-start"
         >
           <div>
-            <h1 className="text-3xl tracking-[0.2em] font-medium mb-2 font-kai">我的</h1>
-            <p className="text-xs text-[#8C8478] tracking-[0.3em] uppercase">Profile</p>
+            <h1 className="text-3xl tracking-[0.2em] font-medium mb-2 font-kai text-white">我的</h1>
+            <p className="text-xs text-white/60 tracking-[0.3em] uppercase">Profile</p>
           </div>
           {isLoggedIn && (
             <button 
               onClick={handleLogout}
-              className="p-2 rounded-full hover:bg-[#2C2C2C]/5 transition-colors"
+              className="p-2 rounded-full hover:bg-white/10 transition-colors backdrop-blur-sm"
             >
-              <LogOut className="w-4 h-4 text-[#8C8478]" />
+              <LogOut className="w-4 h-4 text-white/60" />
             </button>
           )}
         </motion.div>
@@ -114,30 +117,30 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
           onClick={() => !isLoggedIn && setShowLogin(true)}
           className="relative h-32 rounded-2xl overflow-hidden mb-8 group cursor-pointer"
         >
-          <div className="absolute inset-0 bg-[#FAF9F6] border border-[#789262]/20 transition-colors group-hover:border-[#789262]/40 shadow-sm" />
+          <div className="absolute inset-0 bg-white/5 backdrop-blur-md border border-white/10 transition-colors group-hover:bg-white/10 shadow-lg" />
           
           <div className="relative z-10 h-full p-6 flex items-center gap-6">
-            <div className="w-16 h-16 rounded-full bg-[#2C2C2C]/5 flex items-center justify-center border border-[#2C2C2C]/10">
-              <User className="w-8 h-8 text-[#2C2C2C]/60" />
+            <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+              <User className="w-8 h-8 text-white/80" />
             </div>
             
             <div className="flex-1">
               {isLoggedIn ? (
                 <>
-                  <h2 className="text-xl font-medium tracking-widest text-[#2C2C2C] mb-1 font-kai">{profile.name || "悟道者"}</h2>
-                  <p className="text-xs text-[#8C8478] tracking-wider flex items-center gap-2">
+                  <h2 className="text-xl font-medium tracking-widest text-white mb-1 font-kai">{profile.name || "悟道者"}</h2>
+                  <p className="text-xs text-white/60 tracking-wider flex items-center gap-2">
                     <MapPin className="w-3 h-3" /> {profile.birthCity || "未知之地"}
                   </p>
                 </>
               ) : (
                 <>
-                  <h2 className="text-lg font-medium tracking-widest text-[#2C2C2C] mb-1 font-kai">点击登录/注册</h2>
-                  <p className="text-xs text-[#8C8478] tracking-wider">建立个人基础结构</p>
+                  <h2 className="text-lg font-medium tracking-widest text-white mb-1 font-kai">点击登录/注册</h2>
+                  <p className="text-xs text-white/60 tracking-wider">建立个人基础结构</p>
                 </>
               )}
             </div>
             
-            {!isLoggedIn && <ChevronRight className="w-5 h-5 text-[#2C2C2C]/40" />}
+            {!isLoggedIn && <ChevronRight className="w-5 h-5 text-white/40" />}
           </div>
         </div>
 
@@ -146,33 +149,33 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
           <div className="grid grid-cols-2 gap-4 mb-8">
             <button 
               onClick={() => onNavigate && onNavigate('today_image')}
-              className="relative overflow-hidden rounded-2xl p-5 text-left group shadow-lg shadow-[#789262]/10 bg-gradient-to-br from-[#2C2C2C] to-[#1a1a1a]"
+              className="relative overflow-hidden rounded-2xl p-5 text-left group shadow-lg bg-gradient-to-br from-[#FFD700]/20 to-transparent border border-[#FFD700]/20 backdrop-blur-sm"
             >
               <div className="absolute top-0 right-0 p-3 opacity-20">
-                <Sparkles className="w-12 h-12 text-[#FAF9F6]" />
+                <Sparkles className="w-12 h-12 text-[#FFD700]" />
               </div>
               <div className="relative z-10">
-                <div className="w-8 h-8 rounded-full bg-[#FAF9F6]/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-500">
-                  <Sparkles className="w-4 h-4 text-[#FAF9F6]" />
+                <div className="w-8 h-8 rounded-full bg-[#FFD700]/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-500">
+                  <Sparkles className="w-4 h-4 text-[#FFD700]" />
                 </div>
-                <h3 className="text-lg font-kai tracking-widest text-[#FAF9F6] mb-1">今日之象</h3>
-                <p className="text-[10px] text-[#FAF9F6]/60 tracking-wider">每日运势 · 五行指引</p>
+                <h3 className="text-lg font-kai tracking-widest text-[#FFD700] mb-1">今日之象</h3>
+                <p className="text-[10px] text-[#FFD700]/60 tracking-wider">每日运势 · 五行指引</p>
               </div>
             </button>
 
             <button 
               onClick={() => onNavigate && onNavigate('library')}
-              className="relative overflow-hidden rounded-2xl p-5 text-left group shadow-lg shadow-[#8C8478]/10 bg-[#FAF9F6] border border-[#2C2C2C]/5"
+              className="relative overflow-hidden rounded-2xl p-5 text-left group shadow-lg bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors"
             >
-              <div className="absolute top-0 right-0 p-3 opacity-5">
-                <BookOpen className="w-12 h-12 text-[#2C2C2C]" />
+              <div className="absolute top-0 right-0 p-3 opacity-10">
+                <BookOpen className="w-12 h-12 text-white" />
               </div>
               <div className="relative z-10">
-                <div className="w-8 h-8 rounded-full bg-[#2C2C2C]/5 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-500">
-                  <BookOpen className="w-4 h-4 text-[#2C2C2C]" />
+                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-500">
+                  <BookOpen className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="text-lg font-kai tracking-widest text-[#2C2C2C] mb-1">万物藏经</h3>
-                <p className="text-[10px] text-[#8C8478] tracking-wider">六十四卦 · 智慧全集</p>
+                <h3 className="text-lg font-kai tracking-widest text-white mb-1">万物藏经</h3>
+                <p className="text-[10px] text-white/60 tracking-wider">六十四卦 · 智慧全集</p>
               </div>
             </button>
           </div>
@@ -181,16 +184,16 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
         {/* 档案归集 (Archives) */}
         {isLoggedIn && (
           <div className="mb-8">
-            <h3 className="text-sm font-medium text-[#2C2C2C] tracking-[0.2em] mb-4 font-kai">档案归集</h3>
+            <h3 className="text-sm font-medium text-white/80 tracking-[0.2em] mb-4 font-kai">档案归集</h3>
             <div className="grid grid-cols-3 gap-3">
               <Dialog>
                 <DialogTrigger asChild>
-                  <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-[#FAF9F6] border border-[#789262]/10 hover:bg-[#789262]/5 transition-colors">
-                    <div className="w-10 h-10 rounded-full bg-[#789262]/10 flex items-center justify-center mb-2 text-[#789262]">
+                  <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors backdrop-blur-sm">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-2 text-white/80">
                       <Book className="w-5 h-5" />
                     </div>
-                    <span className="text-xs text-[#2C2C2C] tracking-widest">灵犀</span>
-                    <span className="text-[10px] text-[#8C8478] mt-1">{archives?.filter((a: any) => a.type === 'insight').length || 0} 条</span>
+                    <span className="text-xs text-white/90 tracking-widest">灵犀</span>
+                    <span className="text-[10px] text-white/50 mt-1">{archives?.filter((a: any) => a.type === 'insight').length || 0} 条</span>
                   </button>
                 </DialogTrigger>
                 <DialogContent className="bg-[#FAF9F6] border border-[#789262]/20 max-w-[320px] max-h-[80vh] flex flex-col">
@@ -216,12 +219,12 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
 
               <Dialog>
                 <DialogTrigger asChild>
-                  <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-[#FAF9F6] border border-[#789262]/10 hover:bg-[#789262]/5 transition-colors">
-                    <div className="w-10 h-10 rounded-full bg-[#789262]/10 flex items-center justify-center mb-2 text-[#789262]">
+                  <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors backdrop-blur-sm">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-2 text-white/80">
                       <Hexagon className="w-5 h-5" />
                     </div>
-                    <span className="text-xs text-[#2C2C2C] tracking-widest">乾坤</span>
-                    <span className="text-[10px] text-[#8C8478] mt-1">{archives?.filter((a: any) => a.type === 'ritual').length || 0} 条</span>
+                    <span className="text-xs text-white/90 tracking-widest">乾坤</span>
+                    <span className="text-[10px] text-white/50 mt-1">{archives?.filter((a: any) => a.type === 'ritual').length || 0} 条</span>
                   </button>
                 </DialogTrigger>
                 <DialogContent className="bg-[#FAF9F6] border border-[#789262]/20 max-w-[320px] max-h-[80vh] flex flex-col">
@@ -250,12 +253,12 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
 
               <Dialog>
                 <DialogTrigger asChild>
-                  <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-[#FAF9F6] border border-[#789262]/10 hover:bg-[#789262]/5 transition-colors">
-                    <div className="w-10 h-10 rounded-full bg-[#789262]/10 flex items-center justify-center mb-2 text-[#789262]">
+                  <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors backdrop-blur-sm">
+                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-2 text-white/80">
                       <Heart className="w-5 h-5" />
                     </div>
-                    <span className="text-xs text-[#2C2C2C] tracking-widest">遗泽</span>
-                    <span className="text-[10px] text-[#8C8478] mt-1">{archives?.filter((a: any) => a.type === 'gift').length || 0} 条</span>
+                    <span className="text-xs text-white/90 tracking-widest">功德</span>
+                    <span className="text-[10px] text-white/50 mt-1">{archives?.filter((a: any) => a.type === 'merit').length || 0} 条</span>
                   </button>
                 </DialogTrigger>
                 <DialogContent className="bg-[#FAF9F6] border border-[#789262]/20 max-w-[320px] max-h-[80vh] flex flex-col">
