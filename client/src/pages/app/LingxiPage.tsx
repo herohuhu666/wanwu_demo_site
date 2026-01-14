@@ -1,175 +1,343 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ChevronRight, Lock } from "lucide-react";
+import { Send, ChevronRight, Lock, MessageCircle, Mic, History, X, Sparkles } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 
+// Categories
+const CATEGORIES = [
+  { id: 'career', label: '事业', icon: '💼' },
+  { id: 'relationship', label: '人际', icon: '🤝' },
+  { id: 'health', label: '健康', icon: '🌿' },
+  { id: 'emotion', label: '情绪', icon: '💭' },
+  { id: 'life', label: '生活', icon: '🏠' },
+  { id: 'random', label: '随心', icon: '✨' },
+];
+
 export default function LingxiPage() {
-  const { dailyRecord, profile, isMember } = useUser();
+  const { 
+    dailyRecord, 
+    profile, 
+    isMember, 
+    insightCount, 
+    merit, 
+    consumeMerit, 
+    addInsightRecord,
+    checkInsightAvailability 
+  } = useUser();
+
+  const [step, setStep] = useState<'category' | 'input' | 'result'>('category');
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [input, setInput] = useState("");
   const [result, setResult] = useState<null | {
-    symbol: string;
-    gua: string;
-    interpretation: string;
+    answer: string;
+    isDeep: boolean;
   }>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [dailyCount, setDailyCount] = useState(0);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const handleCategorySelect = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    setStep('input');
+  };
 
   const handleAsk = () => {
     if (!input.trim()) return;
     
-    // Check daily limit for non-members
-    if (!isMember && dailyCount >= 3) {
-      toast.error("今日灵犀次数已尽，请明日再来或升级会员");
+    const availability = checkInsightAvailability();
+    
+    if (!availability.available) {
+      toast.error("今日免费次数已尽，且功德不足兑换");
       return;
+    }
+
+    if (availability.reason === 'merit') {
+      if (!confirm("今日免费次数已尽，是否消耗 50 功德进行问询？")) return;
+      consumeMerit(50);
     }
 
     setIsLoading(true);
     
-    // Mock Logic: Generate response based on Daily State & Profile
+    // Mock Logic: Generate response
     setTimeout(() => {
       const state = dailyRecord?.state || 'steady';
-      let interpretation = "";
-      let symbol = "";
-      let gua = "";
+      let answer = "";
+      const isDeep = isMember;
 
-      // Logic based on Daily State
-      if (state === 'advance') {
-        symbol = "风起云涌";
-        gua = "乾为天";
-        interpretation = `鉴于今日势头为“进”，且${profile.name ? `阁下(${profile.name})` : '阁下'}精力充沛。当下之象，如顺水行舟。宜积极进取，把握良机。细节之中藏有转机，大胆尝试，方能洞察先机。`;
-      } else if (state === 'retreat') {
-        symbol = "山雨欲来";
-        gua = "艮为山";
-        interpretation = `鉴于今日势头为“收”，${profile.name ? `阁下(${profile.name})` : '阁下'}宜静不宜动。当下之象，如山止于前。宜韬光养晦，内观自省。暂避锋芒，积蓄力量，待时而动。`;
-      } else {
-        symbol = "平湖秋月";
-        gua = "坤为地";
-        interpretation = `鉴于今日势头为“稳”，${profile.name ? `阁下(${profile.name})` : '阁下'}心境平和。当下之象，如大地承载万物。宜稳扎稳打，步步为营。不急不躁，顺其自然，方得始终。`;
+      // Base answer logic
+      const baseAnswers = [
+        "心如止水，鉴常明。当下困惑，皆因心动。试着放下执念，退一步海阔天空。",
+        "风起于青萍之末。细微之处，藏着转机。留意身边的变化，顺势而为。",
+        "山重水复疑无路，柳暗花明又一村。坚持本心，静待花开。",
+        "静坐常思己过，闲谈莫论人非。内求诸己，外顺天时。",
+      ];
+      
+      answer = baseAnswers[Math.floor(Math.random() * baseAnswers.length)];
+
+      // Deep answer logic for members
+      if (isDeep) {
+        answer += "\n\n【深度解读】\n";
+        if (state === 'advance') {
+          answer += `鉴于今日势头为“进”，且${profile.name || '阁下'}精力充沛，此局大有可为。建议主动出击，整合资源，但需注意过犹不及，保持谦逊。`;
+        } else if (state === 'retreat') {
+          answer += `鉴于今日势头为“收”，${profile.name || '阁下'}宜静不宜动。建议韬光养晦，积蓄力量，避免正面冲突，等待更好的时机。`;
+        } else {
+          answer += `鉴于今日势头为“稳”，${profile.name || '阁下'}心境平和。建议稳扎稳打，巩固现有成果，不急于求成，顺其自然。`;
+        }
+        if (profile.birthCity) {
+          answer += `\n\n结合阁下生于${profile.birthCity}的地气，此时更应关注内心真实的渴望，不被外界喧嚣所扰。`;
+        }
       }
 
-      // Append profile influence if available
-      if (profile.birthCity) {
-        interpretation += ` 考虑到阁下生于${profile.birthCity}，此地风土亦助长此势。`;
-      }
+      const newRecord = {
+        question: input,
+        category: CATEGORIES.find(c => c.id === selectedCategory)?.label || '随心',
+        answer,
+        isDeep
+      };
 
-      setResult({
-        symbol,
-        gua,
-        interpretation
-      });
+      addInsightRecord(newRecord);
+      
+      setResult(newRecord);
       setIsLoading(false);
-      setDailyCount(prev => prev + 1);
+      setStep('result');
     }, 2000);
   };
 
+  const reset = () => {
+    setStep('category');
+    setSelectedCategory("");
+    setInput("");
+    setResult(null);
+  };
+
   return (
-    <div className="h-full flex flex-col relative overflow-hidden font-serif">
-      {/* 背景图 */}
-      <div 
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: 'url(/images/zen_bg.png)' }}
-      />
-      
-      {/* 顶部遮罩，保证状态栏清晰 */}
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#E8E2D2]/80 to-transparent z-10" />
+    <div className="h-full flex flex-col relative overflow-hidden font-serif bg-[#FAF9F6]">
+      {/* 背景纹理 */}
+      <div className="absolute inset-0 z-0 opacity-15 pointer-events-none" 
+           style={{ backgroundImage: 'url(/images/paper_texture.jpg)' }} />
+      <div className="absolute inset-0 z-0 opacity-5 pointer-events-none bg-[url('/images/bamboo_bg.png')] bg-no-repeat bg-right-bottom bg-contain" />
+
+      {/* 顶部遮罩 */}
+      <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-[#FAF9F6] to-transparent z-10" />
 
       {/* 内容区域 */}
-      <div className="relative z-20 flex-1 flex flex-col px-8 pt-20 pb-24 overflow-y-auto scrollbar-hide">
+      <div className="relative z-20 flex-1 flex flex-col px-6 pt-16 pb-24 overflow-y-auto scrollbar-hide">
         
-        {/* 标题区 */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-12 text-center"
-        >
-          <h1 className="text-3xl text-[#4A4036] tracking-[0.2em] font-medium mb-2">灵犀</h1>
-          <p className="text-xs text-[#8C8478] tracking-[0.3em] uppercase">Insight</p>
-        </motion.div>
+        {/* 顶部栏 */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-2xl text-[#2C2C2C] font-medium tracking-[0.2em]">灵犀</h1>
+            <p className="text-[10px] text-[#8C8478] tracking-[0.3em] uppercase mt-1">Insight</p>
+          </div>
+          <button 
+            onClick={() => setShowHistory(true)}
+            className="p-2 rounded-full hover:bg-[#2C2C2C]/5 transition-colors"
+          >
+            <History className="w-5 h-5 text-[#2C2C2C]/60" />
+          </button>
+        </div>
 
-        {/* 交互区 */}
         <AnimatePresence mode="wait">
-          {!result ? (
+          {/* 步骤1: 选择分类 */}
+          {step === 'category' && (
             <motion.div
-              key="input"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              key="category"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
               className="flex-1 flex flex-col justify-center"
             >
-              <div className="bg-[#F5E6C8]/20 backdrop-blur-[2px] rounded-2xl p-6 border border-[#FFF8E7]/30 shadow-[0_8px_32px_rgba(74,64,54,0.05)]">
-                <textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="输入当下所见之细节..."
-                  className="w-full bg-transparent border-none resize-none text-[#4A4036] placeholder-[#8C8478]/60 text-lg leading-relaxed focus:ring-0 min-h-[120px] text-center"
-                />
-                
-                <div className="mt-6 flex flex-col items-center gap-3">
+              <div className="text-center mb-12">
+                <div className="w-16 h-16 mx-auto bg-[#789262]/10 rounded-full flex items-center justify-center mb-6">
+                  <MessageCircle className="w-8 h-8 text-[#789262]" />
+                </div>
+                <h2 className="text-xl text-[#2C2C2C] tracking-widest font-light">心有所惑，叩问灵犀</h2>
+                <p className="text-xs text-[#8C8478] mt-3 tracking-wider">请选择问询方向</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {CATEGORIES.map((cat) => (
                   <button
-                    onClick={handleAsk}
-                    disabled={!input.trim() || isLoading}
-                    className="group relative px-8 py-3 overflow-hidden rounded-full transition-all duration-500"
+                    key={cat.id}
+                    onClick={() => handleCategorySelect(cat.id)}
+                    className="p-4 rounded-xl border border-[#2C2C2C]/10 hover:border-[#789262]/50 hover:bg-[#789262]/5 transition-all group flex flex-col items-center gap-2"
                   >
-                    <div className="absolute inset-0 bg-[#4A4036] opacity-0 group-hover:opacity-5 transition-opacity duration-500" />
-                    <div className="relative flex items-center gap-3 text-[#4A4036]">
-                      <span className="text-sm tracking-[0.2em] font-medium">
-                        {isLoading ? "感应中..." : "叩问"}
-                      </span>
-                      {!isLoading && <Send className="w-3 h-3 opacity-60" />}
-                    </div>
+                    <span className="text-2xl filter grayscale group-hover:grayscale-0 transition-all">{cat.icon}</span>
+                    <span className="text-sm text-[#2C2C2C] tracking-widest group-hover:text-[#789262]">{cat.label}</span>
                   </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* 步骤2: 输入问题 */}
+          {step === 'input' && (
+            <motion.div
+              key="input"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="flex-1 flex flex-col"
+            >
+              <button 
+                onClick={() => setStep('category')}
+                className="self-start mb-6 text-xs text-[#8C8478] flex items-center gap-1 hover:text-[#2C2C2C]"
+              >
+                <ChevronRight className="w-3 h-3 rotate-180" /> 返回分类
+              </button>
+
+              <div className="flex-1 flex flex-col justify-center">
+                <div className="bg-[#FAF9F6] rounded-2xl p-6 border border-[#2C2C2C]/10 shadow-sm relative">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-[#789262]/20 rounded-t-2xl" />
                   
-                  {!isMember && (
-                    <p className="text-[10px] text-[#8C8478]/60 tracking-wider flex items-center gap-1">
-                      今日剩余次数: {3 - dailyCount} <Lock className="w-3 h-3" />
-                    </p>
-                  )}
+                  <div className="text-center mb-6">
+                    <span className="text-xs text-[#789262] tracking-widest border border-[#789262]/30 px-3 py-1 rounded-full">
+                      {CATEGORIES.find(c => c.id === selectedCategory)?.label}
+                    </span>
+                  </div>
+
+                  <textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="请描述您的困惑..."
+                    className="w-full bg-transparent border-none resize-none text-[#2C2C2C] placeholder-[#8C8478]/40 text-base leading-relaxed focus:ring-0 min-h-[150px] text-center font-sans"
+                  />
+
+                  <div className="mt-8 flex flex-col items-center gap-4">
+                    <button
+                      onClick={handleAsk}
+                      disabled={!input.trim() || isLoading}
+                      className="w-full py-3 bg-[#2C2C2C] text-[#FAF9F6] rounded-xl flex items-center justify-center gap-2 hover:bg-[#2C2C2C]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoading ? (
+                        <span className="text-sm tracking-widest">感应中...</span>
+                      ) : (
+                        <>
+                          <span className="text-sm tracking-widest">发起问询</span>
+                          <Send className="w-3 h-3" />
+                        </>
+                      )}
+                    </button>
+
+                    {!isMember && (
+                      <div className="flex items-center gap-4 text-[10px] text-[#8C8478]">
+                        <span className="flex items-center gap-1">
+                          今日免费: {Math.max(0, 3 - insightCount)}/3
+                        </span>
+                        <span className="w-[1px] h-3 bg-[#2C2C2C]/10" />
+                        <span className="flex items-center gap-1">
+                          功德兑换: 50/次
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </motion.div>
-          ) : (
+          )}
+
+          {/* 步骤3: 结果展示 */}
+          {step === 'result' && result && (
             <motion.div
               key="result"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="flex-1 flex flex-col"
             >
-              {/* 结果卡片 */}
-              <div className="flex-1 bg-[#F5E6C8]/10 backdrop-blur-sm rounded-3xl p-8 border border-[#FFF8E7]/20 shadow-[0_16px_48px_rgba(74,64,54,0.08)] flex flex-col items-center text-center relative overflow-hidden">
-                
-                {/* 装饰纹理 */}
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#4A4036]/20 to-transparent opacity-30" />
-
-                <div className="mt-4 mb-8">
-                  <span className="text-xs text-[#8C8478] tracking-[0.4em] block mb-2">取象</span>
-                  <h2 className="text-2xl text-[#4A4036] font-bold tracking-widest">{result.symbol}</h2>
+              <div className={`flex-1 rounded-3xl p-8 border relative overflow-hidden flex flex-col ${
+                isMember ? 'bg-[#FAF9F6] border-[#789262]/30' : 'bg-[#FAF9F6] border-[#2C2C2C]/10'
+              }`}>
+                {/* 装饰 */}
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                  <Sparkles className="w-24 h-24 text-[#789262]" />
                 </div>
 
-                <div className="w-12 h-[1px] bg-[#4A4036]/10 mb-8" />
+                <div className="relative z-10 flex-1">
+                  <div className="flex items-center gap-2 mb-6">
+                    <div className="w-8 h-8 rounded-full bg-[#2C2C2C] flex items-center justify-center text-[#FAF9F6] text-xs font-serif">
+                      灵
+                    </div>
+                    <span className="text-xs text-[#8C8478] tracking-widest">灵犀指引</span>
+                  </div>
 
-                <div className="mb-8">
-                  <span className="text-xs text-[#8C8478] tracking-[0.4em] block mb-2">卦象</span>
-                  <h3 className="text-xl text-[#4A4036] font-medium tracking-widest">{result.gua}</h3>
+                  <div className="prose prose-stone max-w-none">
+                    <p className="text-[#2C2C2C] text-base leading-loose font-light whitespace-pre-wrap text-justify">
+                      {result.answer}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="flex-1 flex items-center justify-center">
-                  <p className="text-[#4A4036]/90 text-base leading-loose tracking-wide font-light">
-                    {result.interpretation}
+                {isMember && (
+                  <div className="mt-8 pt-6 border-t border-[#2C2C2C]/5 flex justify-between items-center">
+                    <div className="flex items-center gap-2 text-[#789262]">
+                      <Mic className="w-4 h-4" />
+                      <span className="text-xs tracking-widest">语音解读</span>
+                    </div>
+                    <span className="text-[10px] text-[#8C8478] bg-[#2C2C2C]/5 px-2 py-1 rounded">会员专属</span>
+                  </div>
+                )}
+
+                <div className="mt-8 text-center">
+                  <p className="text-[10px] text-[#8C8478]/60 mb-4">
+                    * 本内容为传统文化趣味参考，不构成决策依据
                   </p>
+                  <button 
+                    onClick={reset}
+                    className="text-[#2C2C2C] text-xs tracking-[0.2em] hover:text-[#789262] transition-colors flex items-center justify-center gap-2"
+                  >
+                    再次叩问 <ChevronRight className="w-3 h-3" />
+                  </button>
                 </div>
-
-                <button 
-                  onClick={() => { setResult(null); setInput(""); }}
-                  className="mt-8 text-[#8C8478] text-xs tracking-[0.2em] hover:text-[#4A4036] transition-colors flex items-center gap-2"
-                >
-                  再次叩问 <ChevronRight className="w-3 h-3" />
-                </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {/* 历史记录弹窗 */}
+      <AnimatePresence>
+        {showHistory && (
+          <motion.div
+            initial={{ opacity: 0, x: '100%' }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: '100%' }}
+            className="absolute inset-0 z-50 bg-[#FAF9F6] flex flex-col"
+          >
+            <div className="p-6 border-b border-[#2C2C2C]/5 flex justify-between items-center bg-[#FAF9F6]/90 backdrop-blur-sm">
+              <h3 className="text-lg text-[#2C2C2C] tracking-widest font-medium">灵犀记录</h3>
+              <button onClick={() => setShowHistory(false)} className="p-2">
+                <X className="w-5 h-5 text-[#2C2C2C]/60" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {useUser().insightHistory.length === 0 ? (
+                <div className="text-center py-12 text-[#8C8478]">
+                  <p className="text-sm tracking-widest">暂无记录</p>
+                </div>
+              ) : (
+                useUser().insightHistory.map((record) => (
+                  <div key={record.id} className={`p-4 rounded-xl border ${
+                    record.isDeep ? 'bg-gradient-to-br from-[#FAF9F6] to-[#789262]/5 border-[#789262]/20' : 'bg-[#FAF9F6] border-[#2C2C2C]/10'
+                  }`}>
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-xs text-[#789262] border border-[#789262]/30 px-2 py-0.5 rounded-full">
+                        {record.category}
+                      </span>
+                      <span className="text-[10px] text-[#8C8478]">
+                        {new Date(record.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-sm text-[#2C2C2C] font-medium mb-2 line-clamp-1">{record.question}</p>
+                    <p className="text-xs text-[#8C8478] line-clamp-2 leading-relaxed">{record.answer}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

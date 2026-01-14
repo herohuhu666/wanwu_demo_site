@@ -20,18 +20,32 @@ export interface DailyRecord {
   completed: boolean;
 }
 
+export interface InsightRecord {
+  id: string;
+  date: string;
+  question: string;
+  category: string;
+  answer: string;
+  isDeep: boolean; // 是否为深度解读
+}
+
 interface UserContextType {
   isLoggedIn: boolean;
   isMember: boolean;
   profile: UserProfile;
   merit: number;
   dailyRecord: DailyRecord | null;
+  insightCount: number; // 今日已用免费次数
+  insightHistory: InsightRecord[];
   
   login: (profile: UserProfile) => void;
   logout: () => void;
   toggleMember: () => void;
   addMerit: (amount: number) => void;
+  consumeMerit: (amount: number) => boolean;
   submitDailyRecord: (state: DailyState, energy: EnergyLevel, sleep: SleepQuality) => void;
+  addInsightRecord: (record: Omit<InsightRecord, 'id' | 'date'>) => void;
+  checkInsightAvailability: () => { available: boolean; reason: 'free' | 'merit' | 'member' | 'none' };
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -48,6 +62,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   });
   const [merit, setMerit] = useState(108);
   const [dailyRecord, setDailyRecord] = useState<DailyRecord | null>(null);
+  const [insightCount, setInsightCount] = useState(0);
+  const [insightHistory, setInsightHistory] = useState<InsightRecord[]>([]);
 
   // Mock: Load from local storage on mount
   useEffect(() => {
@@ -57,9 +73,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       setIsLoggedIn(true);
     }
     
-    const savedDaily = localStorage.getItem('wanwu_daily_' + new Date().toDateString());
+    const today = new Date().toDateString();
+    const savedDaily = localStorage.getItem('wanwu_daily_' + today);
     if (savedDaily) {
       setDailyRecord(JSON.parse(savedDaily));
+    }
+
+    const savedInsightCount = localStorage.getItem('wanwu_insight_count_' + today);
+    if (savedInsightCount) {
+      setInsightCount(parseInt(savedInsightCount));
+    }
+
+    const savedHistory = localStorage.getItem('wanwu_insight_history');
+    if (savedHistory) {
+      setInsightHistory(JSON.parse(savedHistory));
     }
   }, []);
 
@@ -84,6 +111,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setMerit(prev => prev + amount);
   };
 
+  const consumeMerit = (amount: number) => {
+    if (merit >= amount) {
+      setMerit(prev => prev - amount);
+      return true;
+    }
+    return false;
+  };
+
   const submitDailyRecord = (state: DailyState, energy: EnergyLevel, sleep: SleepQuality) => {
     const record: DailyRecord = {
       date: new Date().toDateString(),
@@ -94,7 +129,33 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
     setDailyRecord(record);
     localStorage.setItem('wanwu_daily_' + new Date().toDateString(), JSON.stringify(record));
-    addMerit(1); // Daily check-in merit
+    addMerit(2); // Daily check-in merit (updated to +2 as per new requirement)
+  };
+
+  const addInsightRecord = (recordData: Omit<InsightRecord, 'id' | 'date'>) => {
+    const newRecord: InsightRecord = {
+      id: Date.now().toString(),
+      date: new Date().toISOString(),
+      ...recordData
+    };
+    
+    const newHistory = [newRecord, ...insightHistory];
+    setInsightHistory(newHistory);
+    localStorage.setItem('wanwu_insight_history', JSON.stringify(newHistory));
+
+    // Update daily count if not member
+    if (!isMember) {
+      const newCount = insightCount + 1;
+      setInsightCount(newCount);
+      localStorage.setItem('wanwu_insight_count_' + new Date().toDateString(), newCount.toString());
+    }
+  };
+
+  const checkInsightAvailability = (): { available: boolean; reason: 'free' | 'merit' | 'member' | 'none' } => {
+    if (isMember) return { available: true, reason: 'member' };
+    if (insightCount < 3) return { available: true, reason: 'free' };
+    if (merit >= 50) return { available: true, reason: 'merit' };
+    return { available: false, reason: 'none' };
   };
 
   return (
@@ -104,11 +165,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       profile,
       merit,
       dailyRecord,
+      insightCount,
+      insightHistory,
       login,
       logout,
       toggleMember,
       addMerit,
-      submitDailyRecord
+      consumeMerit,
+      submitDailyRecord,
+      addInsightRecord,
+      checkInsightAvailability
     }}>
       {children}
     </UserContext.Provider>
