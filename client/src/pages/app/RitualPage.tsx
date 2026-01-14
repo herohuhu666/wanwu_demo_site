@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Hexagon, ChevronRight, RefreshCw } from "lucide-react";
+import { Hexagon, ChevronRight, RefreshCw, Lock } from "lucide-react";
+import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 
 // Yao type: 0 for Yin, 1 for Yang
 type Yao = 0 | 1;
 
 export default function RitualPage() {
+  const { isMember } = useUser();
   const [isShaking, setIsShaking] = useState(false);
   const [yaos, setYaos] = useState<Yao[]>([]);
   const [result, setResult] = useState<null | {
@@ -14,6 +16,7 @@ export default function RitualPage() {
     name: string;
     desc: string;
     wisdom: string;
+    structure?: string; // Member only
   }>(null);
 
   const handleShake = () => {
@@ -36,14 +39,22 @@ export default function RitualPage() {
 
   const generateResult = (finalYaos: Yao[]) => {
     // Mock result generation based on yaos
-    // In a real app, this would map the 6 yaos to 64 hexagrams
     setTimeout(() => {
-      setResult({
+      const baseResult = {
         gua: "䷀", 
         name: "乾为天", 
         desc: "天行健，君子以自强不息。",
         wisdom: "当下运势如日中天，能量充盈。宜积极进取，确立宏大目标并付诸行动。但需注意亢龙有悔，切忌骄傲自满，应保持谦逊，方能长久。"
-      });
+      };
+
+      if (isMember) {
+        setResult({
+          ...baseResult,
+          structure: "【结构分析】\n初九：潜龙勿用。\n九二：见龙在田。\n九三：君子终日乾乾。\n九四：或跃在渊。\n九五：飞龙在天。\n上九：亢龙有悔。\n\n此卦六爻皆阳，纯阳刚健，象征万物生发之始。结构上呈现出一种不断上升、进取的态势，但也隐含着盛极而衰的风险。"
+        });
+      } else {
+        setResult(baseResult);
+      }
     }, 500);
   };
 
@@ -141,7 +152,7 @@ export default function RitualPage() {
                 key="result"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full"
+                className="w-full h-full overflow-y-auto pb-20"
               >
                 <div className="bg-[#F5E6C8]/10 backdrop-blur-md rounded-3xl p-8 border border-[#FFF8E7]/30 shadow-[0_16px_48px_rgba(74,64,54,0.08)] text-center relative overflow-hidden">
                   {/* 装饰纹理 */}
@@ -168,6 +179,23 @@ export default function RitualPage() {
                         {result.wisdom}
                       </p>
                     </div>
+
+                    {/* 会员专属结构分析 */}
+                    {isMember ? (
+                      <div className="bg-[#4A4036]/5 p-4 rounded-xl">
+                        <p className="text-xs text-[#8C8478] tracking-widest mb-2 uppercase flex items-center gap-2">
+                          Structure <Lock className="w-3 h-3 opacity-0" /> {/* Hidden lock for alignment */}
+                        </p>
+                        <p className="text-[#4A4036]/80 text-xs leading-loose tracking-wide whitespace-pre-line">
+                          {result.structure}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bg-[#4A4036]/5 p-4 rounded-xl flex items-center justify-between">
+                        <span className="text-xs text-[#8C8478] tracking-widest">解锁深层结构分析</span>
+                        <Lock className="w-4 h-4 text-[#4A4036]/40" />
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-8 pt-6 border-t border-[#4A4036]/5">

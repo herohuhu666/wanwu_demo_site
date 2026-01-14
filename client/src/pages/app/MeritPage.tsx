@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, ShoppingBag, Plus, TrendingUp, Lock, Calendar } from "lucide-react";
+import { Heart, ShoppingBag, Plus, TrendingUp, Lock, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
+import { useUser } from "@/contexts/UserContext";
 
 type LogType = 'check-in' | 'pray' | 'altruism' | 'reflect';
 
@@ -25,7 +26,7 @@ const LOG_TYPES: { type: LogType; label: string; value: number; color: string }[
 ];
 
 export default function MeritPage() {
-  const [merit, setMerit] = useState(108);
+  const { merit, addMerit, isMember } = useUser();
   const [logs, setLogs] = useState<Log[]>([
     { id: '1', type: 'check-in', content: '每日守望', value: 1, time: '08:30' },
     { id: '2', type: 'altruism', content: '帮邻居收快递', value: 10, time: 'Yesterday' },
@@ -33,9 +34,6 @@ export default function MeritPage() {
   const [selectedType, setSelectedType] = useState<LogType>('altruism');
   const [input, setInput] = useState("");
   const [showTrend, setShowTrend] = useState(false);
-  
-  // Mock membership state (should be synced with global state in real app)
-  const isMember = false; 
 
   const handleAddLog = () => {
     if (!input.trim()) return;
@@ -48,9 +46,9 @@ export default function MeritPage() {
       time: 'Just now'
     };
     setLogs([newLog, ...logs]);
-    setMerit(m => m + typeConfig.value);
+    addMerit(typeConfig.value);
     setInput("");
-    toast.success("功德 + " + typeConfig.value);
+    toast.success("信任值 + " + typeConfig.value);
   };
 
   return (
@@ -112,7 +110,13 @@ export default function MeritPage() {
           >
             {merit}
           </motion.div>
-          <p className="text-xs text-[#8C8478] uppercase tracking-[0.3em] mt-2">Total Merit</p>
+          <div className="flex items-center justify-center gap-2 mt-2">
+            <ShieldCheck className="w-3 h-3 text-[#8C8478]" />
+            <p className="text-xs text-[#8C8478] uppercase tracking-[0.3em]">Trust Indicator</p>
+          </div>
+          <p className="text-[10px] text-[#8C8478]/60 mt-2 tracking-wider">
+            功德即信任，信任即力量
+          </p>
         </div>
 
         {/* 趋势分析入口 (会员功能) */}

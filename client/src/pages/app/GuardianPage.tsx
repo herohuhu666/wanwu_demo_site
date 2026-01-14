@@ -2,22 +2,18 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sun, Shield, Sparkles, Activity, Moon, Battery, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-
-// Types for Daily Mainline
-type RhythmType = 'slow' | 'normal' | 'fast';
-type EnergyLevel = 'low' | 'medium' | 'high';
-type SleepQuality = 'poor' | 'fair' | 'good';
+import { useUser, DailyState, EnergyLevel, SleepQuality } from "@/contexts/UserContext";
 
 export default function GuardianPage() {
+  const { dailyRecord, submitDailyRecord } = useUser();
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(259200); // 72 hours
   const [showWeather, setShowWeather] = useState(false);
   const [showFortune, setShowFortune] = useState(false);
   
   // Daily Mainline State
-  const [dailyCheckInDone, setDailyCheckInDone] = useState(false);
   const [showDailyCheckIn, setShowDailyCheckIn] = useState(false);
-  const [selectedRhythm, setSelectedRhythm] = useState<RhythmType>('normal');
+  const [selectedState, setSelectedState] = useState<DailyState>('steady');
   const [energyLevel, setEnergyLevel] = useState<EnergyLevel>('medium');
   const [sleepQuality, setSleepQuality] = useState<SleepQuality>('fair');
 
@@ -38,7 +34,7 @@ export default function GuardianPage() {
   const handleIgnite = () => {
     setIsActive(true);
     setTimeLeft(259200);
-    if (!dailyCheckInDone) {
+    if (!dailyRecord?.completed) {
       setShowDailyCheckIn(true);
     } else {
       toast.success("命灯已点亮，平安信号已发送");
@@ -47,7 +43,7 @@ export default function GuardianPage() {
   };
 
   const handleDailySubmit = () => {
-    setDailyCheckInDone(true);
+    submitDailyRecord(selectedState, energyLevel, sleepQuality);
     setShowDailyCheckIn(false);
     toast.success("今日状态已记录");
     setTimeout(() => setIsActive(false), 2000);
@@ -95,7 +91,7 @@ export default function GuardianPage() {
 
         {/* 今日提醒卡 (仅当已签到时显示) */}
         <AnimatePresence>
-          {dailyCheckInDone && (
+          {dailyRecord?.completed && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
@@ -105,8 +101,8 @@ export default function GuardianPage() {
               <div>
                 <p className="text-sm text-[#4A4036] font-medium tracking-wide mb-1">今日提醒</p>
                 <p className="text-xs text-[#4A4036]/80 leading-relaxed">
-                  今日行动节奏宜{selectedRhythm === 'fast' ? '快' : selectedRhythm === 'slow' ? '慢' : '稳'}，
-                  情绪波动{energyLevel === 'high' ? '较高' : '平稳'}，决策风险中等。
+                  今日状态：{dailyRecord.state === 'advance' ? '进（行）' : dailyRecord.state === 'retreat' ? '收（省）' : '稳（守）'}。
+                  {dailyRecord.state === 'advance' ? '宜积极进取，把握良机。' : dailyRecord.state === 'retreat' ? '宜韬光养晦，内观自省。' : '宜稳扎稳打，步步为营。'}
                 </p>
               </div>
             </motion.div>
@@ -188,33 +184,33 @@ export default function GuardianPage() {
               </div>
 
               <div className="space-y-8">
-                {/* 1. 节奏选择 */}
+                {/* 1. 状态选择 */}
                 <div className="space-y-3">
-                  <p className="text-sm text-[#4A4036] tracking-widest text-center">今日节奏</p>
+                  <p className="text-sm text-[#4A4036] tracking-widest text-center">今日状态</p>
                   <div className="grid grid-cols-3 gap-3">
-                    {(['slow', 'normal', 'fast'] as const).map((r) => (
+                    {(['steady', 'advance', 'retreat'] as const).map((s) => (
                       <button
-                        key={r}
-                        onClick={() => setSelectedRhythm(r)}
+                        key={s}
+                        onClick={() => setSelectedState(s)}
                         className={`py-3 rounded-xl text-xs tracking-widest transition-all ${
-                          selectedRhythm === r
+                          selectedState === s
                             ? 'bg-[#4A4036] text-[#F9F9F7]'
                             : 'bg-[#F9F9F7]/50 text-[#4A4036] hover:bg-[#F9F9F7]'
                         }`}
                       >
-                        {r === 'slow' ? '偏慢' : r === 'normal' ? '正常' : '偏快'}
+                        {s === 'steady' ? '稳（守）' : s === 'advance' ? '进（行）' : '收（省）'}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* 2. 健康感知 */}
+                {/* 2. 状态感知 */}
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <Battery className="w-4 h-4 text-[#4A4036]/60" />
-                        <span className="text-xs text-[#4A4036] tracking-widest">精力</span>
+                        <span className="text-xs text-[#4A4036] tracking-widest">精力感受</span>
                       </div>
                       <div className="flex gap-2">
                         {(['low', 'medium', 'high'] as const).map((l) => (
@@ -238,7 +234,7 @@ export default function GuardianPage() {
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <Moon className="w-4 h-4 text-[#4A4036]/60" />
-                        <span className="text-xs text-[#4A4036] tracking-widest">睡眠</span>
+                        <span className="text-xs text-[#4A4036] tracking-widest">睡眠感受</span>
                       </div>
                       <div className="flex gap-2">
                         {(['poor', 'fair', 'good'] as const).map((q) => (
@@ -257,17 +253,6 @@ export default function GuardianPage() {
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* 3. 态势摘要 */}
-                <div className="bg-[#F9F9F7]/50 p-4 rounded-xl border border-[#4A4036]/5">
-                  <p className="text-xs text-[#4A4036]/60 tracking-widest mb-2">今日态势摘要</p>
-                  <p className="text-sm text-[#4A4036] leading-relaxed font-light">
-                    "气机{selectedRhythm === 'fast' ? '浮动' : selectedRhythm === 'slow' ? '沉静' : '平稳'}，
-                    身心{energyLevel === 'high' ? '充盈' : '需养'}。
-                    宜{selectedRhythm === 'fast' ? '果断行动' : '静观其变'}，
-                    {energyLevel === 'low' ? '切勿强求' : '顺势而为'}。"
-                  </p>
                 </div>
 
                 <button

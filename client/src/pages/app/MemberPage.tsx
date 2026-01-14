@@ -2,40 +2,37 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Crown, Check, Lock, User, Calendar, MapPin, ChevronRight, LogOut } from "lucide-react";
 import { toast } from "sonner";
-
-// Mock User Data
-interface UserProfile {
-  name: string;
-  birthDate: string;
-  birthTime: string;
-  birthCity: string;
-}
+import { useUser, UserProfile } from "@/contexts/UserContext";
 
 export default function MemberPage() {
-  const [isMember, setIsMember] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isLoggedIn, isMember, profile, login, logout, toggleMember } = useUser();
   const [showLogin, setShowLogin] = useState(false);
-  const [profile, setProfile] = useState<UserProfile>({
+  const [tempProfile, setTempProfile] = useState<UserProfile>({
     name: "",
     birthDate: "",
     birthTime: "",
     birthCity: ""
   });
 
-  const toggleMember = () => {
+  const handleToggleMember = () => {
     if (!isLoggedIn) {
       setShowLogin(true);
       return;
     }
-    setIsMember(!isMember);
+    toggleMember();
     toast.success(isMember ? "已取消订阅" : "欢迎加入万物会员");
   };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoggedIn(true);
+    login(tempProfile);
     setShowLogin(false);
     toast.success("登录成功");
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast.success("已退出登录");
   };
 
   return (
@@ -64,11 +61,7 @@ export default function MemberPage() {
           </div>
           {isLoggedIn && (
             <button 
-              onClick={() => {
-                setIsLoggedIn(false);
-                setIsMember(false);
-                toast.success("已退出登录");
-              }}
+              onClick={handleLogout}
               className="p-2 rounded-full hover:bg-[#4A4036]/5 transition-colors"
             >
               <LogOut className="w-4 h-4 text-[#8C8478]" />
@@ -129,7 +122,7 @@ export default function MemberPage() {
             </div>
 
             <button
-              onClick={toggleMember}
+              onClick={handleToggleMember}
               className={`w-full py-3 rounded-xl text-xs tracking-[0.2em] transition-colors ${
                 isMember 
                   ? 'bg-[#F9F9F7]/10 text-[#F9F9F7] hover:bg-[#F9F9F7]/20' 
@@ -202,8 +195,8 @@ export default function MemberPage() {
                     <input 
                       type="text" 
                       required
-                      value={profile.name}
-                      onChange={e => setProfile({...profile, name: e.target.value})}
+                      value={tempProfile.name}
+                      onChange={e => setTempProfile({...tempProfile, name: e.target.value})}
                       className="w-full bg-[#F9F9F7]/50 border border-[#4A4036]/10 rounded-xl py-3 pl-10 pr-4 text-sm text-[#4A4036] focus:outline-none focus:border-[#4A4036]/30"
                       placeholder="如何称呼您"
                     />
@@ -217,8 +210,8 @@ export default function MemberPage() {
                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4A4036]/40" />
                       <input 
                         type="date" 
-                        value={profile.birthDate}
-                        onChange={e => setProfile({...profile, birthDate: e.target.value})}
+                        value={tempProfile.birthDate}
+                        onChange={e => setTempProfile({...tempProfile, birthDate: e.target.value})}
                         className="w-full bg-[#F9F9F7]/50 border border-[#4A4036]/10 rounded-xl py-3 pl-10 pr-4 text-sm text-[#4A4036] focus:outline-none focus:border-[#4A4036]/30"
                       />
                     </div>
@@ -227,8 +220,8 @@ export default function MemberPage() {
                     <label className="text-xs text-[#4A4036] tracking-widest block">出生时间</label>
                     <input 
                       type="time" 
-                      value={profile.birthTime}
-                      onChange={e => setProfile({...profile, birthTime: e.target.value})}
+                      value={tempProfile.birthTime}
+                      onChange={e => setTempProfile({...tempProfile, birthTime: e.target.value})}
                       className="w-full bg-[#F9F9F7]/50 border border-[#4A4036]/10 rounded-xl py-3 px-4 text-sm text-[#4A4036] focus:outline-none focus:border-[#4A4036]/30"
                     />
                   </div>
@@ -240,8 +233,8 @@ export default function MemberPage() {
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4A4036]/40" />
                     <input 
                       type="text" 
-                      value={profile.birthCity}
-                      onChange={e => setProfile({...profile, birthCity: e.target.value})}
+                      value={tempProfile.birthCity}
+                      onChange={e => setTempProfile({...tempProfile, birthCity: e.target.value})}
                       className="w-full bg-[#F9F9F7]/50 border border-[#4A4036]/10 rounded-xl py-3 pl-10 pr-4 text-sm text-[#4A4036] focus:outline-none focus:border-[#4A4036]/30"
                       placeholder="例如：北京"
                     />

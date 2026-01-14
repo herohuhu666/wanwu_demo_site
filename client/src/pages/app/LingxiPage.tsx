@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ChevronRight } from "lucide-react";
+import { Send, ChevronRight, Lock } from "lucide-react";
+import { useUser } from "@/contexts/UserContext";
+import { toast } from "sonner";
 
 export default function LingxiPage() {
+  const { dailyRecord, profile, isMember } = useUser();
   const [input, setInput] = useState("");
   const [result, setResult] = useState<null | {
     symbol: string;
@@ -10,19 +13,53 @@ export default function LingxiPage() {
     interpretation: string;
   }>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [dailyCount, setDailyCount] = useState(0);
 
   const handleAsk = () => {
     if (!input.trim()) return;
+    
+    // Check daily limit for non-members
+    if (!isMember && dailyCount >= 3) {
+      toast.error("今日灵犀次数已尽，请明日再来或升级会员");
+      return;
+    }
+
     setIsLoading(true);
     
-    // Mock API delay
+    // Mock Logic: Generate response based on Daily State & Profile
     setTimeout(() => {
+      const state = dailyRecord?.state || 'steady';
+      let interpretation = "";
+      let symbol = "";
+      let gua = "";
+
+      // Logic based on Daily State
+      if (state === 'advance') {
+        symbol = "风起云涌";
+        gua = "乾为天";
+        interpretation = `鉴于今日势头为“进”，且${profile.name ? `阁下(${profile.name})` : '阁下'}精力充沛。当下之象，如顺水行舟。宜积极进取，把握良机。细节之中藏有转机，大胆尝试，方能洞察先机。`;
+      } else if (state === 'retreat') {
+        symbol = "山雨欲来";
+        gua = "艮为山";
+        interpretation = `鉴于今日势头为“收”，${profile.name ? `阁下(${profile.name})` : '阁下'}宜静不宜动。当下之象，如山止于前。宜韬光养晦，内观自省。暂避锋芒，积蓄力量，待时而动。`;
+      } else {
+        symbol = "平湖秋月";
+        gua = "坤为地";
+        interpretation = `鉴于今日势头为“稳”，${profile.name ? `阁下(${profile.name})` : '阁下'}心境平和。当下之象，如大地承载万物。宜稳扎稳打，步步为营。不急不躁，顺其自然，方得始终。`;
+      }
+
+      // Append profile influence if available
+      if (profile.birthCity) {
+        interpretation += ` 考虑到阁下生于${profile.birthCity}，此地风土亦助长此势。`;
+      }
+
       setResult({
-        symbol: "风起云涌",
-        gua: "巽为风",
-        interpretation: "当下之势，如风行草上。宜顺势而为，不可强求。细节之中藏有转机，静观其变，方能洞察先机。"
+        symbol,
+        gua,
+        interpretation
       });
       setIsLoading(false);
+      setDailyCount(prev => prev + 1);
     }, 2000);
   };
 
@@ -68,7 +105,7 @@ export default function LingxiPage() {
                   className="w-full bg-transparent border-none resize-none text-[#4A4036] placeholder-[#8C8478]/60 text-lg leading-relaxed focus:ring-0 min-h-[120px] text-center"
                 />
                 
-                <div className="mt-6 flex justify-center">
+                <div className="mt-6 flex flex-col items-center gap-3">
                   <button
                     onClick={handleAsk}
                     disabled={!input.trim() || isLoading}
@@ -82,6 +119,12 @@ export default function LingxiPage() {
                       {!isLoading && <Send className="w-3 h-3 opacity-60" />}
                     </div>
                   </button>
+                  
+                  {!isMember && (
+                    <p className="text-[10px] text-[#8C8478]/60 tracking-wider flex items-center gap-1">
+                      今日剩余次数: {3 - dailyCount} <Lock className="w-3 h-3" />
+                    </p>
+                  )}
                 </div>
               </div>
             </motion.div>
