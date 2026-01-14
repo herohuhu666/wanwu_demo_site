@@ -252,9 +252,11 @@ export default function MeritPage() {
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
                         LOG_TYPES.find(t => t.type === log.type)?.color.replace('text-[#F9F9F7]', 'text-[#FAF9F6]').replace('bg-[#', 'bg-[#').replace(']', ']/80')
                       }`}>
-                        {LOG_TYPES.find(t => t.type === log.type)?.icon && (
-                          <item.icon className="w-4 h-4 text-white" />
-                        ) || LOG_TYPES.find(t => t.type === log.type)?.label[0]}
+                        {(() => {
+                          const typeConfig = LOG_TYPES.find(t => t.type === log.type);
+                          const Icon = typeConfig?.icon;
+                          return Icon ? <Icon className="w-4 h-4 text-[#FAF9F6]" /> : typeConfig?.label[0];
+                        })()}
                       </div>
                       <div>
                         <p className="text-[#2C2C2C] text-sm font-medium tracking-wide">{log.content}</p>
