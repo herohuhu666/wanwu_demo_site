@@ -146,7 +146,7 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
                       <Book className="w-5 h-5" />
                     </div>
                     <span className="text-xs text-[#2C2C2C] tracking-widest">灵犀</span>
-                    <span className="text-[10px] text-[#8C8478] mt-1">{archives.filter(a => a.type === 'insight').length} 条</span>
+                    <span className="text-[10px] text-[#8C8478] mt-1">{archives?.filter(a => a.type === 'insight').length || 0} 条</span>
                   </button>
                 </DialogTrigger>
                 <DialogContent className="bg-[#FAF9F6] border border-[#789262]/20 max-w-[320px] max-h-[80vh] flex flex-col">
@@ -155,7 +155,7 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
                   </DialogHeader>
                   <ScrollArea className="flex-1 pr-4">
                     <div className="space-y-4 py-4">
-                      {archives.filter(a => a.type === 'insight').length > 0 ? (
+                      {archives?.filter(a => a.type === 'insight').length > 0 ? (
                         archives.filter(a => a.type === 'insight').map((a: any, i: number) => (
                           <div key={i} className="p-4 rounded-xl bg-[#2C2C2C]/5 border border-[#2C2C2C]/10">
                             <p className="text-sm font-medium text-[#2C2C2C] mb-2">{a.title}</p>
@@ -177,7 +177,7 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
                       <Hexagon className="w-5 h-5" />
                     </div>
                     <span className="text-xs text-[#2C2C2C] tracking-widest">乾坤</span>
-                    <span className="text-[10px] text-[#8C8478] mt-1">{archives.filter(a => a.type === 'ritual').length} 条</span>
+                    <span className="text-[10px] text-[#8C8478] mt-1">{archives?.filter(a => a.type === 'ritual').length || 0} 条</span>
                   </button>
                 </DialogTrigger>
                 <DialogContent className="bg-[#FAF9F6] border border-[#789262]/20 max-w-[320px] max-h-[80vh] flex flex-col">
@@ -186,7 +186,7 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
                   </DialogHeader>
                   <ScrollArea className="flex-1 pr-4">
                     <div className="space-y-4 py-4">
-                      {archives.filter(a => a.type === 'ritual').length > 0 ? (
+                      {archives?.filter(a => a.type === 'ritual').length > 0 ? (
                         archives.filter(a => a.type === 'ritual').map((a: any, i: number) => (
                           <div key={i} className="p-4 rounded-xl bg-[#2C2C2C]/5 border border-[#2C2C2C]/10">
                             <div className="flex justify-between items-center mb-2">
@@ -211,7 +211,7 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
                       <Heart className="w-5 h-5" />
                     </div>
                     <span className="text-xs text-[#2C2C2C] tracking-widest">遗泽</span>
-                    <span className="text-[10px] text-[#8C8478] mt-1">{archives.filter(a => a.type === 'gift').length} 条</span>
+                    <span className="text-[10px] text-[#8C8478] mt-1">{archives?.filter(a => a.type === 'gift').length || 0} 条</span>
                   </button>
                 </DialogTrigger>
                 <DialogContent className="bg-[#FAF9F6] border border-[#789262]/20 max-w-[320px] max-h-[80vh] flex flex-col">
@@ -220,7 +220,7 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
                   </DialogHeader>
                   <ScrollArea className="flex-1 pr-4">
                     <div className="space-y-4 py-4">
-                      {archives.filter(a => a.type === 'gift').length > 0 ? (
+                      {archives?.filter(a => a.type === 'gift').length > 0 ? (
                         archives.filter(a => a.type === 'gift').map((a: any, i: number) => (
                           <div key={i} className="p-4 rounded-xl bg-[#2C2C2C]/5 border border-[#2C2C2C]/10">
                             <p className="text-sm font-medium text-[#2C2C2C] mb-2">{a.title}</p>
