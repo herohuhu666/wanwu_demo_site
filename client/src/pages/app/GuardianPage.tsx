@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sun, Shield, Sparkles, Activity, Moon, Battery, AlertTriangle, CheckCircle2, X } from "lucide-react";
+import { Sun, Shield, Sparkles, Activity, Moon, Battery, AlertTriangle, CheckCircle2, X, Flame, Timer } from "lucide-react";
 import { toast } from "sonner";
 import { useUser, DailyState, EnergyLevel, SleepQuality } from "@/contexts/UserContext";
 
@@ -28,6 +28,11 @@ export default function GuardianPage() {
   const [energyLevel, setEnergyLevel] = useState<EnergyLevel>('medium');
   const [sleepQuality, setSleepQuality] = useState<SleepQuality>('fair');
 
+  // Meditation State
+  const [showMeditation, setShowMeditation] = useState(false);
+  const [meditationTime, setMeditationTime] = useState(0);
+  const [isMeditating, setIsMeditating] = useState(false);
+
   // Mock: Check if within 08:30 - 24:00
   const isLightUpTime = () => {
     const now = new Date();
@@ -53,6 +58,26 @@ export default function GuardianPage() {
     return () => clearInterval(timer);
   }, []);
 
+  // Meditation Timer
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isMeditating) {
+      interval = setInterval(() => {
+        setMeditationTime(prev => {
+          if (prev >= 900) { // 15 minutes (one incense stick)
+            clearInterval(interval);
+            setIsMeditating(false);
+            addMerit(5);
+            toast.success("一柱香时间已到，功德+5");
+            return 900;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isMeditating]);
+
   const triggerLegacyCapsule = () => {
     const contents = ["专属自省提示", "轻卦象箴言", "补签卡×1"];
     const randomContent = contents[Math.floor(Math.random() * contents.length)];
@@ -75,6 +100,12 @@ export default function GuardianPage() {
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const formatMeditationTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
   const handleIgniteClick = () => {
@@ -132,6 +163,13 @@ export default function GuardianPage() {
             <h1 className="text-3xl tracking-[0.2em] font-medium mb-2 font-kai">守望</h1>
             <p className="text-xs text-[#8C8478] tracking-[0.3em] uppercase">Guardian</p>
           </motion.div>
+
+          <button 
+            onClick={() => setShowMeditation(true)}
+            className="p-2 rounded-full bg-[#2C2C2C]/5 hover:bg-[#2C2C2C]/10 transition-colors"
+          >
+            <Flame className="w-5 h-5 text-[#789262]" />
+          </button>
         </div>
 
         {/* 命灯核心区 */}
@@ -279,19 +317,18 @@ export default function GuardianPage() {
                 <div className="w-full h-[1px] bg-[#2C2C2C]/10 my-6" />
 
                 <div className="mb-8">
-                  <div className="flex items-center justify-center gap-2 text-[#8C8478] mb-2">
-                    <span className="text-xs tracking-widest">随机机缘</span>
+                  <div className="flex items-center justify-center gap-2 text-[#8C8478] mb-3">
+                    <Activity className="w-4 h-4" />
+                    <span className="text-sm tracking-widest">随机掉落</span>
                   </div>
-                  <div className="bg-[#789262]/10 py-3 px-4 rounded-lg border border-[#789262]/20">
-                    <p className="text-[#2C2C2C] tracking-widest font-kai">{legacyContent}</p>
-                  </div>
+                  <p className="text-base text-[#2C2C2C] font-kai">{legacyContent}</p>
                 </div>
 
                 <button
                   onClick={handleLegacyClaim}
-                  className="w-full py-3 bg-[#789262] text-[#FAF9F6] text-sm tracking-[0.2em] rounded-xl hover:bg-[#789262]/90 transition-colors shadow-lg shadow-[#789262]/20"
+                  className="w-full bg-[#2C2C2C] text-[#FAF9F6] py-4 rounded-xl text-sm tracking-[0.3em] hover:bg-[#2C2C2C]/90 transition-colors shadow-lg shadow-[#2C2C2C]/20"
                 >
-                  收入囊中
+                  领取遗泽
                 </button>
               </div>
             </motion.div>
@@ -299,104 +336,189 @@ export default function GuardianPage() {
         )}
       </AnimatePresence>
 
-      {/* 每日主线流程弹窗 (保持原有逻辑，仅微调样式) */}
+      {/* 每日签到弹窗 */}
       <AnimatePresence>
         {showDailyCheckIn && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 bg-[#FAF9F6]/95 backdrop-blur-xl flex items-center justify-center p-6"
+            className="absolute inset-0 z-50 bg-[#2C2C2C]/40 backdrop-blur-sm flex items-center justify-center p-6"
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="w-full max-w-sm"
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-[#FAF9F6] w-full max-w-sm rounded-3xl p-8 shadow-2xl relative overflow-hidden"
             >
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-medium tracking-[0.2em] text-[#2C2C2C] mb-2 font-kai">今日已在</h3>
-                <p className="text-xs text-[#8C8478] tracking-widest">Daily Check-in</p>
-              </div>
+              <button 
+                onClick={() => setShowDailyCheckIn(false)}
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-[#2C2C2C]/5"
+              >
+                <X className="w-5 h-5 text-[#8C8478]" />
+              </button>
 
-              <div className="space-y-8">
-                {/* 1. 状态选择 */}
+              <h2 className="text-2xl font-medium tracking-[0.2em] text-[#2C2C2C] mb-2 font-kai text-center">今日状态</h2>
+              <p className="text-xs text-[#8C8478] text-center mb-8 tracking-wider">记录当下的身心能量</p>
+
+              <div className="space-y-6">
+                {/* 状态选择 */}
                 <div className="space-y-3">
-                  <p className="text-sm text-[#2C2C2C] tracking-widest text-center">今日状态</p>
+                  <label className="text-xs text-[#2C2C2C] tracking-widest uppercase flex items-center gap-2">
+                    <Activity className="w-3 h-3" /> 整体节奏
+                  </label>
                   <div className="grid grid-cols-3 gap-3">
-                    {(['steady', 'advance', 'retreat'] as const).map((s) => (
+                    {[
+                      { id: 'steady', label: '稳', desc: '持重' },
+                      { id: 'advance', label: '进', desc: '开拓' },
+                      { id: 'retreat', label: '收', desc: '沉淀' }
+                    ].map((item) => (
                       <button
-                        key={s}
-                        onClick={() => setSelectedState(s)}
-                        className={`py-3 rounded-xl text-xs tracking-widest transition-all border ${
-                          selectedState === s
-                            ? 'bg-[#2C2C2C] text-[#FAF9F6] border-[#2C2C2C]'
-                            : 'bg-transparent text-[#2C2C2C] border-[#2C2C2C]/20 hover:border-[#2C2C2C]'
+                        key={item.id}
+                        onClick={() => setSelectedState(item.id as DailyState)}
+                        className={`p-3 rounded-xl border transition-all ${
+                          selectedState === item.id 
+                            ? 'bg-[#2C2C2C] text-[#FAF9F6] border-[#2C2C2C]' 
+                            : 'bg-transparent border-[#2C2C2C]/10 text-[#2C2C2C] hover:bg-[#2C2C2C]/5'
                         }`}
                       >
-                        {s === 'steady' ? '稳（守）' : s === 'advance' ? '进（行）' : '收（省）'}
+                        <div className="text-lg font-kai mb-1">{item.label}</div>
+                        <div className="text-[10px] opacity-60">{item.desc}</div>
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* 2. 状态感知 */}
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <Battery className="w-4 h-4 text-[#2C2C2C]/60" />
-                        <span className="text-xs text-[#2C2C2C] tracking-widest">精力感受</span>
-                      </div>
-                      <div className="flex gap-2">
-                        {(['low', 'medium', 'high'] as const).map((l) => (
-                          <button
-                            key={l}
-                            onClick={() => setEnergyLevel(l)}
-                            className={`w-8 h-8 rounded-full text-[10px] flex items-center justify-center transition-all border ${
-                              energyLevel === l
-                                ? 'bg-[#2C2C2C] text-[#FAF9F6] border-[#2C2C2C]'
-                                : 'bg-transparent text-[#2C2C2C] border-[#2C2C2C]/20'
-                            }`}
-                          >
-                            {l === 'low' ? '低' : l === 'medium' ? '中' : '高'}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                {/* 能量水平 */}
+                <div className="space-y-3">
+                  <label className="text-xs text-[#2C2C2C] tracking-widest uppercase flex items-center gap-2">
+                    <Battery className="w-3 h-3" /> 能量水平
+                  </label>
+                  <div className="flex gap-2 bg-[#2C2C2C]/5 p-1 rounded-xl">
+                    {[
+                      { id: 'low', label: '低' },
+                      { id: 'medium', label: '中' },
+                      { id: 'high', label: '高' }
+                    ].map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => setEnergyLevel(item.id as EnergyLevel)}
+                        className={`flex-1 py-2 rounded-lg text-xs transition-all ${
+                          energyLevel === item.id 
+                            ? 'bg-[#FAF9F6] text-[#2C2C2C] shadow-sm' 
+                            : 'text-[#8C8478] hover:text-[#2C2C2C]'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
                   </div>
+                </div>
 
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <Moon className="w-4 h-4 text-[#2C2C2C]/60" />
-                        <span className="text-xs text-[#2C2C2C] tracking-widest">睡眠感受</span>
-                      </div>
-                      <div className="flex gap-2">
-                        {(['poor', 'fair', 'good'] as const).map((q) => (
-                          <button
-                            key={q}
-                            onClick={() => setSleepQuality(q)}
-                            className={`w-8 h-8 rounded-full text-[10px] flex items-center justify-center transition-all border ${
-                              sleepQuality === q
-                                ? 'bg-[#2C2C2C] text-[#FAF9F6] border-[#2C2C2C]'
-                                : 'bg-transparent text-[#2C2C2C] border-[#2C2C2C]/20'
-                            }`}
-                          >
-                            {q === 'poor' ? '差' : q === 'fair' ? '平' : '好'}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                {/* 睡眠质量 */}
+                <div className="space-y-3">
+                  <label className="text-xs text-[#2C2C2C] tracking-widest uppercase flex items-center gap-2">
+                    <Moon className="w-3 h-3" /> 昨夜睡眠
+                  </label>
+                  <div className="flex gap-2 bg-[#2C2C2C]/5 p-1 rounded-xl">
+                    {[
+                      { id: 'poor', label: '差' },
+                      { id: 'fair', label: '一般' },
+                      { id: 'good', label: '优' }
+                    ].map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => setSleepQuality(item.id as SleepQuality)}
+                        className={`flex-1 py-2 rounded-lg text-xs transition-all ${
+                          sleepQuality === item.id 
+                            ? 'bg-[#FAF9F6] text-[#2C2C2C] shadow-sm' 
+                            : 'text-[#8C8478] hover:text-[#2C2C2C]'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
                 <button
                   onClick={handleDailySubmit}
-                  className="w-full py-4 bg-[#789262] text-[#FAF9F6] rounded-xl text-sm tracking-[0.2em] hover:bg-[#789262]/90 transition-colors shadow-lg shadow-[#789262]/20"
+                  className="w-full bg-[#2C2C2C] text-[#FAF9F6] py-4 rounded-xl text-sm tracking-[0.3em] hover:bg-[#2C2C2C]/90 transition-colors mt-4 shadow-lg shadow-[#2C2C2C]/20"
                 >
-                  确认记录
+                  记录并点亮
                 </button>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 冥想弹窗 */}
+      <AnimatePresence>
+        {showMeditation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 bg-[#2C2C2C]/90 backdrop-blur-md flex items-center justify-center p-6"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full h-full flex flex-col items-center justify-center text-[#FAF9F6] relative"
+            >
+              <button 
+                onClick={() => {
+                  setShowMeditation(false);
+                  setIsMeditating(false);
+                  setMeditationTime(0);
+                }}
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-[#FAF9F6]/10"
+              >
+                <X className="w-6 h-6 text-[#FAF9F6]/60" />
+              </button>
+
+              <div className="mb-12 text-center">
+                <h2 className="text-3xl font-kai tracking-[0.3em] mb-2">一柱香</h2>
+                <p className="text-xs text-[#FAF9F6]/40 tracking-widest">Incense Meditation</p>
+              </div>
+
+              {/* 香烟动画容器 */}
+              <div className="relative w-2 h-64 bg-[#FAF9F6]/10 rounded-full mb-12 overflow-hidden">
+                <motion.div 
+                  className="absolute bottom-0 left-0 right-0 bg-[#E0C38C] shadow-[0_0_20px_rgba(224,195,140,0.5)]"
+                  initial={{ height: "100%" }}
+                  animate={{ height: isMeditating ? "0%" : "100%" }}
+                  transition={{ duration: 900, ease: "linear" }} // 15 minutes
+                />
+                {/* 燃烧点光效 */}
+                {isMeditating && (
+                  <motion.div 
+                    className="absolute left-1/2 -translate-x-1/2 w-4 h-4 bg-[#FF4D4D] rounded-full blur-sm"
+                    initial={{ bottom: "100%" }}
+                    animate={{ bottom: "0%" }}
+                    transition={{ duration: 900, ease: "linear" }}
+                  />
+                )}
+              </div>
+
+              <div className="text-4xl font-light tracking-widest font-variant-numeric mb-12">
+                {formatMeditationTime(900 - meditationTime)}
+              </div>
+
+              {!isMeditating ? (
+                <button
+                  onClick={() => setIsMeditating(true)}
+                  className="px-12 py-4 bg-[#FAF9F6] text-[#2C2C2C] rounded-full text-sm tracking-[0.3em] hover:bg-[#FAF9F6]/90 transition-colors"
+                >
+                  开始静坐
+                </button>
+              ) : (
+                <p className="text-sm text-[#FAF9F6]/40 tracking-widest animate-pulse">
+                  静心 · 勿扰
+                </p>
+              )}
             </motion.div>
           </motion.div>
         )}

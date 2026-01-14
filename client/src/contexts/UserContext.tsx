@@ -29,6 +29,15 @@ export interface InsightRecord {
   isDeep: boolean; // 是否为深度解读
 }
 
+export interface RitualRecord {
+  id: string;
+  date: string;
+  title: string;
+  content: string;
+  tags: string[];
+  isDeep: boolean;
+}
+
 interface UserContextType {
   isLoggedIn: boolean;
   isMember: boolean;
@@ -37,6 +46,8 @@ interface UserContextType {
   dailyRecord: DailyRecord | null;
   insightCount: number; // 今日已用免费次数
   insightHistory: InsightRecord[];
+  ritualHistory: RitualRecord[];
+  archives: any[]; // Combined history for convenience
   
   login: (profile: UserProfile) => void;
   logout: () => void;
@@ -45,6 +56,7 @@ interface UserContextType {
   consumeMerit: (amount: number) => boolean;
   submitDailyRecord: (state: DailyState, energy: EnergyLevel, sleep: SleepQuality) => void;
   addInsightRecord: (record: Omit<InsightRecord, 'id' | 'date'>) => void;
+  addRitualRecord: (record: Omit<RitualRecord, 'id' | 'date'>) => void;
   checkInsightAvailability: () => { available: boolean; reason: 'free' | 'merit' | 'member' | 'none' };
 }
 
@@ -64,6 +76,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [dailyRecord, setDailyRecord] = useState<DailyRecord | null>(null);
   const [insightCount, setInsightCount] = useState(0);
   const [insightHistory, setInsightHistory] = useState<InsightRecord[]>([]);
+  const [ritualHistory, setRitualHistory] = useState<RitualRecord[]>([]);
 
   // Mock: Load from local storage on mount
   useEffect(() => {
@@ -87,6 +100,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const savedHistory = localStorage.getItem('wanwu_insight_history');
     if (savedHistory) {
       setInsightHistory(JSON.parse(savedHistory));
+    }
+
+    const savedRitualHistory = localStorage.getItem('wanwu_ritual_history');
+    if (savedRitualHistory) {
+      setRitualHistory(JSON.parse(savedRitualHistory));
     }
   }, []);
 
@@ -129,7 +147,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
     setDailyRecord(record);
     localStorage.setItem('wanwu_daily_' + new Date().toDateString(), JSON.stringify(record));
-    addMerit(2); // Daily check-in merit (updated to +2 as per new requirement)
+    addMerit(2); // Daily check-in merit
   };
 
   const addInsightRecord = (recordData: Omit<InsightRecord, 'id' | 'date'>) => {
@@ -151,6 +169,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const addRitualRecord = (recordData: Omit<RitualRecord, 'id' | 'date'>) => {
+    const newRecord: RitualRecord = {
+      id: Date.now().toString(),
+      date: new Date().toISOString(),
+      ...recordData
+    };
+    
+    const newHistory = [newRecord, ...ritualHistory];
+    setRitualHistory(newHistory);
+    localStorage.setItem('wanwu_ritual_history', JSON.stringify(newHistory));
+  };
+
   const checkInsightAvailability = (): { available: boolean; reason: 'free' | 'merit' | 'member' | 'none' } => {
     if (isMember) return { available: true, reason: 'member' };
     if (insightCount < 3) return { available: true, reason: 'free' };
@@ -167,6 +197,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       dailyRecord,
       insightCount,
       insightHistory,
+      ritualHistory,
+      archives: [
+        ...insightHistory.map(h => ({ ...h, type: 'insight', title: h.question, content: h.answer })),
+        ...ritualHistory.map(h => ({ ...h, type: 'ritual', title: h.title, content: h.content })),
+        // Add gift history if implemented later
+      ],
       login,
       logout,
       toggleMember,
@@ -174,6 +210,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       consumeMerit,
       submitDailyRecord,
       addInsightRecord,
+      addRitualRecord,
       checkInsightAvailability
     }}>
       {children}
