@@ -137,14 +137,17 @@ export default function LingxiPage() {
   };
 
   return (
-    <div className="h-full flex flex-col relative overflow-hidden font-serif bg-[#FAF9F6]">
-      {/* 背景纹理 */}
-      <div className="absolute inset-0 z-0 opacity-15 pointer-events-none" 
-           style={{ backgroundImage: 'url(/images/paper_texture.jpg)' }} />
-      <div className="absolute inset-0 z-0 opacity-5 pointer-events-none bg-[url('/images/bamboo_bg.png')] bg-no-repeat bg-right-bottom bg-contain" />
-
-      {/* 顶部遮罩 */}
-      <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-[#FAF9F6] to-transparent z-10" />
+    <div className="h-full flex flex-col relative overflow-hidden font-serif text-white/90 bg-black">
+      {/* 背景图片 */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="/images/lingxi_bg.png" 
+          alt="Lingxi Background" 
+          className="w-full h-full object-cover opacity-80"
+        />
+        {/* 渐变遮罩，确保文字可读性 */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
+      </div>
 
       {/* 内容区域 */}
       <div className="relative z-20 flex-1 flex flex-col px-6 pt-16 pb-24 overflow-y-auto scrollbar-hide">
@@ -152,14 +155,14 @@ export default function LingxiPage() {
         {/* 顶部栏 */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-2xl text-[#2C2C2C] font-medium tracking-[0.2em]">灵犀</h1>
-            <p className="text-[10px] text-[#8C8478] tracking-[0.3em] uppercase mt-1">Insight</p>
+            <h1 className="text-2xl text-white font-medium tracking-[0.2em]">灵犀</h1>
+            <p className="text-[10px] text-white/60 tracking-[0.3em] uppercase mt-1">Insight</p>
           </div>
           <button 
             onClick={() => setShowHistory(true)}
-            className="p-2 rounded-full hover:bg-[#2C2C2C]/5 transition-colors"
+            className="p-2 rounded-full hover:bg-white/10 transition-colors backdrop-blur-sm"
           >
-            <History className="w-5 h-5 text-[#2C2C2C]/60" />
+            <History className="w-5 h-5 text-white/60" />
           </button>
         </div>
 
@@ -174,11 +177,11 @@ export default function LingxiPage() {
               className="flex-1 flex flex-col justify-center"
             >
               <div className="text-center mb-12">
-                <div className="w-16 h-16 mx-auto bg-[#789262]/10 rounded-full flex items-center justify-center mb-6">
-                  <MessageCircle className="w-8 h-8 text-[#789262]" />
+                <div className="w-16 h-16 mx-auto bg-[#FFD700]/10 rounded-full flex items-center justify-center mb-6 border border-[#FFD700]/20">
+                  <MessageCircle className="w-8 h-8 text-[#FFD700]" />
                 </div>
-                <h2 className="text-xl text-[#2C2C2C] tracking-widest font-light">心有所惑，叩问灵犀</h2>
-                <p className="text-xs text-[#8C8478] mt-3 tracking-wider">请选择问询方向</p>
+                <h2 className="text-xl text-white tracking-widest font-light">心有所惑，叩问灵犀</h2>
+                <p className="text-xs text-white/60 mt-3 tracking-wider">请选择问询方向</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -186,10 +189,10 @@ export default function LingxiPage() {
                   <button
                     key={cat.id}
                     onClick={() => handleCategorySelect(cat.id)}
-                    className="p-4 rounded-xl border border-[#2C2C2C]/10 hover:border-[#789262]/50 hover:bg-[#789262]/5 transition-all group flex flex-col items-center gap-2"
+                    className="p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-[#FFD700]/30 transition-all group flex flex-col items-center gap-2 backdrop-blur-sm"
                   >
                     <span className="text-2xl filter grayscale group-hover:grayscale-0 transition-all">{cat.icon}</span>
-                    <span className="text-sm text-[#2C2C2C] tracking-widest group-hover:text-[#789262]">{cat.label}</span>
+                    <span className="text-sm text-white/80 tracking-widest group-hover:text-[#FFD700]">{cat.label}</span>
                   </button>
                 ))}
               </div>
@@ -207,17 +210,17 @@ export default function LingxiPage() {
             >
               <button 
                 onClick={() => setStep('category')}
-                className="self-start mb-6 text-xs text-[#8C8478] flex items-center gap-1 hover:text-[#2C2C2C]"
+                className="self-start mb-6 text-xs text-white/60 flex items-center gap-1 hover:text-white"
               >
                 <ChevronRight className="w-3 h-3 rotate-180" /> 返回分类
               </button>
 
               <div className="flex-1 flex flex-col justify-center">
-                <div className="bg-[#FAF9F6] rounded-2xl p-6 border border-[#2C2C2C]/10 shadow-sm relative">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-[#789262]/20 rounded-t-2xl" />
+                <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-lg relative">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-[#FFD700]/30 rounded-t-2xl" />
                   
                   <div className="text-center mb-6">
-                    <span className="text-xs text-[#789262] tracking-widest border border-[#789262]/30 px-3 py-1 rounded-full">
+                    <span className="text-xs text-[#FFD700] tracking-widest border border-[#FFD700]/30 px-3 py-1 rounded-full">
                       {CATEGORIES.find(c => c.id === selectedCategory)?.label}
                     </span>
                   </div>
@@ -226,14 +229,14 @@ export default function LingxiPage() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="请描述您的困惑..."
-                    className="w-full bg-transparent border-none resize-none text-[#2C2C2C] placeholder-[#8C8478]/40 text-base leading-relaxed focus:ring-0 min-h-[150px] text-center font-sans"
+                    className="w-full bg-transparent border-none resize-none text-white placeholder-white/30 text-base leading-relaxed focus:ring-0 min-h-[150px] text-center font-sans"
                   />
 
                   <div className="mt-8 flex flex-col items-center gap-4">
                     <button
                       onClick={handleAsk}
                       disabled={!input.trim() || isLoading}
-                      className="w-full py-3 bg-[#2C2C2C] text-[#FAF9F6] rounded-xl flex items-center justify-center gap-2 hover:bg-[#2C2C2C]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-3 bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/20 rounded-xl flex items-center justify-center gap-2 hover:bg-[#FFD700]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isLoading ? (
                         <span className="text-sm tracking-widest">感应中...</span>
@@ -246,11 +249,11 @@ export default function LingxiPage() {
                     </button>
 
                     {!isMember && (
-                      <div className="flex items-center gap-4 text-[10px] text-[#8C8478]">
+                      <div className="flex items-center gap-4 text-[10px] text-white/40">
                         <span className="flex items-center gap-1">
                           今日免费: {Math.max(0, 3 - insightCount)}/3
                         </span>
-                        <span className="w-[1px] h-3 bg-[#2C2C2C]/10" />
+                        <span className="w-[1px] h-3 bg-white/10" />
                         <span className="flex items-center gap-1">
                           功德兑换: 50/次
                         </span>
@@ -271,23 +274,23 @@ export default function LingxiPage() {
               className="flex-1 flex flex-col"
             >
               <div className={`flex-1 rounded-3xl p-8 border relative overflow-hidden flex flex-col ${
-                isMember ? 'bg-[#FAF9F6] border-[#789262]/30' : 'bg-[#FAF9F6] border-[#2C2C2C]/10'
+                isMember ? 'bg-white/10 border-[#FFD700]/30 backdrop-blur-md' : 'bg-white/5 border-white/10 backdrop-blur-md'
               }`}>
                 {/* 装饰 */}
                 <div className="absolute top-0 right-0 p-4 opacity-10">
-                  <Sparkles className="w-24 h-24 text-[#789262]" />
+                  <Sparkles className="w-24 h-24 text-[#FFD700]" />
                 </div>
 
                 <div className="relative z-10 flex-1">
                   <div className="flex items-center gap-2 mb-6">
-                    <div className="w-8 h-8 rounded-full bg-[#2C2C2C] flex items-center justify-center text-[#FAF9F6] text-xs font-serif">
+                    <div className="w-8 h-8 rounded-full bg-[#FFD700]/20 border border-[#FFD700]/30 flex items-center justify-center text-[#FFD700] text-xs font-serif">
                       灵
                     </div>
-                    <span className="text-xs text-[#8C8478] tracking-widest">灵犀指引</span>
+                    <span className="text-xs text-white/60 tracking-widest">灵犀指引</span>
                   </div>
 
-                  <div className="prose prose-stone max-w-none">
-                    <p className="text-[#2C2C2C] text-base leading-loose font-light whitespace-pre-wrap text-justify">
+                  <div className="prose prose-invert max-w-none">
+                    <p className="text-white/90 text-base leading-loose font-light whitespace-pre-wrap text-justify">
                       {result.answer}
                     </p>
                   </div>
