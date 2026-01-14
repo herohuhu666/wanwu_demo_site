@@ -96,14 +96,17 @@ export default function RitualPage() {
   };
 
   return (
-    <div className="h-full flex flex-col relative overflow-hidden font-serif text-[#2C2C2C] bg-[#FAF9F6]">
-      {/* 背景纹理 */}
-      <div className="absolute inset-0 z-0 opacity-15 pointer-events-none" 
-           style={{ backgroundImage: 'url(/images/paper_texture.jpg)' }} />
-      <div className="absolute inset-0 z-0 opacity-5 pointer-events-none bg-[url('/images/bagua_bg.png')] bg-no-repeat bg-center bg-contain" />
-      
-      {/* 顶部遮罩 */}
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#FAF9F6] to-transparent z-10" />
+    <div className="h-full flex flex-col relative overflow-hidden font-serif text-white/90 bg-black">
+      {/* 背景图片 */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="/images/qiankun_bg.png" 
+          alt="Qiankun Background" 
+          className="w-full h-full object-cover opacity-80"
+        />
+        {/* 渐变遮罩，确保文字可读性 */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
+      </div>
 
       {/* 内容区域 */}
       <div className="relative z-20 flex-1 flex flex-col px-8 pt-20 pb-24 overflow-y-auto scrollbar-hide">
@@ -115,15 +118,15 @@ export default function RitualPage() {
           className="mb-8 flex justify-between items-start"
         >
           <div>
-            <h1 className="text-3xl tracking-[0.2em] font-medium mb-2 font-kai">乾坤</h1>
-            <p className="text-xs text-[#8C8478] tracking-[0.3em] uppercase">Ritual</p>
+            <h1 className="text-3xl tracking-[0.2em] font-medium mb-2 font-kai text-white">乾坤</h1>
+            <p className="text-xs text-white/60 tracking-[0.3em] uppercase">Ritual</p>
           </div>
           {(yaos.length > 0 || mode) && !result && (
             <button 
               onClick={resetRitual}
-              className="p-2 rounded-full hover:bg-[#2C2C2C]/5 transition-colors"
+              className="p-2 rounded-full hover:bg-white/10 transition-colors backdrop-blur-sm"
             >
-              <RefreshCw className="w-4 h-4 text-[#8C8478]" />
+              <RefreshCw className="w-4 h-4 text-white/60" />
             </button>
           )}
         </motion.div>
@@ -142,13 +145,13 @@ export default function RitualPage() {
               >
                 <button
                   onClick={() => setMode('manual')}
-                  className="group relative overflow-hidden bg-[#FAF9F6] border border-[#789262]/30 rounded-2xl p-6 text-left hover:border-[#789262] transition-colors shadow-sm"
+                  className="group relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-6 text-left hover:bg-white/10 hover:border-[#FFD700]/30 transition-all backdrop-blur-sm"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-lg font-kai tracking-widest text-[#2C2C2C]">手动六摇</span>
-                    <Hand className="w-5 h-5 text-[#789262] opacity-60 group-hover:opacity-100 transition-opacity" />
+                    <span className="text-lg font-kai tracking-widest text-white/90">手动六摇</span>
+                    <Hand className="w-5 h-5 text-[#FFD700] opacity-60 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  <p className="text-xs text-[#8C8478] tracking-wide">诚心正意，手摇六次成卦</p>
+                  <p className="text-xs text-white/60 tracking-wide">诚心正意，手摇六次成卦</p>
                 </button>
 
                 <button
@@ -156,13 +159,13 @@ export default function RitualPage() {
                     setMode('auto');
                     handleAutoShake();
                   }}
-                  className="group relative overflow-hidden bg-[#FAF9F6] border border-[#789262]/30 rounded-2xl p-6 text-left hover:border-[#789262] transition-colors shadow-sm"
+                  className="group relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-6 text-left hover:bg-white/10 hover:border-[#FFD700]/30 transition-all backdrop-blur-sm"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-lg font-kai tracking-widest text-[#2C2C2C]">一键起卦</span>
-                    <Zap className="w-5 h-5 text-[#789262] opacity-60 group-hover:opacity-100 transition-opacity" />
+                    <span className="text-lg font-kai tracking-widest text-white/90">一键起卦</span>
+                    <Zap className="w-5 h-5 text-[#FFD700] opacity-60 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  <p className="text-xs text-[#8C8478] tracking-wide">灵机一动，快速感应成卦</p>
+                  <p className="text-xs text-white/60 tracking-wide">灵机一动，快速感应成卦</p>
                 </button>
               </motion.div>
             ) : !result ? (
@@ -181,12 +184,12 @@ export default function RitualPage() {
                       key={i} 
                       className={`h-3 w-full rounded-sm transition-all duration-500 ${
                         i < yaos.length 
-                          ? 'bg-[#2C2C2C] shadow-sm' 
-                          : 'bg-[#2C2C2C]/5 border border-[#2C2C2C]/10'
+                          ? 'bg-[#FFD700] shadow-[0_0_10px_rgba(255,215,0,0.3)]' 
+                          : 'bg-white/10 border border-white/10'
                       }`}
                     >
                       {i < yaos.length && yaos[i] === 0 && (
-                        <div className="w-8 h-full bg-[#FAF9F6] mx-auto border-x border-[#FAF9F6]" /> // Yin Yao gap
+                        <div className="w-8 h-full bg-black/80 mx-auto border-x border-black/80" /> // Yin Yao gap
                       )}
                     </div>
                   ))}
@@ -200,17 +203,17 @@ export default function RitualPage() {
                     } : {}}
                     transition={{ duration: 0.5, repeat: isShaking ? Infinity : 0 }}
                     onClick={handleManualShake}
-                    className="w-32 h-32 bg-[#FAF9F6] rounded-full border border-[#789262]/30 flex items-center justify-center cursor-pointer hover:bg-[#789262]/5 transition-colors shadow-lg shadow-[#789262]/10"
+                    className="w-32 h-32 bg-white/5 rounded-full border border-[#FFD700]/30 flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors shadow-[0_0_20px_rgba(255,215,0,0.1)] backdrop-blur-sm"
                   >
-                    <Hexagon className="w-10 h-10 text-[#2C2C2C] opacity-80" strokeWidth={1} />
+                    <Hexagon className="w-10 h-10 text-[#FFD700] opacity-80" strokeWidth={1} />
                   </motion.div>
                 )}
                 
                 <div className="mt-8 text-center">
-                  <p className="text-sm text-[#2C2C2C] tracking-[0.3em] font-medium mb-2">
+                  <p className="text-sm text-white tracking-[0.3em] font-medium mb-2">
                     {isShaking ? "感应天地..." : mode === 'auto' ? "正在起卦..." : `第 ${yaos.length + 1} 摇`}
                   </p>
-                  <p className="text-[10px] text-[#8C8478] tracking-widest">
+                  <p className="text-[10px] text-white/60 tracking-widest">
                     {yaos.length < 6 ? "诚心正意，静候卦成" : "卦象已成"}
                   </p>
                 </div>
@@ -223,7 +226,7 @@ export default function RitualPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="w-full h-full overflow-y-auto pb-20"
               >
-                <div className="bg-[#FAF9F6] rounded-3xl p-8 border border-[#789262]/20 shadow-xl text-center relative overflow-hidden">
+                <div className="bg-white/5 backdrop-blur-md rounded-3xl p-8 border border-white/10 shadow-xl text-center relative overflow-hidden">
                   {/* 装饰纹理 */}
                   <div className="absolute inset-0 opacity-10 bg-[url('/images/paper_texture.jpg')]" />
 
@@ -232,34 +235,34 @@ export default function RitualPage() {
                       {/* 极简卦象图 */}
                       <div className="w-16 mx-auto mb-4 flex flex-col-reverse gap-1">
                         {result.yaos.map((y, i) => (
-                          <div key={i} className="h-1.5 w-full bg-[#2C2C2C] rounded-sm relative">
-                             {y === 0 && <div className="absolute left-1/2 -translate-x-1/2 w-4 h-full bg-[#FAF9F6]" />}
+                          <div key={i} className="h-1.5 w-full bg-[#FFD700] rounded-sm relative shadow-[0_0_5px_rgba(255,215,0,0.3)]">
+                             {y === 0 && <div className="absolute left-1/2 -translate-x-1/2 w-4 h-full bg-black/80" />}
                           </div>
                         ))}
                       </div>
-                      <h2 className="text-2xl font-medium tracking-[0.3em] text-[#2C2C2C] font-kai">{result.name}</h2>
-                      <div className="mt-2 inline-block px-3 py-1 rounded-full border border-[#789262]/30 text-[10px] text-[#789262] tracking-widest">
+                      <h2 className="text-2xl font-medium tracking-[0.3em] text-white font-kai">{result.name}</h2>
+                      <div className="mt-2 inline-block px-3 py-1 rounded-full border border-[#FFD700]/30 text-[10px] text-[#FFD700] tracking-widest">
                         {result.tag}
                       </div>
                     </div>
 
-                    <div className="w-8 h-[1px] bg-[#2C2C2C]/10 mx-auto mb-6" />
+                    <div className="w-8 h-[1px] bg-white/10 mx-auto mb-6" />
 
                     <div className="space-y-8 text-left">
                       <div>
-                        <p className="text-xs text-[#8C8478] tracking-widest mb-2 uppercase flex items-center gap-2">
-                          <span className="w-1 h-1 rounded-full bg-[#789262]" /> 卦辞
+                        <p className="text-xs text-white/60 tracking-widest mb-2 uppercase flex items-center gap-2">
+                          <span className="w-1 h-1 rounded-full bg-[#FFD700]" /> 卦辞
                         </p>
-                        <p className="text-[#2C2C2C] text-sm leading-loose tracking-wide font-kai">
+                        <p className="text-white/90 text-sm leading-loose tracking-wide font-kai">
                           {result.desc}
                         </p>
                       </div>
                       
                       <div>
-                        <p className="text-xs text-[#8C8478] tracking-widest mb-2 uppercase flex items-center gap-2">
-                          <span className="w-1 h-1 rounded-full bg-[#789262]" /> 象曰
+                        <p className="text-xs text-white/60 tracking-widest mb-2 uppercase flex items-center gap-2">
+                          <span className="w-1 h-1 rounded-full bg-[#FFD700]" /> 象曰
                         </p>
-                        <p className="text-[#2C2C2C]/80 text-sm leading-loose tracking-wide font-light text-justify">
+                        <p className="text-white/80 text-sm leading-loose tracking-wide font-light text-justify">
                           {result.wisdom}
                         </p>
                       </div>
