@@ -1,13 +1,25 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sun, Shield, Sparkles } from "lucide-react";
+import { Sun, Shield, Sparkles, Activity, Moon, Battery, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+
+// Types for Daily Mainline
+type RhythmType = 'slow' | 'normal' | 'fast';
+type EnergyLevel = 'low' | 'medium' | 'high';
+type SleepQuality = 'poor' | 'fair' | 'good';
 
 export default function GuardianPage() {
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(259200); // 72 hours
   const [showWeather, setShowWeather] = useState(false);
   const [showFortune, setShowFortune] = useState(false);
+  
+  // Daily Mainline State
+  const [dailyCheckInDone, setDailyCheckInDone] = useState(false);
+  const [showDailyCheckIn, setShowDailyCheckIn] = useState(false);
+  const [selectedRhythm, setSelectedRhythm] = useState<RhythmType>('normal');
+  const [energyLevel, setEnergyLevel] = useState<EnergyLevel>('medium');
+  const [sleepQuality, setSleepQuality] = useState<SleepQuality>('fair');
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -26,8 +38,19 @@ export default function GuardianPage() {
   const handleIgnite = () => {
     setIsActive(true);
     setTimeLeft(259200);
-    toast.success("命灯已点亮，平安信号已发送");
-    setTimeout(() => setIsActive(false), 2000); // Reset animation state
+    if (!dailyCheckInDone) {
+      setShowDailyCheckIn(true);
+    } else {
+      toast.success("命灯已点亮，平安信号已发送");
+      setTimeout(() => setIsActive(false), 2000);
+    }
+  };
+
+  const handleDailySubmit = () => {
+    setDailyCheckInDone(true);
+    setShowDailyCheckIn(false);
+    toast.success("今日状态已记录");
+    setTimeout(() => setIsActive(false), 2000);
   };
 
   return (
@@ -45,7 +68,7 @@ export default function GuardianPage() {
       <div className="relative z-20 flex-1 flex flex-col px-8 pt-20 pb-8">
         
         {/* 顶部栏 */}
-        <div className="flex justify-between items-start mb-12">
+        <div className="flex justify-between items-start mb-8">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -69,6 +92,26 @@ export default function GuardianPage() {
             </button>
           </div>
         </div>
+
+        {/* 今日提醒卡 (仅当已签到时显示) */}
+        <AnimatePresence>
+          {dailyCheckInDone && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mb-8 bg-[#F5E6C8]/10 backdrop-blur-md rounded-xl p-4 border border-[#FFF8E7]/30 flex items-start gap-3"
+            >
+              <AlertTriangle className="w-5 h-5 text-[#4A4036]/60 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-[#4A4036] font-medium tracking-wide mb-1">今日提醒</p>
+                <p className="text-xs text-[#4A4036]/80 leading-relaxed">
+                  今日行动节奏宜{selectedRhythm === 'fast' ? '快' : selectedRhythm === 'slow' ? '慢' : '稳'}，
+                  情绪波动{energyLevel === 'high' ? '较高' : '平稳'}，决策风险中等。
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* 命灯核心区 */}
         <div className="flex-1 flex flex-col items-center justify-center relative">
@@ -125,7 +168,122 @@ export default function GuardianPage() {
         </div>
       </div>
 
-      {/* 能量天气弹窗 */}
+      {/* 每日主线流程弹窗 */}
+      <AnimatePresence>
+        {showDailyCheckIn && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 bg-[#E8E2D2]/90 backdrop-blur-xl flex items-center justify-center p-6"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-full max-w-sm"
+            >
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-medium tracking-[0.2em] text-[#4A4036] mb-2">今日已在</h3>
+                <p className="text-xs text-[#8C8478] tracking-widest">Daily Check-in</p>
+              </div>
+
+              <div className="space-y-8">
+                {/* 1. 节奏选择 */}
+                <div className="space-y-3">
+                  <p className="text-sm text-[#4A4036] tracking-widest text-center">今日节奏</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    {(['slow', 'normal', 'fast'] as const).map((r) => (
+                      <button
+                        key={r}
+                        onClick={() => setSelectedRhythm(r)}
+                        className={`py-3 rounded-xl text-xs tracking-widest transition-all ${
+                          selectedRhythm === r
+                            ? 'bg-[#4A4036] text-[#F9F9F7]'
+                            : 'bg-[#F9F9F7]/50 text-[#4A4036] hover:bg-[#F9F9F7]'
+                        }`}
+                      >
+                        {r === 'slow' ? '偏慢' : r === 'normal' ? '正常' : '偏快'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. 健康感知 */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Battery className="w-4 h-4 text-[#4A4036]/60" />
+                        <span className="text-xs text-[#4A4036] tracking-widest">精力</span>
+                      </div>
+                      <div className="flex gap-2">
+                        {(['low', 'medium', 'high'] as const).map((l) => (
+                          <button
+                            key={l}
+                            onClick={() => setEnergyLevel(l)}
+                            className={`w-8 h-8 rounded-full text-[10px] flex items-center justify-center transition-all ${
+                              energyLevel === l
+                                ? 'bg-[#4A4036] text-[#F9F9F7]'
+                                : 'bg-[#F9F9F7]/50 text-[#4A4036]'
+                            }`}
+                          >
+                            {l === 'low' ? '低' : l === 'medium' ? '中' : '高'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Moon className="w-4 h-4 text-[#4A4036]/60" />
+                        <span className="text-xs text-[#4A4036] tracking-widest">睡眠</span>
+                      </div>
+                      <div className="flex gap-2">
+                        {(['poor', 'fair', 'good'] as const).map((q) => (
+                          <button
+                            key={q}
+                            onClick={() => setSleepQuality(q)}
+                            className={`w-8 h-8 rounded-full text-[10px] flex items-center justify-center transition-all ${
+                              sleepQuality === q
+                                ? 'bg-[#4A4036] text-[#F9F9F7]'
+                                : 'bg-[#F9F9F7]/50 text-[#4A4036]'
+                            }`}
+                          >
+                            {q === 'poor' ? '差' : q === 'fair' ? '平' : '好'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. 态势摘要 */}
+                <div className="bg-[#F9F9F7]/50 p-4 rounded-xl border border-[#4A4036]/5">
+                  <p className="text-xs text-[#4A4036]/60 tracking-widest mb-2">今日态势摘要</p>
+                  <p className="text-sm text-[#4A4036] leading-relaxed font-light">
+                    "气机{selectedRhythm === 'fast' ? '浮动' : selectedRhythm === 'slow' ? '沉静' : '平稳'}，
+                    身心{energyLevel === 'high' ? '充盈' : '需养'}。
+                    宜{selectedRhythm === 'fast' ? '果断行动' : '静观其变'}，
+                    {energyLevel === 'low' ? '切勿强求' : '顺势而为'}。"
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleDailySubmit}
+                  className="w-full py-4 bg-[#4A4036] text-[#F9F9F7] rounded-xl text-sm tracking-[0.3em] hover:bg-[#4A4036]/90 transition-colors flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  确认记录
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 能量天气弹窗 (保持原有逻辑) */}
       <AnimatePresence>
         {showWeather && (
           <motion.div
@@ -182,7 +340,7 @@ export default function GuardianPage() {
         )}
       </AnimatePresence>
 
-      {/* 今日运势弹窗 */}
+      {/* 今日运势弹窗 (保持原有逻辑) */}
       <AnimatePresence>
         {showFortune && (
           <motion.div

@@ -1,31 +1,55 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Hexagon, ChevronRight } from "lucide-react";
+import { Hexagon, ChevronRight, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
+
+// Yao type: 0 for Yin, 1 for Yang
+type Yao = 0 | 1;
 
 export default function RitualPage() {
   const [isShaking, setIsShaking] = useState(false);
+  const [yaos, setYaos] = useState<Yao[]>([]);
   const [result, setResult] = useState<null | {
     gua: string;
     name: string;
     desc: string;
+    wisdom: string;
   }>(null);
 
   const handleShake = () => {
-    if (isShaking) return;
+    if (isShaking || yaos.length >= 6) return;
+    
     setIsShaking(true);
-    setResult(null);
-
+    
     // Simulate shaking duration
     setTimeout(() => {
       setIsShaking(false);
-      const results = [
-        { gua: "䷀", name: "乾为天", desc: "天行健，君子以自强不息。当下运势如日中天，宜积极进取，大展宏图。然亢龙有悔，切忌骄躁。" },
-        { gua: "䷁", name: "坤为地", desc: "地势坤，君子以厚德载物。宜顺势而为，包容万物。静待时机，不可急躁冒进。" },
-        { gua: "䷾", name: "水火既济", desc: "初吉终乱。事情已成，需防微杜渐。守成不易，当思患预防。" },
-        { gua: "䷿", name: "火水未济", desc: "君子以慎辨物居方。新的开始，审视方向。虽未成功，但充满希望。" },
-      ];
-      setResult(results[Math.floor(Math.random() * results.length)]);
-    }, 2000);
+      const newYao: Yao = Math.random() > 0.5 ? 1 : 0;
+      const newYaos: Yao[] = [...yaos, newYao];
+      setYaos(newYaos);
+
+      if (newYaos.length === 6) {
+        generateResult(newYaos);
+      }
+    }, 1500);
+  };
+
+  const generateResult = (finalYaos: Yao[]) => {
+    // Mock result generation based on yaos
+    // In a real app, this would map the 6 yaos to 64 hexagrams
+    setTimeout(() => {
+      setResult({
+        gua: "䷀", 
+        name: "乾为天", 
+        desc: "天行健，君子以自强不息。",
+        wisdom: "当下运势如日中天，能量充盈。宜积极进取，确立宏大目标并付诸行动。但需注意亢龙有悔，切忌骄傲自满，应保持谦逊，方能长久。"
+      });
+    }, 500);
+  };
+
+  const resetRitual = () => {
+    setYaos([]);
+    setResult(null);
   };
 
   return (
@@ -46,10 +70,20 @@ export default function RitualPage() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-12"
+          className="mb-8 flex justify-between items-start"
         >
-          <h1 className="text-3xl tracking-[0.2em] font-medium mb-2">乾坤</h1>
-          <p className="text-xs text-[#8C8478] tracking-[0.3em] uppercase">Ritual</p>
+          <div>
+            <h1 className="text-3xl tracking-[0.2em] font-medium mb-2">乾坤</h1>
+            <p className="text-xs text-[#8C8478] tracking-[0.3em] uppercase">Ritual</p>
+          </div>
+          {yaos.length > 0 && !result && (
+            <button 
+              onClick={resetRitual}
+              className="p-2 rounded-full hover:bg-[#4A4036]/5 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4 text-[#8C8478]" />
+            </button>
+          )}
         </motion.div>
 
         {/* 核心交互区 */}
@@ -61,8 +95,26 @@ export default function RitualPage() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="flex flex-col items-center"
+                className="flex flex-col items-center w-full"
               >
+                {/* 爻象展示区 */}
+                <div className="h-48 flex flex-col-reverse justify-center gap-3 mb-8 w-32">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div 
+                      key={i} 
+                      className={`h-3 w-full rounded-sm transition-all duration-500 ${
+                        i < yaos.length 
+                          ? 'bg-[#4A4036] shadow-sm' 
+                          : 'bg-[#4A4036]/5 border border-[#4A4036]/10'
+                      }`}
+                    >
+                      {i < yaos.length && yaos[i] === 0 && (
+                        <div className="w-4 h-full bg-[#F9F9F7] mx-auto" /> // Yin Yao gap
+                      )}
+                    </div>
+                  ))}
+                </div>
+
                 <motion.div
                   animate={isShaking ? {
                     x: [-5, 5, -5, 5, 0],
@@ -70,13 +122,19 @@ export default function RitualPage() {
                   } : {}}
                   transition={{ duration: 0.5, repeat: isShaking ? Infinity : 0 }}
                   onClick={handleShake}
-                  className="w-48 h-48 bg-[#F5E6C8]/10 backdrop-blur-md rounded-full border border-[#FFF8E7]/30 flex items-center justify-center cursor-pointer hover:bg-[#F5E6C8]/20 transition-colors shadow-[0_8px_32px_rgba(74,64,54,0.05)]"
+                  className="w-40 h-40 bg-[#F5E6C8]/10 backdrop-blur-md rounded-full border border-[#FFF8E7]/30 flex items-center justify-center cursor-pointer hover:bg-[#F5E6C8]/20 transition-colors shadow-[0_8px_32px_rgba(74,64,54,0.05)]"
                 >
-                  <Hexagon className="w-16 h-16 text-[#4A4036] opacity-80" strokeWidth={1} />
+                  <Hexagon className="w-12 h-12 text-[#4A4036] opacity-80" strokeWidth={1} />
                 </motion.div>
-                <p className="mt-8 text-sm text-[#8C8478] tracking-[0.3em]">
-                  {isShaking ? "感应天地..." : "点击起卦"}
-                </p>
+                
+                <div className="mt-8 text-center">
+                  <p className="text-sm text-[#4A4036] tracking-[0.3em] font-medium mb-2">
+                    {isShaking ? "感应天地..." : yaos.length === 0 ? "点击起卦" : `第 ${yaos.length + 1} 爻`}
+                  </p>
+                  <p className="text-[10px] text-[#8C8478] tracking-widest">
+                    {yaos.length < 6 ? "诚心正意，共需六摇" : "卦象已成"}
+                  </p>
+                </div>
               </motion.div>
             ) : (
               <motion.div
@@ -96,16 +154,33 @@ export default function RitualPage() {
 
                   <div className="w-8 h-[1px] bg-[#4A4036]/10 mx-auto mb-6" />
 
-                  <p className="text-[#4A4036]/90 text-base leading-loose tracking-wide font-light mb-8">
-                    {result.desc}
-                  </p>
+                  <div className="space-y-6 text-left">
+                    <div>
+                      <p className="text-xs text-[#8C8478] tracking-widest mb-2 uppercase">The Image</p>
+                      <p className="text-[#4A4036] text-sm leading-loose tracking-wide font-medium">
+                        {result.desc}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <p className="text-xs text-[#8C8478] tracking-widest mb-2 uppercase">Wisdom</p>
+                      <p className="text-[#4A4036]/80 text-sm leading-loose tracking-wide font-light">
+                        {result.wisdom}
+                      </p>
+                    </div>
+                  </div>
 
-                  <button 
-                    onClick={() => setResult(null)}
-                    className="text-[#8C8478] text-xs tracking-[0.2em] hover:text-[#4A4036] transition-colors flex items-center justify-center gap-2 mx-auto"
-                  >
-                    再次起卦 <ChevronRight className="w-3 h-3" />
-                  </button>
+                  <div className="mt-8 pt-6 border-t border-[#4A4036]/5">
+                    <p className="text-[10px] text-[#8C8478] tracking-wider mb-4">
+                      * 此结果仅供决策参考，非宿命定论
+                    </p>
+                    <button 
+                      onClick={resetRitual}
+                      className="text-[#4A4036] text-xs tracking-[0.2em] hover:opacity-70 transition-opacity flex items-center justify-center gap-2 mx-auto"
+                    >
+                      再次起卦 <ChevronRight className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             )}
