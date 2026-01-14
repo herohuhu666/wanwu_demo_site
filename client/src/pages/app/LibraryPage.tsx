@@ -1,10 +1,14 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Search, BookOpen, ChevronLeft } from "lucide-react";
 import { HEXAGRAMS } from "@/lib/hexagrams_data";
 import { Link } from "wouter";
 
-export default function LibraryPage() {
+interface LibraryPageProps {
+  onBack?: () => void;
+}
+
+export default function LibraryPage({ onBack }: LibraryPageProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedHexagram, setSelectedHexagram] = useState<number | null>(null);
 
@@ -25,9 +29,19 @@ export default function LibraryPage() {
       {/* Header */}
       <div className="relative z-20 px-6 pt-12 pb-4 bg-gradient-to-b from-[#FAF9F6] to-[#FAF9F6]/90 backdrop-blur-sm">
         <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-medium tracking-[0.2em] font-kai">藏经阁</h1>
-            <p className="text-[10px] text-[#8C8478] tracking-[0.3em] uppercase mt-1">Library</p>
+          <div className="flex items-center gap-4">
+            {onBack && (
+              <button 
+                onClick={onBack}
+                className="w-10 h-10 rounded-full bg-[#2C2C2C]/5 flex items-center justify-center hover:bg-[#2C2C2C]/10 transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5 text-[#2C2C2C]" />
+              </button>
+            )}
+            <div>
+              <h1 className="text-2xl font-medium tracking-[0.2em] font-kai">藏经阁</h1>
+              <p className="text-[10px] text-[#8C8478] tracking-[0.3em] uppercase mt-1">Library</p>
+            </div>
           </div>
           <div className="w-10 h-10 rounded-full bg-[#2C2C2C]/5 flex items-center justify-center">
             <BookOpen className="w-5 h-5 text-[#2C2C2C]/60" />
@@ -143,4 +157,4 @@ export default function LibraryPage() {
   );
 }
 
-import { AnimatePresence } from "framer-motion";
+

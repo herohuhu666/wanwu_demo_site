@@ -117,7 +117,7 @@ export default function Home() {
                   <TodayImagePage onBack={() => setActiveTab('member')} onNavigate={setActiveTab} />
                 </div>
                 <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'library' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
-                  <LibraryPage />
+                  <LibraryPage onBack={() => setActiveTab('member')} />
                 </div>
               </div>
               <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
