@@ -63,7 +63,7 @@ export default function MeritPage() {
       <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#E8E2D2]/80 to-transparent z-10" />
 
       {/* 内容区域 */}
-      <div className="relative z-20 flex-1 flex flex-col px-6 pt-20 pb-8">
+      <div className="relative z-20 flex-1 flex flex-col px-6 pt-20 pb-24 overflow-y-auto scrollbar-hide">
         
         {/* 顶部栏 */}
         <div className="flex justify-between items-start mb-8">
