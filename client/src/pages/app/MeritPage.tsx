@@ -62,14 +62,17 @@ export default function MeritPage() {
   };
 
   return (
-    <div className="h-full flex flex-col relative overflow-hidden font-serif text-[#2C2C2C] bg-[#FAF9F6]">
-      {/* 背景纹理 */}
-      <div className="absolute inset-0 z-0 opacity-15 pointer-events-none" 
-           style={{ backgroundImage: 'url(/images/paper_texture.jpg)' }} />
-      <div className="absolute inset-0 z-0 opacity-5 pointer-events-none bg-[url('/images/lotus_bg.png')] bg-no-repeat bg-bottom bg-contain" />
-      
-      {/* 顶部遮罩 */}
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#FAF9F6] to-transparent z-10" />
+    <div className="h-full flex flex-col relative overflow-hidden font-serif text-white/90 bg-black">
+      {/* 背景图片 */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="/images/merit_bg.png" 
+          alt="Merit Background" 
+          className="w-full h-full object-cover opacity-80"
+        />
+        {/* 渐变遮罩，确保文字可读性 */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
+      </div>
 
       {/* 内容区域 */}
       <div className="relative z-20 flex-1 flex flex-col px-6 pt-20 pb-24 overflow-y-auto scrollbar-hide">
@@ -80,12 +83,12 @@ export default function MeritPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="text-3xl tracking-[0.2em] font-medium mb-2 font-kai">功德</h1>
-            <p className="text-xs text-[#8C8478] tracking-[0.3em] uppercase">Merit</p>
+            <h1 className="text-3xl tracking-[0.2em] font-medium mb-2 font-kai text-white">功德</h1>
+            <p className="text-xs text-white/60 tracking-[0.3em] uppercase">Merit</p>
           </motion.div>
           
           <div className="flex gap-3">
-            <button className="p-3 rounded-full bg-[#FAF9F6] border border-[#789262]/20 text-[#2C2C2C] hover:bg-[#789262]/10 transition-colors shadow-sm">
+            <button className="p-3 rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-colors backdrop-blur-sm">
               <ShoppingBag className="w-5 h-5 opacity-70" />
             </button>
           </div>
@@ -97,15 +100,15 @@ export default function MeritPage() {
             key={merit}
             initial={{ scale: 1.2, opacity: 0.8 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="text-6xl font-light text-[#2C2C2C] tabular-nums font-kai"
+            className="text-6xl font-light text-[#FFD700] tabular-nums font-kai drop-shadow-[0_0_15px_rgba(255,215,0,0.3)]"
           >
             {merit}
           </motion.div>
           <div className="flex items-center justify-center gap-2 mt-2">
-            <ShieldCheck className="w-3 h-3 text-[#789262]" />
-            <p className="text-xs text-[#789262] uppercase tracking-[0.3em]">Trust Indicator</p>
+            <ShieldCheck className="w-3 h-3 text-[#FFD700]" />
+            <p className="text-xs text-[#FFD700] uppercase tracking-[0.3em]">Trust Indicator</p>
           </div>
-          <p className="text-[10px] text-[#8C8478]/60 mt-2 tracking-wider">
+          <p className="text-[10px] text-white/40 mt-2 tracking-wider">
             功德即信任，信任即力量
           </p>
         </div>
@@ -120,21 +123,21 @@ export default function MeritPage() {
                     setActiveAction(item.type);
                     setInput("");
                   }}
-                  className="group relative overflow-hidden bg-[#FAF9F6] border border-[#789262]/20 rounded-2xl p-4 text-left hover:border-[#789262]/50 transition-all shadow-sm hover:shadow-md"
+                  className="group relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-4 text-left hover:bg-white/10 hover:border-[#FFD700]/30 transition-all backdrop-blur-sm"
                 >
-                  <div className={`w-8 h-8 rounded-full ${item.color} flex items-center justify-center mb-3 text-[#FAF9F6]`}>
+                  <div className={`w-8 h-8 rounded-full bg-white/10 flex items-center justify-center mb-3 text-[#FFD700]`}>
                     <item.icon className="w-4 h-4" />
                   </div>
                   <div className="flex justify-between items-end">
-                    <span className="text-lg font-kai text-[#2C2C2C]">{item.label}</span>
-                    <span className="text-xs font-medium text-[#789262]">+{item.value}</span>
+                    <span className="text-lg font-kai text-white/90">{item.label}</span>
+                    <span className="text-xs font-medium text-[#FFD700]">+{item.value}</span>
                   </div>
                 </button>
               </DialogTrigger>
-              <DialogContent className="bg-[#FAF9F6] border border-[#789262]/20 shadow-2xl max-w-[320px] rounded-3xl">
+              <DialogContent className="bg-[#1C1C1C] border border-white/10 shadow-2xl max-w-[320px] rounded-3xl text-white">
                 <DialogHeader>
-                  <DialogTitle className="font-kai text-center text-xl text-[#2C2C2C] tracking-widest mb-2">{item.label}</DialogTitle>
-                  <p className="text-center text-xs text-[#8C8478] tracking-wide">{item.desc}</p>
+                  <DialogTitle className="font-kai text-center text-xl text-white tracking-widest mb-2">{item.label}</DialogTitle>
+                  <p className="text-center text-xs text-white/60 tracking-wide">{item.desc}</p>
                 </DialogHeader>
                 <div className="space-y-6 py-4">
                   {item.type !== 'check-in' && (
@@ -143,14 +146,14 @@ export default function MeritPage() {
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder={item.type === 'pray' ? "回向给谁？愿望为何？" : item.type === 'altruism' ? "今日行何善事？" : "今日有何过失？"} 
-                        className="bg-[#2C2C2C]/5 border-none text-[#2C2C2C] placeholder:text-[#8C8478]/50 h-12 px-4 rounded-xl focus-visible:ring-1 focus-visible:ring-[#789262]/50" 
+                        className="bg-white/5 border-none text-white placeholder:text-white/30 h-12 px-4 rounded-xl focus-visible:ring-1 focus-visible:ring-[#FFD700]/50" 
                       />
-                      <PenTool className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C8478]/40" />
+                      <PenTool className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                     </div>
                   )}
                   <Button 
                     onClick={handleAddLog}
-                    className="w-full bg-[#2C2C2C] text-[#FAF9F6] hover:bg-[#2C2C2C]/90 tracking-widest h-12 rounded-xl text-sm font-medium"
+                    className="w-full bg-[#FFD700]/20 text-[#FFD700] hover:bg-[#FFD700]/30 tracking-widest h-12 rounded-xl text-sm font-medium border border-[#FFD700]/20"
                   >
                     确认记录
                   </Button>
@@ -164,21 +167,21 @@ export default function MeritPage() {
         <div className="mb-6">
           <button
             onClick={() => setShowTrend(!showTrend)}
-            className="w-full p-4 rounded-xl bg-[#FAF9F6] border border-[#789262]/20 flex items-center justify-between group hover:bg-[#789262]/5 transition-colors shadow-sm"
+            className="w-full p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between group hover:bg-white/10 transition-colors backdrop-blur-sm"
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#2C2C2C]/5 flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-[#2C2C2C]" />
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-white" />
               </div>
               <div className="text-left">
-                <p className="text-sm font-medium text-[#2C2C2C] tracking-wider">功德明细</p>
-                <p className="text-xs text-[#8C8478] tracking-wide">善行积累趋势</p>
+                <p className="text-sm font-medium text-white tracking-wider">功德明细</p>
+                <p className="text-xs text-white/60 tracking-wide">善行积累趋势</p>
               </div>
             </div>
             {isMember ? (
-              <div className="text-xs text-[#2C2C2C] tracking-widest">查看详情</div>
+              <div className="text-xs text-white/80 tracking-widest">查看详情</div>
             ) : (
-              <Lock className="w-4 h-4 text-[#8C8478]/60" />
+              <Lock className="w-4 h-4 text-white/40" />
             )}
           </button>
 
@@ -191,35 +194,35 @@ export default function MeritPage() {
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden"
               >
-                <div className="mt-2 p-4 rounded-xl bg-[#FAF9F6] border border-[#2C2C2C]/5 text-center">
+                <div className="mt-2 p-4 rounded-xl bg-white/5 border border-white/10 text-center backdrop-blur-sm">
                   {isMember ? (
                     <div className="space-y-4">
                       {/* Mock Chart */}
                       <div className="h-32 w-full flex items-end justify-between px-2 gap-1">
                         {[30, 45, 35, 60, 50, 70, 65].map((h, i) => (
-                          <div key={i} className="w-full bg-[#789262]/20 rounded-t-sm relative group">
+                          <div key={i} className="w-full bg-white/10 rounded-t-sm relative group">
                             <div 
-                              className="absolute bottom-0 left-0 right-0 bg-[#789262] rounded-t-sm transition-all duration-500"
+                              className="absolute bottom-0 left-0 right-0 bg-[#FFD700] rounded-t-sm transition-all duration-500 opacity-80"
                               style={{ height: `${h}%` }}
                             />
                           </div>
                         ))}
                       </div>
-                      <div className="flex justify-between text-[10px] text-[#8C8478] px-1">
+                      <div className="flex justify-between text-[10px] text-white/40 px-1">
                         <span>Mon</span><span>Sun</span>
                       </div>
-                      <p className="text-xs text-[#2C2C2C] leading-relaxed text-left mt-2">
-                        <span className="font-medium">周报：</span>本周善行积累稳步上升，"利他"行为占比最高，建议继续保持。
+                      <p className="text-xs text-white/80 leading-relaxed text-left mt-2">
+                        <span className="font-medium text-[#FFD700]">周报：</span>本周善行积累稳步上升，"利他"行为占比最高，建议继续保持。
                       </p>
                     </div>
                   ) : (
                     <div className="py-4">
-                      <p className="text-sm text-[#2C2C2C] mb-2 tracking-widest font-kai">会员专属功能</p>
-                      <p className="text-xs text-[#8C8478] mb-4 leading-relaxed">
+                      <p className="text-sm text-white mb-2 tracking-widest font-kai">会员专属功能</p>
+                      <p className="text-xs text-white/60 mb-4 leading-relaxed">
                         升级会员解锁 7天/14天 趋势分析<br/>
                         及多维状态对照图表
                       </p>
-                      <Button size="sm" className="bg-[#2C2C2C] text-[#FAF9F6] tracking-widest rounded-full px-6">立即升级</Button>
+                      <Button size="sm" className="bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/20 tracking-widest rounded-full px-6 hover:bg-[#FFD700]/30">立即升级</Button>
                     </div>
                   )}
                 </div>
@@ -229,11 +232,11 @@ export default function MeritPage() {
         </div>
 
         {/* 记录列表 */}
-        <div className="flex-1 bg-[#FAF9F6] rounded-t-3xl shadow-[0_-4px_20px_rgba(44,44,44,0.03)] overflow-hidden flex flex-col border-t border-[#789262]/10">
+        <div className="flex-1 bg-white/5 backdrop-blur-md rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col border-t border-white/10">
           <div className="p-6 pb-2 flex justify-between items-center">
-            <h3 className="text-xs font-medium text-[#8C8478] uppercase tracking-[0.2em]">History</h3>
+            <h3 className="text-xs font-medium text-white/60 uppercase tracking-[0.2em]">History</h3>
             {!isMember && (
-              <span className="text-[10px] text-[#8C8478]/60 flex items-center gap-1">
+              <span className="text-[10px] text-white/40 flex items-center gap-1">
                 仅展示近3天 <Lock className="w-3 h-3" />
               </span>
             )}
@@ -246,24 +249,22 @@ export default function MeritPage() {
                     key={log.id}
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
-                    className="flex items-center justify-between py-3 border-b border-[#2C2C2C]/5 last:border-0"
+                    className="flex items-center justify-between py-3 border-b border-white/10 last:border-0"
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                        LOG_TYPES.find(t => t.type === log.type)?.color.replace('text-[#F9F9F7]', 'text-[#FAF9F6]').replace('bg-[#', 'bg-[#').replace(']', ']/80')
-                      }`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-white/10 text-[#FFD700]`}>
                         {(() => {
                           const typeConfig = LOG_TYPES.find(t => t.type === log.type);
                           const Icon = typeConfig?.icon;
-                          return Icon ? <Icon className="w-4 h-4 text-[#FAF9F6]" /> : typeConfig?.label[0];
+                          return Icon ? <Icon className="w-4 h-4" /> : typeConfig?.label[0];
                         })()}
                       </div>
                       <div>
-                        <p className="text-[#2C2C2C] text-sm font-medium tracking-wide">{log.content}</p>
-                        <p className="text-xs text-[#8C8478] tracking-wider">{log.time}</p>
+                        <p className="text-white/90 text-sm font-medium tracking-wide">{log.content}</p>
+                        <p className="text-xs text-white/40 tracking-wider">{log.time}</p>
                       </div>
                     </div>
-                    <span className={`font-medium text-sm ${log.value > 0 ? 'text-[#789262]' : 'text-[#2C2C2C]'}`}>
+                    <span className={`font-medium text-sm ${log.value > 0 ? 'text-[#FFD700]' : 'text-white'}`}>
                       +{log.value}
                     </span>
                   </motion.div>
@@ -272,7 +273,7 @@ export default function MeritPage() {
               
               {!isMember && logs.length > 0 && (
                 <div className="text-center py-4">
-                  <p className="text-xs text-[#8C8478]/60 mb-2">更多历史记录仅会员可见</p>
+                  <p className="text-xs text-white/40 mb-2">更多历史记录仅会员可见</p>
                 </div>
               )}
             </div>
