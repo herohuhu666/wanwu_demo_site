@@ -23,7 +23,8 @@ export default function LingxiPage() {
     merit, 
     consumeMerit, 
     addInsightRecord,
-    checkInsightAvailability 
+    checkInsightAvailability,
+    insightHistory
   } = useUser();
 
   const [step, setStep] = useState<'category' | 'input' | 'result'>('category');
@@ -336,12 +337,12 @@ export default function LingxiPage() {
             </div>
             
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {useUser().insightHistory.length === 0 ? (
+              {insightHistory.length === 0 ? (
                 <div className="text-center py-12 text-[#8C8478]">
                   <p className="text-sm tracking-widest">暂无记录</p>
                 </div>
               ) : (
-                useUser().insightHistory.map((record) => (
+                insightHistory.map((record) => (
                   <div key={record.id} className={`p-4 rounded-xl border ${
                     record.isDeep ? 'bg-gradient-to-br from-[#FAF9F6] to-[#789262]/5 border-[#789262]/20' : 'bg-[#FAF9F6] border-[#2C2C2C]/10'
                   }`}>
