@@ -109,7 +109,7 @@ export default function Home() {
                   <MeritPage />
                 </div>
                 <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'member' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
-                  <MemberPage />
+                  <MemberPage onNavigate={setActiveTab} />
                 </div>
               </div>
               <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />

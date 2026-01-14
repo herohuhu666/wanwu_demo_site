@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Crown, Check, Lock, User, Calendar, MapPin, ChevronRight, LogOut } from "lucide-react";
+import { Crown, Check, Lock, User, Calendar, MapPin, ChevronRight, LogOut, Sparkles, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { useUser, UserProfile } from "@/contexts/UserContext";
 
-export default function MemberPage() {
+interface MemberPageProps {
+  onNavigate?: (tab: string) => void;
+}
+
+export default function MemberPage({ onNavigate }: MemberPageProps) {
   const { isLoggedIn, isMember, profile, login, logout, toggleMember } = useUser();
   const [showLogin, setShowLogin] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [tempProfile, setTempProfile] = useState<UserProfile>({
     name: "",
     birthDate: "",
@@ -27,12 +32,29 @@ export default function MemberPage() {
     e.preventDefault();
     login(tempProfile);
     setShowLogin(false);
-    toast.success("登录成功");
+    setShowConfirmation(true);
   };
 
   const handleLogout = () => {
     logout();
     toast.success("已退出登录");
+  };
+
+  const handleStartDaily = () => {
+    setShowConfirmation(false);
+    if (onNavigate) {
+      onNavigate("guardian");
+    }
+  };
+
+  // 简单的时节判断逻辑（Mock）
+  const getSeasonEnergy = (dateStr: string) => {
+    if (!dateStr) return "气机潜藏";
+    const month = new Date(dateStr).getMonth() + 1;
+    if (month >= 3 && month <= 5) return "生于春日，木气生发";
+    if (month >= 6 && month <= 8) return "生于夏日，火气旺盛";
+    if (month >= 9 && month <= 11) return "生于秋日，金气收敛";
+    return "生于冬日，水气潜藏";
   };
 
   return (
@@ -262,6 +284,62 @@ export default function MemberPage() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 结构确认页 (登录后显示) */}
+      <AnimatePresence>
+        {showConfirmation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 bg-[#E8E2D2] flex flex-col items-center justify-center p-8"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="w-full max-w-sm text-center"
+            >
+              <div className="w-16 h-16 mx-auto mb-8 rounded-full bg-[#4A4036]/5 flex items-center justify-center">
+                <Sparkles className="w-8 h-8 text-[#4A4036]/60" />
+              </div>
+
+              <h3 className="text-2xl font-medium tracking-[0.2em] text-[#4A4036] mb-2">基础结构已建立</h3>
+              <p className="text-xs text-[#8C8478] tracking-widest mb-12">Structure Established</p>
+
+              <div className="space-y-8 mb-12">
+                <div className="space-y-2">
+                  <p className="text-xs text-[#8C8478] tracking-widest uppercase">时间结构</p>
+                  <p className="text-lg text-[#4A4036] font-medium tracking-wider">
+                    {getSeasonEnergy(profile.birthDate)}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-xs text-[#8C8478] tracking-widest uppercase">空间结构</p>
+                  <p className="text-lg text-[#4A4036] font-medium tracking-wider">
+                    {profile.birthCity ? `根植${profile.birthCity}，得地气滋养` : "四方云游，气机流动"}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-xs text-[#8C8478] tracking-widest uppercase">结构倾向</p>
+                  <p className="text-lg text-[#4A4036] font-medium tracking-wider">
+                    内蕴生机，待时而动
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={handleStartDaily}
+                className="w-full py-4 bg-[#4A4036] text-[#F9F9F7] rounded-xl text-sm tracking-[0.2em] hover:bg-[#4A4036]/90 transition-colors flex items-center justify-center gap-2"
+              >
+                开启今日对齐 <ArrowRight className="w-4 h-4" />
+              </button>
             </motion.div>
           </motion.div>
         )}
