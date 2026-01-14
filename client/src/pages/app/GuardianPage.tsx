@@ -265,9 +265,9 @@ export default function GuardianPage() {
               animate={{ scale: 1, opacity: 1 }}
               className="w-full max-w-xs bg-[#1C1C1C] rounded-2xl p-8 border border-white/10 shadow-2xl text-center relative overflow-hidden"
             >
-              <div className="absolute inset-0 opacity-5 bg-[url('/images/paper_texture.jpg')]" />
+              <div className="absolute inset-0 opacity-5 bg-[url('/images/paper_texture.jpg')] pointer-events-none" />
               
-              <h3 className="text-2xl text-white font-thin tracking-[0.2em] mb-8 font-shoujin">
+              <h3 className="relative z-10 text-2xl text-white font-thin tracking-[0.2em] mb-8 font-shoujin">
                 {currentQuote}
               </h3>
               
@@ -276,7 +276,7 @@ export default function GuardianPage() {
                   e.stopPropagation();
                   confirmIgnite();
                 }}
-                className="w-full py-3 bg-white/10 hover:bg-white/20 text-white text-sm tracking-[0.2em] rounded-lg transition-colors border border-white/5"
+                className="relative z-10 w-full py-3 bg-white/10 hover:bg-white/20 text-white text-sm tracking-[0.2em] rounded-lg transition-colors border border-white/5 cursor-pointer"
               >
                 心安
               </button>
