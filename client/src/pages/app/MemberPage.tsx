@@ -258,16 +258,26 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
               <Crown className={`w-6 h-6 ${isMember ? 'text-[#E0C38C]' : 'text-[#2C2C2C]/40'}`} />
             </div>
 
-            <button
-              onClick={handleToggleMember}
-              className={`w-full py-3 rounded-xl text-xs tracking-[0.2em] transition-colors ${
-                isMember 
-                  ? 'bg-[#FAF9F6]/10 text-[#FAF9F6] hover:bg-[#FAF9F6]/20' 
-                  : 'bg-[#2C2C2C] text-[#FAF9F6] hover:bg-[#2C2C2C]/90'
-              }`}
-            >
-              {isMember ? "管理订阅" : "立即升级"}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleToggleMember}
+                className={`flex-1 py-3 rounded-xl text-xs tracking-[0.2em] transition-colors ${
+                  isMember 
+                    ? 'bg-[#FAF9F6]/10 text-[#FAF9F6] hover:bg-[#FAF9F6]/20' 
+                    : 'bg-[#2C2C2C] text-[#FAF9F6] hover:bg-[#2C2C2C]/90'
+                }`}
+              >
+                {isMember ? "管理订阅" : "立即升级"}
+              </button>
+              {!isMember && (
+                <button
+                  onClick={() => setShowUpgrade(true)}
+                  className="px-4 py-3 rounded-xl text-xs tracking-[0.2em] transition-colors bg-[#FAF9F6] border border-[#2C2C2C]/10 text-[#2C2C2C] hover:bg-[#FAF9F6]/80"
+                >
+                  查看价格
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

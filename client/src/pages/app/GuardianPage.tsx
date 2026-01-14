@@ -231,8 +231,11 @@ export default function GuardianPage() {
               </h3>
               
               <button
-                onClick={confirmIgnite}
-                className="px-8 py-2 bg-[#2C2C2C] text-[#FAF9F6] text-sm tracking-widest rounded-full hover:bg-[#2C2C2C]/90 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  confirmIgnite();
+                }}
+                className="px-8 py-2 bg-[#2C2C2C] text-[#FAF9F6] text-sm tracking-widest rounded-full hover:bg-[#2C2C2C]/90 transition-colors relative z-50 cursor-pointer"
               >
                 确认
               </button>
