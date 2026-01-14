@@ -142,15 +142,18 @@ export default function GuardianPage() {
   const progress = Math.min(3, Math.ceil((259200 - timeLeft) / 86400)); 
 
   return (
-    <div className="h-full flex flex-col relative overflow-hidden font-serif text-[#2C2C2C] bg-[#FAF9F6]">
-      {/* 背景纹理 */}
-      <div className="absolute inset-0 z-0 opacity-15 pointer-events-none" 
-           style={{ backgroundImage: 'url(/images/paper_texture.jpg)' }} />
-      <div className="absolute inset-0 z-0 opacity-5 pointer-events-none bg-[url('/images/bamboo_bg.png')] bg-no-repeat bg-right-bottom bg-contain" />
+    <div className="h-full flex flex-col relative overflow-hidden font-serif text-white/90 bg-black">
+      {/* 背景图片 */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="/images/guardian_bg_cropped.png" 
+          alt="Guardian Background" 
+          className="w-full h-full object-cover opacity-80"
+        />
+        {/* 渐变遮罩，确保文字可读性 */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80" />
+      </div>
       
-      {/* 顶部遮罩 */}
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#FAF9F6] to-transparent z-10" />
-
       {/* 内容区域 */}
       <div className="relative z-20 flex-1 flex flex-col px-8 pt-20 pb-24 overflow-y-auto scrollbar-hide">
         
@@ -160,32 +163,32 @@ export default function GuardianPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="text-3xl tracking-[0.2em] font-medium mb-2 font-kai">守望</h1>
-            <p className="text-xs text-[#8C8478] tracking-[0.3em] uppercase">Guardian</p>
+            <h1 className="text-3xl tracking-[0.2em] font-medium mb-2 font-kai text-white">守望</h1>
+            <p className="text-xs text-white/60 tracking-[0.3em] uppercase">Guardian</p>
           </motion.div>
 
           <button 
             onClick={() => setShowMeditation(true)}
-            className="p-2 rounded-full bg-[#2C2C2C]/5 hover:bg-[#2C2C2C]/10 transition-colors"
+            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm"
           >
-            <Flame className="w-5 h-5 text-[#789262]" />
+            <Flame className="w-5 h-5 text-[#E0D6C8]" />
           </button>
         </div>
 
         {/* 命灯核心区 */}
         <div className="flex-1 flex flex-col items-center justify-center relative">
-          {/* 呼吸光环 */}
+          {/* 呼吸光环 - 调整颜色以匹配背景 */}
           <motion.div
             animate={{
               scale: [1, 1.05, 1],
-              opacity: [0.3, 0.6, 0.3],
+              opacity: [0.2, 0.4, 0.2],
             }}
             transition={{
               duration: 4,
               repeat: Infinity,
               ease: "easeInOut"
             }}
-            className="absolute w-64 h-64 rounded-full bg-gradient-to-b from-[#789262]/20 to-transparent blur-3xl opacity-40"
+            className="absolute w-64 h-64 rounded-full bg-gradient-to-b from-[#FFD700]/20 to-transparent blur-3xl opacity-30"
           />
 
           {/* 交互按钮 */}
@@ -193,24 +196,24 @@ export default function GuardianPage() {
             onClick={handleIgniteClick}
             className="relative w-48 h-48 rounded-full flex items-center justify-center group transition-transform duration-500 active:scale-95"
           >
-            {/* 按钮背景 */}
-            <div className="absolute inset-0 rounded-full bg-[#FAF9F6]/50 backdrop-blur-md border border-[#789262]/20 shadow-[0_8px_32px_rgba(120,146,98,0.1)]" />
+            {/* 按钮背景 - 更通透的磨砂感 */}
+            <div className="absolute inset-0 rounded-full bg-black/20 backdrop-blur-sm border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)]" />
             
             {/* 内圈装饰 */}
-            <div className="absolute inset-2 rounded-full border border-[#2C2C2C]/5" />
+            <div className="absolute inset-2 rounded-full border border-white/10" />
             
             <div className="relative z-10 text-center">
               <div className="mb-2">
                 {/* 简化灯笼图标 */}
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#789262" strokeWidth="1.5" className="mx-auto opacity-80">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#E0D6C8" strokeWidth="1.5" className="mx-auto opacity-90">
                   <path d="M12 2v20M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
                   <path d="M2 12h20" />
                 </svg>
               </div>
-              <h2 className={`text-xl font-medium tracking-[0.2em] mb-1 transition-colors duration-500 ${isActive ? 'text-[#789262]' : 'text-[#2C2C2C]'}`}>
+              <h2 className={`text-xl font-medium tracking-[0.2em] mb-1 transition-colors duration-500 ${isActive ? 'text-[#FFD700]' : 'text-white'}`}>
                 {isActive ? "已点亮" : "点亮"}
               </h2>
-              <p className="text-[10px] text-[#8C8478] tracking-[0.2em] uppercase">
+              <p className="text-[10px] text-white/60 tracking-[0.2em] uppercase">
                 {isActive ? "Ignited" : "Ignite"}
               </p>
             </div>
@@ -219,8 +222,8 @@ export default function GuardianPage() {
           {/* 倒计时与进度条 */}
           <div className="mt-12 flex flex-col items-center gap-4">
             <div className="text-center">
-              <p className="text-[10px] text-[#8C8478] tracking-[0.3em] uppercase mb-2">Remaining Time</p>
-              <p className="text-3xl font-variant-numeric tabular-nums tracking-widest font-light text-[#2C2C2C]">
+              <p className="text-[10px] text-white/60 tracking-[0.3em] uppercase mb-2">Remaining Time</p>
+              <p className="text-3xl font-variant-numeric tabular-nums tracking-widest font-light text-white">
                 {formatTime(timeLeft)}
               </p>
             </div>
@@ -231,7 +234,7 @@ export default function GuardianPage() {
                 <div 
                   key={i}
                   className={`w-8 h-1.5 rounded-full transition-colors duration-500 ${
-                    i <= progress ? 'bg-[#789262]' : 'bg-[#2C2C2C]/10'
+                    i <= progress ? 'bg-[#E0D6C8]' : 'bg-white/10'
                   }`}
                 />
               ))}
@@ -241,7 +244,7 @@ export default function GuardianPage() {
 
         {/* 底部提示 */}
         <div className="mt-auto text-center">
-          <p className="text-xs text-[#8C8478]/80 tracking-wider flex items-center justify-center gap-2">
+          <p className="text-xs text-white/50 tracking-wider flex items-center justify-center gap-2">
             <Shield className="w-3 h-3" />
             若 72 小时未点亮，将触发遗泽锦囊
           </p>
@@ -255,16 +258,16 @@ export default function GuardianPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 bg-[#2C2C2C]/40 backdrop-blur-sm flex items-center justify-center p-6"
+            className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6"
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="w-full max-w-xs bg-[#FAF9F6] rounded-2xl p-8 border border-[#789262]/30 shadow-xl text-center relative overflow-hidden"
+              className="w-full max-w-xs bg-[#1C1C1C] rounded-2xl p-8 border border-white/10 shadow-2xl text-center relative overflow-hidden"
             >
-              <div className="absolute inset-0 opacity-10 bg-[url('/images/paper_texture.jpg')]" />
+              <div className="absolute inset-0 opacity-5 bg-[url('/images/paper_texture.jpg')]" />
               
-              <h3 className="text-2xl text-[#2C2C2C] font-thin tracking-[0.2em] mb-8 font-shoujin">
+              <h3 className="text-2xl text-white font-thin tracking-[0.2em] mb-8 font-shoujin">
                 {currentQuote}
               </h3>
               
@@ -273,11 +276,120 @@ export default function GuardianPage() {
                   e.stopPropagation();
                   confirmIgnite();
                 }}
-                className="px-8 py-2 bg-[#2C2C2C] text-[#FAF9F6] text-sm tracking-widest rounded-full hover:bg-[#2C2C2C]/90 transition-colors relative z-50 cursor-pointer"
+                className="w-full py-3 bg-white/10 hover:bg-white/20 text-white text-sm tracking-[0.2em] rounded-lg transition-colors border border-white/5"
               >
-                确认
+                心安
               </button>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 每日状态记录弹窗 */}
+      <AnimatePresence>
+        {showDailyCheckIn && (
+          <motion.div
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="absolute inset-0 z-50 bg-[#1C1C1C] flex flex-col"
+          >
+            <div className="flex-1 px-8 pt-12 pb-8 overflow-y-auto">
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl font-medium tracking-[0.2em] text-white font-kai">今日状态</h2>
+                <button 
+                  onClick={() => setShowDailyCheckIn(false)}
+                  className="p-2 rounded-full hover:bg-white/10 text-white/60"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* 状态选择 */}
+              <div className="space-y-8">
+                <section>
+                  <h3 className="text-sm text-white/60 tracking-[0.2em] mb-4">心境</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { id: 'anxious', label: '焦虑', icon: AlertTriangle },
+                      { id: 'steady', label: '平稳', icon: Activity },
+                      { id: 'joyful', label: '喜悦', icon: Sparkles },
+                    ].map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => setSelectedState(item.id as DailyState)}
+                        className={`p-4 rounded-xl border transition-all flex flex-col items-center gap-2 ${
+                          selectedState === item.id
+                            ? 'bg-white/10 border-[#E0D6C8] text-[#E0D6C8]'
+                            : 'border-white/10 text-white/40 hover:border-white/20'
+                        }`}
+                      >
+                        <item.icon className="w-5 h-5" />
+                        <span className="text-xs tracking-widest">{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+
+                <section>
+                  <h3 className="text-sm text-white/60 tracking-[0.2em] mb-4">能量</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { id: 'low', label: '低', icon: Battery },
+                      { id: 'medium', label: '中', icon: Battery },
+                      { id: 'high', label: '高', icon: Battery },
+                    ].map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => setEnergyLevel(item.id as EnergyLevel)}
+                        className={`p-4 rounded-xl border transition-all flex flex-col items-center gap-2 ${
+                          energyLevel === item.id
+                            ? 'bg-white/10 border-[#E0D6C8] text-[#E0D6C8]'
+                            : 'border-white/10 text-white/40 hover:border-white/20'
+                        }`}
+                      >
+                        <item.icon className="w-5 h-5" />
+                        <span className="text-xs tracking-widest">{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+
+                <section>
+                  <h3 className="text-sm text-white/60 tracking-[0.2em] mb-4">睡眠</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { id: 'poor', label: '差', icon: Moon },
+                      { id: 'fair', label: '一般', icon: Moon },
+                      { id: 'good', label: '好', icon: Moon },
+                    ].map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => setSleepQuality(item.id as SleepQuality)}
+                        className={`p-4 rounded-xl border transition-all flex flex-col items-center gap-2 ${
+                          sleepQuality === item.id
+                            ? 'bg-white/10 border-[#E0D6C8] text-[#E0D6C8]'
+                            : 'border-white/10 text-white/40 hover:border-white/20'
+                        }`}
+                      >
+                        <item.icon className="w-5 h-5" />
+                        <span className="text-xs tracking-widest">{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            <div className="p-8 border-t border-white/10 bg-[#1C1C1C]">
+              <button
+                onClick={handleDailySubmit}
+                className="w-full py-4 bg-[#E0D6C8] text-[#1C1C1C] rounded-xl font-medium tracking-[0.2em] hover:bg-[#D0C6B8] transition-colors"
+              >
+                记录此刻
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -289,237 +401,105 @@ export default function GuardianPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 bg-[#2C2C2C]/60 backdrop-blur-md flex items-center justify-center p-6"
+            className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              className="w-full max-w-sm bg-[#FAF9F6] rounded-2xl p-0 overflow-hidden shadow-2xl border border-[#789262]/30"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-full max-w-xs bg-[#1C1C1C] rounded-2xl p-8 border border-white/10 shadow-2xl text-center"
             >
-              {/* 锦囊头部 */}
-              <div className="bg-[#2C2C2C] p-6 text-center relative overflow-hidden">
-                <div className="absolute inset-0 opacity-20 bg-[url('/images/pattern_cloud.png')]" />
-                <h3 className="text-xl text-[#FAF9F6] tracking-[0.3em] font-kai relative z-10">遗泽锦囊</h3>
-                <p className="text-[10px] text-[#FAF9F6]/60 tracking-widest mt-2 relative z-10">Legacy Capsule</p>
+              <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6">
+                <Shield className="w-8 h-8 text-[#E0D6C8]" />
+              </div>
+              <h3 className="text-xl font-medium tracking-[0.2em] mb-4 text-white">遗泽锦囊</h3>
+              <p className="text-sm text-white/60 mb-8 leading-relaxed">
+                检测到您已超过72小时未点亮命灯。
+                <br />
+                系统已为您自动触发保护机制。
+              </p>
+              
+              <div className="bg-white/5 p-4 rounded-lg mb-8 border border-white/5">
+                <p className="text-[#E0D6C8] font-kai text-lg">{legacyContent}</p>
               </div>
 
-              {/* 锦囊内容 */}
-              <div className="p-8 text-center">
-                <div className="mb-6 space-y-2">
-                  <div className="flex items-center justify-center gap-2 text-[#789262]">
-                    <Sparkles className="w-4 h-4" />
-                    <span className="text-sm tracking-widest">固定权益</span>
-                  </div>
-                  <p className="text-lg text-[#2C2C2C] font-medium">功德 +28</p>
-                  <p className="text-sm text-[#2C2C2C]/80">灵犀问询 +1</p>
-                </div>
-
-                <div className="w-full h-[1px] bg-[#2C2C2C]/10 my-6" />
-
-                <div className="mb-8">
-                  <div className="flex items-center justify-center gap-2 text-[#8C8478] mb-3">
-                    <Activity className="w-4 h-4" />
-                    <span className="text-sm tracking-widest">随机掉落</span>
-                  </div>
-                  <p className="text-base text-[#2C2C2C] font-kai">{legacyContent}</p>
-                </div>
-
-                <button
-                  onClick={handleLegacyClaim}
-                  className="w-full bg-[#2C2C2C] text-[#FAF9F6] py-4 rounded-xl text-sm tracking-[0.3em] hover:bg-[#2C2C2C]/90 transition-colors shadow-lg shadow-[#2C2C2C]/20"
-                >
-                  领取遗泽
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 每日签到弹窗 */}
-      <AnimatePresence>
-        {showDailyCheckIn && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 bg-[#2C2C2C]/40 backdrop-blur-sm flex items-center justify-center p-6"
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-[#FAF9F6] w-full max-w-sm rounded-3xl p-8 shadow-2xl relative overflow-hidden"
-            >
-              <button 
-                onClick={() => setShowDailyCheckIn(false)}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-[#2C2C2C]/5"
+              <button
+                onClick={handleLegacyClaim}
+                className="w-full py-3 bg-[#E0D6C8] text-[#1C1C1C] rounded-lg tracking-[0.2em] hover:bg-[#D0C6B8] transition-colors"
               >
-                <X className="w-5 h-5 text-[#8C8478]" />
+                领取庇护
               </button>
-
-              <h2 className="text-2xl font-medium tracking-[0.2em] text-[#2C2C2C] mb-2 font-kai text-center">今日状态</h2>
-              <p className="text-xs text-[#8C8478] text-center mb-8 tracking-wider">记录当下的身心能量</p>
-
-              <div className="space-y-6">
-                {/* 状态选择 */}
-                <div className="space-y-3">
-                  <label className="text-xs text-[#2C2C2C] tracking-widest uppercase flex items-center gap-2">
-                    <Activity className="w-3 h-3" /> 整体节奏
-                  </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      { id: 'steady', label: '稳', desc: '持重' },
-                      { id: 'advance', label: '进', desc: '开拓' },
-                      { id: 'retreat', label: '收', desc: '沉淀' }
-                    ].map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => setSelectedState(item.id as DailyState)}
-                        className={`p-3 rounded-xl border transition-all ${
-                          selectedState === item.id 
-                            ? 'bg-[#2C2C2C] text-[#FAF9F6] border-[#2C2C2C]' 
-                            : 'bg-transparent border-[#2C2C2C]/10 text-[#2C2C2C] hover:bg-[#2C2C2C]/5'
-                        }`}
-                      >
-                        <div className="text-lg font-kai mb-1">{item.label}</div>
-                        <div className="text-[10px] opacity-60">{item.desc}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 能量水平 */}
-                <div className="space-y-3">
-                  <label className="text-xs text-[#2C2C2C] tracking-widest uppercase flex items-center gap-2">
-                    <Battery className="w-3 h-3" /> 能量水平
-                  </label>
-                  <div className="flex gap-2 bg-[#2C2C2C]/5 p-1 rounded-xl">
-                    {[
-                      { id: 'low', label: '低' },
-                      { id: 'medium', label: '中' },
-                      { id: 'high', label: '高' }
-                    ].map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => setEnergyLevel(item.id as EnergyLevel)}
-                        className={`flex-1 py-2 rounded-lg text-xs transition-all ${
-                          energyLevel === item.id 
-                            ? 'bg-[#FAF9F6] text-[#2C2C2C] shadow-sm' 
-                            : 'text-[#8C8478] hover:text-[#2C2C2C]'
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 睡眠质量 */}
-                <div className="space-y-3">
-                  <label className="text-xs text-[#2C2C2C] tracking-widest uppercase flex items-center gap-2">
-                    <Moon className="w-3 h-3" /> 昨夜睡眠
-                  </label>
-                  <div className="flex gap-2 bg-[#2C2C2C]/5 p-1 rounded-xl">
-                    {[
-                      { id: 'poor', label: '差' },
-                      { id: 'fair', label: '一般' },
-                      { id: 'good', label: '优' }
-                    ].map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => setSleepQuality(item.id as SleepQuality)}
-                        className={`flex-1 py-2 rounded-lg text-xs transition-all ${
-                          sleepQuality === item.id 
-                            ? 'bg-[#FAF9F6] text-[#2C2C2C] shadow-sm' 
-                            : 'text-[#8C8478] hover:text-[#2C2C2C]'
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleDailySubmit}
-                  className="w-full bg-[#2C2C2C] text-[#FAF9F6] py-4 rounded-xl text-sm tracking-[0.3em] hover:bg-[#2C2C2C]/90 transition-colors mt-4 shadow-lg shadow-[#2C2C2C]/20"
-                >
-                  记录并点亮
-                </button>
-              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 冥想弹窗 */}
+      {/* 一柱香冥想弹窗 */}
       <AnimatePresence>
         {showMeditation && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 bg-[#2C2C2C]/90 backdrop-blur-md flex items-center justify-center p-6"
+            className="absolute inset-0 z-50 bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center"
           >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full h-full flex flex-col items-center justify-center text-[#FAF9F6] relative"
+            <button 
+              onClick={() => {
+                setShowMeditation(false);
+                setIsMeditating(false);
+              }}
+              className="absolute top-8 right-8 p-2 text-white/40 hover:text-white transition-colors"
             >
-              <button 
-                onClick={() => {
-                  setShowMeditation(false);
-                  setIsMeditating(false);
-                  setMeditationTime(0);
-                }}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-[#FAF9F6]/10"
-              >
-                <X className="w-6 h-6 text-[#FAF9F6]/60" />
-              </button>
+              <X className="w-6 h-6" />
+            </button>
 
-              <div className="mb-12 text-center">
-                <h2 className="text-3xl font-kai tracking-[0.3em] mb-2">一柱香</h2>
-                <p className="text-xs text-[#FAF9F6]/40 tracking-widest">Incense Meditation</p>
-              </div>
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-kai text-white tracking-[0.3em] mb-4">一柱香</h2>
+              <p className="text-xs text-white/40 tracking-[0.2em] uppercase">Meditation</p>
+            </div>
 
-              {/* 香烟动画容器 */}
-              <div className="relative w-2 h-64 bg-[#FAF9F6]/10 rounded-full mb-12 overflow-hidden">
+            {/* 香炉动画 */}
+            <div className="relative w-24 h-64 mb-12 flex justify-center items-end">
+              {/* 香身 */}
+              <div className="w-1 h-48 bg-gradient-to-t from-[#8B4513] to-[#D2691E] relative rounded-t-sm">
+                {/* 燃烧点 */}
                 <motion.div 
-                  className="absolute bottom-0 left-0 right-0 bg-[#E0C38C] shadow-[0_0_20px_rgba(224,195,140,0.5)]"
-                  initial={{ height: "100%" }}
-                  animate={{ height: isMeditating ? "0%" : "100%" }}
-                  transition={{ duration: 900, ease: "linear" }} // 15 minutes
+                  animate={{ opacity: [0.6, 1, 0.6] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 bg-red-500 rounded-full blur-[1px]"
                 />
-                {/* 燃烧点光效 */}
-                {isMeditating && (
-                  <motion.div 
-                    className="absolute left-1/2 -translate-x-1/2 w-4 h-4 bg-[#FF4D4D] rounded-full blur-sm"
-                    initial={{ bottom: "100%" }}
-                    animate={{ bottom: "0%" }}
-                    transition={{ duration: 900, ease: "linear" }}
-                  />
-                )}
+                {/* 烟雾 */}
+                <motion.div
+                  animate={{ 
+                    y: [-10, -30, -50],
+                    x: [0, 5, -5, 0],
+                    opacity: [0.4, 0.2, 0]
+                  }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  className="absolute -top-4 left-1/2 -translate-x-1/2 w-4 h-12 bg-gray-400/30 blur-md rounded-full"
+                />
               </div>
+              {/* 香炉底座 */}
+              <div className="absolute bottom-0 w-16 h-8 bg-[#2C2C2C] rounded-b-xl border-t border-white/10" />
+            </div>
 
-              <div className="text-4xl font-light tracking-widest font-variant-numeric mb-12">
-                {formatMeditationTime(900 - meditationTime)}
+            <div className="text-center">
+              <div className="text-4xl font-light text-white tracking-widest mb-8 font-variant-numeric tabular-nums">
+                {formatMeditationTime(meditationTime)}
               </div>
-
+              
               {!isMeditating ? (
                 <button
                   onClick={() => setIsMeditating(true)}
-                  className="px-12 py-4 bg-[#FAF9F6] text-[#2C2C2C] rounded-full text-sm tracking-[0.3em] hover:bg-[#FAF9F6]/90 transition-colors"
+                  className="px-12 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full tracking-[0.2em] transition-all border border-white/10"
                 >
-                  开始静坐
+                  开始静心
                 </button>
               ) : (
-                <p className="text-sm text-[#FAF9F6]/40 tracking-widest animate-pulse">
-                  静心 · 勿扰
+                <p className="text-white/40 tracking-[0.2em] text-sm animate-pulse">
+                  静心凝神...
                 </p>
               )}
-            </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
