@@ -49,10 +49,10 @@ function TurtleShell({ isShaking, texture }: { isShaking: boolean, texture: THRE
     if (isShaking) {
       shakeTime.current += delta * 20;
       // Violent shake
-      meshRef.current.rotation.z = Math.sin(shakeTime.current) * 0.3;
-      meshRef.current.rotation.x = Math.cos(shakeTime.current * 1.5) * 0.2;
-      meshRef.current.position.x = Math.sin(shakeTime.current * 2) * 0.2;
-      meshRef.current.position.y = Math.cos(shakeTime.current * 2.5) * 0.2;
+      meshRef.current.rotation.z = Math.sin(shakeTime.current * 15) * 0.5;
+      meshRef.current.rotation.x = Math.cos(shakeTime.current * 12) * 0.3;
+      meshRef.current.position.x = Math.sin(shakeTime.current * 20) * 0.3;
+      meshRef.current.position.y = Math.cos(shakeTime.current * 18) * 0.3;
     } else {
       // Reset smoothly
       meshRef.current.rotation.z = THREE.MathUtils.lerp(meshRef.current.rotation.z, 0, 0.1);
@@ -63,9 +63,9 @@ function TurtleShell({ isShaking, texture }: { isShaking: boolean, texture: THRE
   });
 
   return (
-    <mesh ref={meshRef} scale={[3, 3, 1]}>
+    <mesh ref={meshRef} scale={[3.5, 3.5, 1]}>
       <planeGeometry args={[1, 1]} />
-      <meshStandardMaterial map={texture} transparent alphaTest={0.5} side={THREE.DoubleSide} />
+      <meshStandardMaterial map={texture} transparent alphaTest={0.1} side={THREE.DoubleSide} />
     </mesh>
   );
 }

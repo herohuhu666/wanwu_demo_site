@@ -313,19 +313,23 @@ export default function RitualPage() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={handleManualShake}
-                      className="relative w-56 h-56 cursor-pointer transition-transform"
+                      className="relative w-64 h-64 cursor-pointer transition-transform"
                     >
                       <img 
                         src="/images/turtle_shell.png" 
                         alt="Turtle Shell" 
-                        className="w-full h-full object-contain drop-shadow-2xl"
+                        className="w-full h-full object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
                       />
                       
                       {/* 提示文字 */}
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <span className="px-4 py-2 bg-black/40 backdrop-blur-sm rounded-full text-xs text-white/80 tracking-widest border border-white/10">
+                        <motion.span 
+                          animate={{ scale: [1, 1.1, 1], opacity: [0.8, 1, 0.8] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="px-4 py-2 bg-black/40 backdrop-blur-sm rounded-full text-xs text-white/90 tracking-widest border border-white/10 shadow-lg"
+                        >
                           点击摇卦
-                        </span>
+                        </motion.span>
                       </div>
                     </motion.div>
                   </div>
