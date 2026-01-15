@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { ArrowLeft, Share2, Lock, ChevronRight, Wind, Zap, Droplets, Mountain, Flame } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Share2, Lock, ChevronRight, Wind, Zap, Droplets, Mountain, Flame, Calendar } from "lucide-react";
+import EnergyPlanner from "@/components/EnergyPlanner";
 import { useUser } from "@/contexts/UserContext";
 import { calculateBaseHexagram, calculateDailyHexagram, calculateElements, getDailyAdvice, WuXing } from "@/lib/numerology";
 import { toast } from "sonner";
@@ -16,6 +17,7 @@ export default function TodayImagePage({ onBack, onNavigate }: TodayImagePagePro
   const [dailyHex, setDailyHex] = useState<any>(null);
   const [elements, setElements] = useState<Record<WuXing, number> | null>(null);
   const [advice, setAdvice] = useState<{ recommend: string; avoid: string } | null>(null);
+  const [showEnergyPlanner, setShowEnergyPlanner] = useState(false);
 
   useEffect(() => {
     if (profile.nickname && profile.birthDate) {
@@ -68,6 +70,46 @@ export default function TodayImagePage({ onBack, onNavigate }: TodayImagePagePro
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-hide px-6 pb-24">
+        {/* 能量日程表入口 (仅会员可见) */}
+        {isMember && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <button
+              onClick={() => setShowEnergyPlanner(!showEnergyPlanner)}
+              className="w-full bg-white rounded-2xl p-4 border border-[#2C2C2C]/5 shadow-sm flex items-center justify-between hover:bg-stone-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#789262]/10 flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-[#789262]" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-sm font-medium text-[#2C2C2C] font-kai">能量日程表</h3>
+                  <p className="text-xs text-[#8C8478]">查看未来7天能量趋势</p>
+                </div>
+              </div>
+              <ChevronRight className={`w-4 h-4 text-[#8C8478] transition-transform ${showEnergyPlanner ? 'rotate-90' : ''}`} />
+            </button>
+            
+            <AnimatePresence>
+              {showEnergyPlanner && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="pt-4">
+                    <EnergyPlanner />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
+
         {/* 今日卦象卡片 */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}

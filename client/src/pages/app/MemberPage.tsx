@@ -1,30 +1,55 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Crown, Check, Lock, User, Calendar, MapPin, ChevronRight, LogOut, Sparkles, ArrowRight, Book, Hexagon, Heart, TrendingUp, X, BookOpen, Shield } from "lucide-react";
-import { toast } from "sonner";
-import { useUser } from "@/contexts/UserContext";
-import { LifeParameters } from "@/lib/types";
+import { User, Crown, Settings, ChevronRight, Star, Moon, Sun, Wind, Cloud, Droplets, Flame, X, Check, Hexagon, Heart, Shield } from "lucide-react";
+import { useUser } from "../../contexts/UserContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import FiveElementsChart from "@/components/FiveElementsChart";
 
+// 模拟历史数据
+const mockRitualArchives = [
+  { date: "2024-01-15", hexagramName: "大有", question: "近期事业发展方向", note: "火在天上，顺天依时，大有可为。" },
+  { date: "2024-01-12", hexagramName: "谦", question: "人际关系处理", note: "地中有山，谦谦君子，卑以自牧。" },
+  { date: "2024-01-08", hexagramName: "复", question: "是否应该跳槽", note: "雷在地中，复，其见天地之心乎。" },
+];
 
-interface MemberPageProps {
-  onNavigate?: (tab: string) => void;
-}
+const mockInsightArchives = [
+  { timestamp: "2024-01-14T10:30:00", question: "感到很迷茫，不知道意义何在", answer: "迷茫是觉醒的前奏。就像大雾弥漫时，正是阳光即将穿透的前夜。试着关注当下的呼吸，意义不在远方，而在每一次的一呼一吸之间。" },
+  { timestamp: "2024-01-10T22:15:00", question: "如何面对失去", answer: "失去是另一种形式的获得。落叶归根，是为了滋养明春的新芽。允许悲伤流淌，但不要让它淹没你内心的光。" },
+];
 
-export default function MemberPage({ onNavigate }: MemberPageProps) {
-  const { isLoggedIn, isMember, profile, coreStructure, login, logout, toggleMember, archives } = useUser();
+const mockLegacyArchives = [
+  { timestamp: "2023-12-25", title: "冬至锦囊", content: "一阳初生，万物待发。此时最宜静养，护持心中微弱的阳气。" },
+  { timestamp: "2023-11-08", title: "立冬锦囊", content: "水始冰，地始冻。收藏之时，不宜远行，宜温补，宜读书。" },
+];
+
+export default function MemberPage() {
+  const { profile, login, isMember, toggleMember } = useUser();
   const [showLogin, setShowLogin] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
-
-  const [tempProfile, setTempProfile] = useState<LifeParameters>({
+  const [tempProfile, setTempProfile] = useState({
     nickname: "",
     birthDate: "",
     birthTime: "",
     birthCity: ""
   });
+
+  // 模拟数据源
+  const ritualArchives = profile ? mockRitualArchives : [];
+  const insightArchives = profile ? mockInsightArchives : [];
+
+  const isLoggedIn = !!profile;
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    login({
+      nickname: tempProfile.nickname,
+      birthDate: tempProfile.birthDate,
+      birthTime: tempProfile.birthTime,
+      birthCity: tempProfile.birthCity,
+
+    });
+    setShowLogin(false);
+  };
 
   const handleToggleMember = () => {
     if (!isLoggedIn) {
@@ -32,8 +57,8 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
       return;
     }
     if (isMember) {
+      // 如果已经是会员，显示管理弹窗（这里简化为直接取消）
       toggleMember();
-      toast.success("已取消订阅");
     } else {
       setShowUpgrade(true);
     }
@@ -42,209 +67,79 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
   const confirmUpgrade = () => {
     toggleMember();
     setShowUpgrade(false);
-    toast.success("欢迎加入万物会员");
   };
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    login(tempProfile);
-    setShowLogin(false);
-    
-    // 自动跳转到今日之象
-    if (onNavigate) {
-      onNavigate("today_image");
-      toast.success("资料已完善，正在生成今日之象...");
-    } else {
-      setShowConfirmation(true);
-    }
-  };
-
-  const handleLogout = () => {
-    logout();
-    toast.success("已退出登录");
-  };
-
-  const handleStartDaily = () => {
-    setShowConfirmation(false);
-    if (onNavigate) {
-      onNavigate("guardian");
-    }
-  };
-
-  const getSeasonEnergy = (dateStr: string) => {
-    if (!dateStr) return "气机潜藏";
-    const month = new Date(dateStr).getMonth() + 1;
-    if (month >= 3 && month <= 5) return "生于春日，木气生发";
-    if (month >= 6 && month <= 8) return "生于夏日，火气旺盛";
-    if (month >= 9 && month <= 11) return "生于秋日，金气收敛";
-    return "生于冬日，水气潜藏";
-  };
-
-  // Filter archives by type
-  const ritualArchives = (archives as any[]).filter(a => a.type === 'ritual');
-  const insightArchives = (archives as any[]).filter(a => a.type === 'insight');
-  const legacyArchives = (archives as any[]).filter(a => a.type === 'legacy');
-
-  // Mock legacy archives if not in context yet (UserContext update needed for real legacy tracking)
-  const mockLegacyArchives = Object.keys(localStorage).filter(k => k.startsWith('wanwu_legacy_capsule_')).map(k => ({
-    id: k,
-    type: 'legacy',
-    title: '遗泽锦囊',
-    content: localStorage.getItem(k) || '',
-    timestamp: parseInt(k.split('_').pop() || '0')
-  }));
 
   return (
-    <div className="h-full flex flex-col relative overflow-hidden font-serif text-white/90 bg-black">
-      {/* 背景图片 */}
-      <div className="absolute inset-0 z-0">
-        <img 
-          src="/images/member_bg.png" 
-          alt="Member Background" 
-          className="w-full h-full object-cover opacity-80"
-        />
-        {/* 渐变遮罩，确保文字可读性 */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
-      </div>
-
-      {/* 内容区域 */}
-      <div className="relative z-20 flex-1 flex flex-col px-8 pt-20 pb-24 overflow-y-auto scrollbar-hide">
-        
-        {/* 顶部栏 */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex justify-between items-start"
-        >
-          <div>
-            <h1 className="text-3xl tracking-[0.2em] font-medium mb-2 font-kai text-white">我的</h1>
-            <p className="text-xs text-white/60 tracking-[0.3em] uppercase">Profile</p>
-          </div>
-          {isLoggedIn && (
-            <button 
-              onClick={handleLogout}
-              className="p-2 rounded-full hover:bg-white/10 transition-colors backdrop-blur-sm"
-            >
-              <LogOut className="w-4 h-4 text-white/60" />
-            </button>
-          )}
-        </motion.div>
-
-        {/* 用户卡片 / 登录入口 */}
-        <div 
-          onClick={() => !isLoggedIn && setShowLogin(true)}
-          className="relative h-32 rounded-2xl overflow-hidden mb-8 group cursor-pointer"
-        >
-          <div className="absolute inset-0 bg-white/5 backdrop-blur-md border border-white/10 transition-colors group-hover:bg-white/10 shadow-lg" />
-          
-          <div className="relative z-10 h-full p-6 flex items-center gap-6">
-            <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
-              <User className="w-8 h-8 text-white/80" />
-            </div>
-            
-            <div className="flex-1">
+    <div className="min-h-screen bg-[#0A0A0A] text-white pb-24 relative overflow-hidden">
+      {/* 背景光效 */}
+      <div className="absolute top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-[#1C1C1C] to-transparent pointer-events-none" />
+      
+      <div className="relative z-10 px-6 pt-12">
+        {/* 头部用户信息 */}
+        <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden relative group">
               {isLoggedIn ? (
-                <>
-                  <h2 className="text-xl font-medium tracking-widest text-white mb-1 font-kai">{profile.nickname || "悟道者"}</h2>
-                  <p className="text-xs text-white/60 tracking-wider flex items-center gap-2">
-                    <MapPin className="w-3 h-3" /> {profile.birthCity || "未知之地"}
-                  </p>
-                </>
+                <div className="w-full h-full bg-gradient-to-br from-[#FFD700]/20 to-transparent flex items-center justify-center text-2xl font-kai text-[#FFD700]">
+                  {profile.nickname[0]}
+                </div>
               ) : (
-                <>
-                  <h2 className="text-lg font-medium tracking-widest text-white mb-1 font-kai">点击登录/注册</h2>
-                  <p className="text-xs text-white/60 tracking-wider">建立个人基础结构</p>
-                </>
+                <User className="w-8 h-8 text-white/40 group-hover:text-white/60 transition-colors" />
+              )}
+              {isMember && (
+                <div className="absolute bottom-0 right-0 w-5 h-5 bg-[#FFD700] rounded-full flex items-center justify-center border-2 border-[#0A0A0A]">
+                  <Crown className="w-3 h-3 text-black" />
+                </div>
               )}
             </div>
-            
-            {!isLoggedIn && <ChevronRight className="w-5 h-5 text-white/40" />}
+            <div>
+              <h1 className="text-xl font-kai tracking-widest text-white mb-1">
+                {isLoggedIn ? profile.nickname : "未登录"}
+              </h1>
+              <p className="text-xs text-white/40 tracking-wider flex items-center gap-2">
+                {isLoggedIn ? (
+                  <>
+                    <span>{profile.birthDate}</span>
+                    <span className="w-1 h-1 rounded-full bg-white/20" />
+                    <span>{profile.birthCity}</span>
+                  </>
+                ) : (
+                  <button onClick={() => setShowLogin(true)} className="hover:text-[#FFD700] transition-colors">
+                    点击建立档案
+                  </button>
+                )}
+              </p>
+            </div>
           </div>
+          <button className="p-2 rounded-full hover:bg-white/5 transition-colors">
+            <Settings className="w-6 h-6 text-white/40" />
+          </button>
         </div>
 
-        {/* 命理结构 (User Core Structure) */}
-        {isLoggedIn && coreStructure && (
-          <div className="mb-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-5">
-              <Hexagon className="w-32 h-32 text-white" />
-            </div>
-            
-            <h3 className="text-sm font-medium text-white/80 tracking-[0.2em] mb-6 font-kai flex items-center gap-2">
-              <span className="w-1 h-4 bg-[#FFD700] rounded-full" />
-              命理结构
-            </h3>
-
-            <div className="grid grid-cols-2 gap-6">
-              {/* 命卦 */}
-              <div className="space-y-1">
-                <p className="text-[10px] text-white/40 tracking-widest uppercase">Life Hexagram</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl text-[#FFD700] font-kai">{coreStructure.lifeHexagramName}</span>
-                  <span className="text-xs text-white/60">卦</span>
-                </div>
-              </div>
-
-              {/* 修行主轴 */}
-              <div className="space-y-1">
-                <p className="text-[10px] text-white/40 tracking-widest uppercase">Cultivation</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xl text-white font-kai">{coreStructure.cultivationAxis}</span>
-                </div>
-              </div>
-
-              {/* 气质类型 */}
-              <div className="space-y-1">
-                <p className="text-[10px] text-white/40 tracking-widest uppercase">Temperament</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xl text-white font-kai">{coreStructure.temperament}</span>
-                </div>
-              </div>
-
-              {/* 五行倾向 (简略) */}
-              <div className="space-y-1 col-span-2">
-                <p className="text-[10px] text-white/40 tracking-widest uppercase mb-2">Energy State</p>
-                <FiveElementsChart data={coreStructure.currentEnergy || coreStructure.elements} />
-              </div>
-            </div>
-          </div>
-        )}
-
-
-
-        {/* 功能入口区 (登录后可见) */}
+        {/* 核心数据概览 (Stats) */}
         {isLoggedIn && (
           <div className="grid grid-cols-2 gap-4 mb-8">
-            <button 
-              onClick={() => onNavigate && onNavigate('today_image')}
-              className="relative overflow-hidden rounded-2xl p-5 text-left group shadow-lg bg-gradient-to-br from-[#FFD700]/20 to-transparent border border-[#FFD700]/20 backdrop-blur-sm"
-            >
-              <div className="absolute top-0 right-0 p-3 opacity-20">
-                <Sparkles className="w-12 h-12 text-[#FFD700]" />
+            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Star className="w-12 h-12 text-white" />
               </div>
-              <div className="relative z-10">
-                <div className="w-8 h-8 rounded-full bg-[#FFD700]/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-500">
-                  <Sparkles className="w-4 h-4 text-[#FFD700]" />
-                </div>
-                <h3 className="text-lg font-kai tracking-widest text-[#FFD700] mb-1">今日之象</h3>
-                <p className="text-[10px] text-[#FFD700]/60 tracking-wider">每日运势 · 五行指引</p>
+              <div className="text-xs text-white/40 mb-1 tracking-wider">累计功德</div>
+              <div className="text-2xl font-medium text-white font-mono">1,248</div>
+              <div className="text-[10px] text-[#FFD700]/60 mt-2 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FFD700]" />
+                今日 +12
               </div>
-            </button>
-
-            <button 
-              onClick={() => onNavigate && onNavigate('library')}
-              className="relative overflow-hidden rounded-2xl p-5 text-left group shadow-lg bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors"
-            >
-              <div className="absolute top-0 right-0 p-3 opacity-10">
-                <BookOpen className="w-12 h-12 text-white" />
+            </div>
+            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Wind className="w-12 h-12 text-white" />
               </div>
-              <div className="relative z-10">
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-500">
-                  <BookOpen className="w-4 h-4 text-white" />
-                </div>
-                <h3 className="text-lg font-kai tracking-widest text-white mb-1">万物藏经</h3>
-                <p className="text-[10px] text-white/60 tracking-wider">六十四卦 · 智慧全集</p>
+              <div className="text-xs text-white/40 mb-1 tracking-wider">专注时长</div>
+              <div className="text-2xl font-medium text-white font-mono">42<span className="text-sm ml-1 text-white/40">h</span></div>
+              <div className="text-[10px] text-white/40 mt-2">
+                超越 85% 道友
               </div>
-            </button>
+            </div>
           </div>
         )}
 
