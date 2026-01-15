@@ -52,7 +52,8 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Helper to generate deterministic hash
-const simpleHash = (str: string): number => {
+const simpleHash = (str: string | undefined | null): number => {
+  if (!str) return 0;
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
@@ -131,7 +132,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   // Core Engine Logic
   const generateCoreEngine = (p: LifeParameters) => {
-    const seed = simpleHash(p.nickname) + simpleHash(p.birthDate) + simpleHash(p.birthCity);
+    const seed = simpleHash(p.nickname || '') + simpleHash(p.birthDate || '') + simpleHash(p.birthCity || '');
     
     // 1. Generate Core Structure
     const lifeHexagramId = (seed % 9) + 1; // 1-9
