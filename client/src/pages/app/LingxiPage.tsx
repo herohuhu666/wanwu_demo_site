@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ChevronRight, Lock, MessageCircle, Mic, History, X, Sparkles, Trash2 } from "lucide-react";
+import { Send, ChevronRight, Lock, MessageCircle, Mic, History, X, Sparkles, Trash2, Camera, Upload } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 import { AudioAnchor } from "@/components/AudioAnchor";
@@ -8,7 +8,7 @@ import { GenerativeArtCard } from "@/components/GenerativeArtCard";
 import { WorryShredder } from "@/components/WorryShredder";
 import { trpc } from "@/lib/trpc";
 
-// Categories
+// Categories for "所念" (what to ask about)
 const CATEGORIES = [
   { id: 'career', label: '事业', icon: '💼' },
   { id: 'relationship', label: '人际', icon: '🤝' },
@@ -31,13 +31,15 @@ export default function LingxiPage() {
     insightHistory
   } = useUser();
 
-  const [step, setStep] = useState<'category' | 'input' | 'result'>('category');
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [input, setInput] = useState("");
+  // Step: 'see' (select what you see) -> 'ask' (select what to ask) -> 'result'
+  const [step, setStep] = useState<'see' | 'ask' | 'result'>('see');
+  const [seenThing, setSeenThing] = useState(""); // What user sees
+  const [selectedCategory, setSelectedCategory] = useState<string>(""); // What user wants to ask
   const [result, setResult] = useState<null | {
     answer: string;
     isDeep: boolean;
     question: string;
+    seenThing: string;
     timestamp: number;
   }>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -47,14 +49,23 @@ export default function LingxiPage() {
   // tRPC mutation for Qwen API
   const qwenChatMutation = trpc.qwen.chat.useMutation();
 
-  const handleCategorySelect = (categoryId: string) => {
-    setSelectedCategory(categoryId);
-    setStep('input');
+  // Step 1: User describes what they see
+  const handleSeenThingSubmit = () => {
+    if (!seenThing.trim()) {
+      toast.error("请描述你所见的事物");
+      return;
+    }
+    setStep('ask');
   };
 
-  const handleAsk = async () => {
-    if (!input.trim()) return;
-    
+  // Step 2: User selects what to ask about
+  const handleCategorySelect = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    handleAsk(categoryId);
+  };
+
+  // Step 3: Generate insight based on both dimensions
+  const handleAsk = async (categoryId: string) => {
     const availability = checkInsightAvailability();
     
     if (!availability.available) {
@@ -73,15 +84,18 @@ export default function LingxiPage() {
       const state = dailyRecord?.state || 'steady';
       const isDeep = isMember;
       
-      // Build system prompt based on user state and category
-      const categoryLabel = CATEGORIES.find(c => c.id === selectedCategory)?.label || '随心';
+      // Build system prompt based on both "所见" and "所念"
+      const categoryLabel = CATEGORIES.find(c => c.id === categoryId)?.label || '随心';
       let systemPrompt = `你是"万物"App 中的"灵犀"智慧导师，擅长以东方哲学和禅意语言提供人生指引。
+用户所见：${seenThing}
+用户所念（问询类型）：${categoryLabel}
+
 你的回答风格应该：
 1. 简洁克制，不超过150字
 2. 使用诗意、禅意的语言，避免说教
-3. 提供启发性的思考角度，而非直接的答案
+3. 根据用户所见的事物和所念的问题，提供启发性的思考角度
 4. 根据用户当前状态（${state === 'advance' ? '进（行）' : state === 'retreat' ? '收（省）' : '稳（守）'}）调整建议
-5. 问询分类：${categoryLabel}
+5. 将所见事物与所念问题相联系，提供"所见即所得，所念即回响"的启示
 
 当前用户状态：${state === 'advance' ? '势头向上，能量充沛' : state === 'retreat' ? '势头收敛，能量内藏' : '势头平稳，能量均衡'}`;
 
@@ -93,61 +107,48 @@ export default function LingxiPage() {
       const response = await qwenChatMutation.mutateAsync({
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: input }
+          { role: "user", content: `基于我所见的"${seenThing}"和我所念的"${categoryLabel}"，请给我智慧指引。` }
         ],
         temperature: 0.8,
         max_tokens: 300
       });
 
-      let answer = response.success ? response.message : "抱歉，灵犀暂时无法回应。请稍后再试。";
-
-      // Add deep analysis for members
-      if (isDeep && response.success) {
-        answer += "\n\n【深度解读】\n";
-        answer += `当前状态：${state === 'advance' ? '进（行）' : state === 'retreat' ? '收（省）' : '稳（守）'}\n`;
-        
-        if (state === 'advance') {
-          answer += `势头向上，能量充沛。${profile.nickname || '阁下'}可大胆尝试，但需注意节奏，避免急躁。`;
-        } else if (state === 'retreat') {
-          answer += `势头收敛，能量内藏。${profile.nickname || '阁下'}宜静不宜动，韬光养晦是上策。`;
-        } else {
-          answer += `势头平稳，能量均衡。${profile.nickname || '阁下'}适合巩固根基，徐徐图之。`;
-        }
-        
-        if (profile.birthCity) {
-          answer += `\n\n地气加持：${profile.birthCity}的水土养育了你的直觉，请相信第一反应。`;
-        }
-      }
-
-      const newRecord = {
-        question: input,
-        category: (CATEGORIES.find(c => c.id === selectedCategory)?.id || 'random') as any,
+      const answer = response.message;
+      
+      const newResult = {
         answer,
         isDeep,
+        question: `所见：${seenThing} | 所念：${categoryLabel}`,
+        seenThing,
         timestamp: Date.now()
       };
-
-      addInsightRecord(newRecord);
       
-      setResult(newRecord);
+      setResult(newResult);
       setStep('result');
+      addInsightRecord({
+        answer,
+        isDeep,
+        category: categoryId as 'career' | 'relationship' | 'health' | 'emotion' | 'life' | 'random',
+        question: `所见：${seenThing} | 所念：${categoryLabel}`
+      });
+      
     } catch (error) {
-      console.error("[Lingxi Error]", error);
-      toast.error("灵犀感应失败，请稍后再试");
+      console.error("Error calling Qwen API:", error);
+      toast.error("灵犀暂时失语，请稍后再试");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const reset = () => {
-    setStep('category');
+  const handleReset = () => {
+    setStep('see');
+    setSeenThing("");
     setSelectedCategory("");
-    setInput("");
     setResult(null);
   };
 
   return (
-    <div className="h-full flex flex-col relative overflow-hidden font-serif text-white/90 bg-black">
+    <div className="h-full flex flex-col bg-black relative overflow-hidden">
       {/* 背景图片 */}
       <div className="absolute inset-0 z-0">
         <img 
@@ -188,10 +189,10 @@ export default function LingxiPage() {
         </div>
 
         <AnimatePresence mode="wait">
-          {/* 步骤1: 选择分类 */}
-          {step === 'category' && (
+          {/* 步骤1: 所见 - 描述你看到的事物 */}
+          {step === 'see' && (
             <motion.div
-              key="category"
+              key="see"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -199,10 +200,54 @@ export default function LingxiPage() {
             >
               <div className="text-center mb-12">
                 <div className="w-16 h-16 mx-auto bg-[#FFD700]/10 rounded-full flex items-center justify-center mb-6 border border-[#FFD700]/20">
+                  <Camera className="w-8 h-8 text-[#FFD700]" />
+                </div>
+                <h2 className="text-xl text-white tracking-widest font-light">所见即所得，所念即回响</h2>
+                <p className="text-xs text-white/60 mt-3 tracking-wider">请描述你所见的事物</p>
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-lg">
+                <textarea
+                  value={seenThing}
+                  onChange={(e) => setSeenThing(e.target.value)}
+                  placeholder="你看到了什么？一朵花、一块石头、一杯茶...描述你所见的事物"
+                  className="w-full h-32 bg-transparent text-white placeholder-white/40 text-sm leading-relaxed focus:outline-none resize-none"
+                />
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={handleSeenThingSubmit}
+                    disabled={!seenThing.trim() || isLoading}
+                    className="flex-1 bg-[#FFD700] text-black font-medium py-3 rounded-lg hover:bg-[#FFD700]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isLoading ? "处理中..." : "下一步"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* 步骤2: 所念 - 选择问询方向 */}
+          {step === 'ask' && (
+            <motion.div
+              key="ask"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="flex-1 flex flex-col justify-center"
+            >
+              <button 
+                onClick={() => setStep('see')}
+                className="self-start mb-6 text-xs text-white/60 flex items-center gap-1 hover:text-white"
+              >
+                <ChevronRight className="w-3 h-3 rotate-180" /> 返回
+              </button>
+
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 mx-auto bg-[#FFD700]/10 rounded-full flex items-center justify-center mb-6 border border-[#FFD700]/20">
                   <MessageCircle className="w-8 h-8 text-[#FFD700]" />
                 </div>
-                <h2 className="text-xl text-white tracking-widest font-light">心有所惑，叩问灵犀</h2>
-                <p className="text-xs text-white/60 mt-3 tracking-wider">请选择问询方向</p>
+                <h2 className="text-lg text-white tracking-widest font-light">所见：{seenThing}</h2>
+                <p className="text-xs text-white/60 mt-3 tracking-wider">请选择你所念的问询方向</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -210,7 +255,8 @@ export default function LingxiPage() {
                   <button
                     key={cat.id}
                     onClick={() => handleCategorySelect(cat.id)}
-                    className="p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-[#FFD700]/30 transition-all group flex flex-col items-center gap-2 backdrop-blur-sm"
+                    disabled={isLoading}
+                    className="p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-[#FFD700]/30 transition-all group flex flex-col items-center gap-2 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className="text-2xl filter grayscale group-hover:grayscale-0 transition-all">{cat.icon}</span>
                     <span className="text-sm text-white/80 tracking-widest group-hover:text-[#FFD700]">{cat.label}</span>
@@ -220,177 +266,117 @@ export default function LingxiPage() {
             </motion.div>
           )}
 
-          {/* 步骤2: 输入问题 */}
-          {step === 'input' && (
-            <motion.div
-              key="input"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="flex-1 flex flex-col"
-            >
-              <button 
-                onClick={() => setStep('category')}
-                className="self-start mb-6 text-xs text-white/60 flex items-center gap-1 hover:text-white"
-              >
-                <ChevronRight className="w-3 h-3 rotate-180" /> 返回分类
-              </button>
-
-              <div className="flex-1 flex flex-col justify-center">
-                <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-lg relative">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-[#FFD700]/30 rounded-t-2xl" />
-                  
-                  <div className="text-center mb-6">
-                    <span className="text-xs text-[#FFD700] tracking-widest border border-[#FFD700]/30 px-3 py-1 rounded-full">
-                      {CATEGORIES.find(c => c.id === selectedCategory)?.label}
-                    </span>
-                  </div>
-
-                  <textarea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="请描述您的困惑..."
-                    className="w-full bg-transparent border-none resize-none text-white placeholder-white/30 text-base leading-relaxed focus:ring-0 min-h-[150px] text-center font-sans"
-                  />
-
-                  <div className="mt-8 flex flex-col items-center gap-4">
-                    <button
-                      onClick={handleAsk}
-                      disabled={!input.trim() || isLoading}
-                      className="w-full py-3 bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/20 rounded-xl flex items-center justify-center gap-2 hover:bg-[#FFD700]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isLoading ? (
-                        <span className="text-sm tracking-widest">感应中...</span>
-                      ) : (
-                        <>
-                          <span className="text-sm tracking-widest">发起问询</span>
-                          <Send className="w-3 h-3" />
-                        </>
-                      )}
-                    </button>
-
-                    {!isMember && (
-                      <div className="flex items-center gap-4 text-[10px] text-white/40">
-                        <span className="flex items-center gap-1">
-                          今日免费: {Math.max(0, 3 - insightCount)}/3
-                        </span>
-                        <span className="w-[1px] h-3 bg-white/10" />
-                        <span className="flex items-center gap-1">
-                          功德兑换: 50/次
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* 步骤3: 结果展示 */}
+          {/* 步骤3: 结果 */}
           {step === 'result' && result && (
             <motion.div
               key="result"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex-1 flex flex-col"
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="flex-1 flex flex-col justify-center"
             >
-              <div className={`flex-1 flex flex-col rounded-2xl p-6 border shadow-lg relative ${
-                isMember ? 'bg-white/10 border-[#FFD700]/30 backdrop-blur-md' : 'bg-white/5 border-white/10 backdrop-blur-md'
-              }`}>
-                {/* 装饰 */}
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                  <Sparkles className="w-24 h-24 text-[#FFD700]" />
+              <button 
+                onClick={() => setStep('ask')}
+                className="self-start mb-6 text-xs text-white/60 flex items-center gap-1 hover:text-white"
+              >
+                <ChevronRight className="w-3 h-3 rotate-180" /> 返回
+              </button>
+
+              <div className="bg-white/5 backdrop-blur-md rounded-2xl p-8 border border-white/10 shadow-lg">
+                <div className="text-center mb-8">
+                  <p className="text-xs text-[#FFD700] tracking-widest mb-4">所见：{result.seenThing}</p>
+                  <Sparkles className="w-8 h-8 text-[#FFD700] mx-auto mb-4" />
                 </div>
 
-                <div className="relative z-10 flex-1">
-                  <div className="flex items-center gap-2 mb-6">
-                    <div className="w-8 h-8 rounded-full bg-[#FFD700]/20 border border-[#FFD700]/30 flex items-center justify-center text-[#FFD700] text-xs font-serif">
-                      灵
-                    </div>
-                    <span className="text-xs text-white/60 tracking-widest">灵犀指引</span>
-                  </div>
-
-                  <div className="prose prose-invert max-w-none">
-                    <p className="text-white/90 text-lg leading-loose font-kai whitespace-pre-wrap">
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <p className="text-white/90 leading-relaxed text-sm">
                       {result.answer}
                     </p>
                   </div>
 
-                  {/* 心境生成画 */}
-                  <GenerativeArtCard 
-                    state={dailyRecord?.state || 'steady'} 
-                    seed={result.question + result.timestamp}
-                    question={result.question}
-                  />
-
-                  {!isMember && (
-                    <div className="mt-8 pt-6 border-t border-white/10 text-center">
-                      <p className="text-xs text-white/40 mb-2">解锁无限问询与深度解读</p>
-                      <button className="text-xs text-[#FFD700] border border-[#FFD700]/30 px-4 py-1 rounded-full hover:bg-[#FFD700]/10 transition-colors">
-                        升级会员
-                      </button>
+                  {result.isDeep && (
+                    <div className="bg-[#FFD700]/5 border border-[#FFD700]/20 rounded-lg p-4">
+                      <p className="text-xs text-[#FFD700] tracking-widest">会员深度解读</p>
+                      <p className="text-xs text-white/60 mt-2">此为会员专属内容</p>
                     </div>
                   )}
+
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      onClick={handleReset}
+                      className="flex-1 bg-white/10 text-white font-medium py-3 rounded-lg hover:bg-white/20 transition-colors"
+                    >
+                      再次问询
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleReset();
+                        setShowHistory(true);
+                      }}
+                      className="flex-1 bg-[#FFD700] text-black font-medium py-3 rounded-lg hover:bg-[#FFD700]/90 transition-colors"
+                    >
+                      查看历史
+                    </button>
+                  </div>
                 </div>
-
-                <div className="mt-8 flex justify-center">
-                  <button
-                    onClick={reset}
-                    className="px-6 py-2 bg-white/5 rounded-full text-sm text-white/60 hover:bg-white/10 transition-colors"
-                  >
-                    再次问询
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* 烦恼粉碎机 */}
-        <AnimatePresence>
-          {showWorryShredder && <WorryShredder onClose={() => setShowWorryShredder(false)} />}
-        </AnimatePresence>
-
-        {/* 历史记录弹窗 */}
-        <AnimatePresence>
-          {showHistory && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-50 bg-black/90 backdrop-blur-md p-6 flex flex-col"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg text-white font-medium tracking-widest">问询记录</h3>
-                <button onClick={() => setShowHistory(false)}>
-                  <X className="w-6 h-6 text-white/60" />
-                </button>
-              </div>
-              
-              <div className="flex-1 overflow-y-auto space-y-4">
-                {insightHistory.length === 0 ? (
-                  <div className="text-center text-white/40 py-12 text-sm">暂无记录</div>
-                ) : (
-                  insightHistory.map((record, i) => (
-                    <div key={i} className="bg-white/5 rounded-xl p-4 border border-white/10">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="text-xs text-[#FFD700] border border-[#FFD700]/30 px-2 py-0.5 rounded-full">
-                          {CATEGORIES.find(c => c.id === record.category)?.label}
-                        </span>
-                        <span className="text-[10px] text-white/40">
-                          {new Date(record.timestamp).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="text-sm text-white/80 mb-2 font-medium">{record.question}</p>
-                      <p className="text-xs text-white/60 line-clamp-2">{record.answer}</p>
-                    </div>
-                  ))
-                )}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {/* 历史记录模态框 */}
+      <AnimatePresence>
+        {showHistory && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end"
+            onClick={() => setShowHistory(false)}
+          >
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full bg-black/90 border-t border-white/10 rounded-t-3xl p-6 max-h-[80vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg text-white tracking-widest">问询历史</h3>
+                <button
+                  onClick={() => setShowHistory(false)}
+                  className="p-2 hover:bg-white/10 rounded-full"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {insightHistory && insightHistory.length > 0 ? (
+                  insightHistory.map((record, idx) => (
+                    <div key={idx} className="bg-white/5 border border-white/10 rounded-lg p-4">
+                      <p className="text-xs text-[#FFD700] mb-2">{record.question}</p>
+                      <p className="text-xs text-white/70">{record.answer}</p>
+                      <p className="text-xs text-white/40 mt-2">
+                        {new Date(record.timestamp).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center text-white/60 py-8">暂无问询历史</p>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 烦恼粉碎机 */}
+      {showWorryShredder && (
+        <WorryShredder onClose={() => setShowWorryShredder(false)} />
+      )}
     </div>
   );
 }
