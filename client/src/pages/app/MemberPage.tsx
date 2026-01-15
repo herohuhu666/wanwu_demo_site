@@ -357,54 +357,52 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
           </div>
         )}
 
-        {/* 会员订阅卡片 */}
-        {isLoggedIn && (
-          <div className="mb-8">
-            <div className="relative overflow-hidden rounded-2xl p-6 border border-[#FFD700]/30 bg-gradient-to-br from-[#FFD700]/10 to-transparent backdrop-blur-sm">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-lg font-kai tracking-widest text-[#FFD700] flex items-center gap-2">
-                    <Crown className="w-5 h-5" />
-                    万物会员
-                  </h3>
-                  <p className="text-xs text-[#FFD700]/60 mt-1 tracking-wider">
-                    {isMember ? "已解锁全部特权" : "解锁更深层的生命指引"}
-                  </p>
-                </div>
-                {isMember && (
-                  <span className="px-3 py-1 rounded-full bg-[#FFD700]/20 text-[#FFD700] text-xs font-medium border border-[#FFD700]/20">
-                    已订阅
-                  </span>
-                )}
+        {/* 会员订阅卡片 - Always Visible */}
+        <div className="mb-8">
+          <div className="relative overflow-hidden rounded-2xl p-6 border border-[#FFD700]/30 bg-gradient-to-br from-[#FFD700]/10 to-transparent backdrop-blur-sm">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-lg font-kai tracking-widest text-[#FFD700] flex items-center gap-2">
+                  <Crown className="w-5 h-5" />
+                  万物会员
+                </h3>
+                <p className="text-xs text-[#FFD700]/60 mt-1 tracking-wider">
+                  {isMember ? "已解锁全部特权" : "解锁更深层的生命指引"}
+                </p>
               </div>
-
-              <div className="space-y-3 mb-6">
-                {[
-                  "无限次灵犀问询",
-                  "深度卦象爻辞解析",
-                  "完整功德趋势分析",
-                  "永久保存历史记录"
-                ].map((feature, i) => (
-                  <div key={i} className="flex items-center gap-2 text-xs text-white/80">
-                    <Check className="w-3 h-3 text-[#FFD700]" />
-                    {feature}
-                  </div>
-                ))}
-              </div>
-
-              <button
-                onClick={handleToggleMember}
-                className={`w-full py-3 rounded-xl text-sm font-medium tracking-widest transition-all ${
-                  isMember 
-                    ? "bg-white/5 text-white/60 hover:bg-white/10" 
-                    : "bg-[#FFD700] text-black hover:bg-[#E5C100] shadow-[0_0_20px_rgba(255,215,0,0.3)]"
-                }`}
-              >
-                {isMember ? "管理订阅" : "立即升级"}
-              </button>
+              {isMember && (
+                <span className="px-3 py-1 rounded-full bg-[#FFD700]/20 text-[#FFD700] text-xs font-medium border border-[#FFD700]/20">
+                  已订阅
+                </span>
+              )}
             </div>
+
+            <div className="space-y-3 mb-6">
+              {[
+                "无限次灵犀问询",
+                "深度卦象爻辞解析",
+                "完整功德趋势分析",
+                "永久保存历史记录"
+              ].map((feature, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs text-white/80">
+                  <Check className="w-3 h-3 text-[#FFD700]" />
+                  {feature}
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={handleToggleMember}
+              className={`w-full py-3 rounded-xl text-sm font-medium tracking-widest transition-all ${
+                isMember 
+                  ? "bg-white/5 text-white/60 hover:bg-white/10" 
+                  : "bg-[#FFD700] text-black hover:bg-[#E5C100] shadow-[0_0_20px_rgba(255,215,0,0.3)]"
+              }`}
+            >
+              {isMember ? "管理订阅" : "立即升级"}
+            </button>
           </div>
-        )}
+        </div>
       </div>
 
       {/* 登录弹窗 */}
