@@ -6,6 +6,7 @@ import { useUser, DailyState, EnergyLevel, SleepQuality } from "@/contexts/UserC
 import { AudioAnchor } from "@/components/AudioAnchor";
 import { FireflyEffect } from "@/components/FireflyEffect";
 import { getCurrentSolarTerm, SolarTerm } from "@/lib/solar-terms";
+import { DigitalIncense } from "@/components/DigitalIncense";
 
 // Zen Quotes
 const ZEN_QUOTES = [
@@ -520,36 +521,16 @@ export default function GuardianPage() {
               <p className="text-xs text-white/40 tracking-widest">Meditation</p>
             </div>
 
-            <div className="relative w-64 h-64 flex items-center justify-center mb-12">
-              {/* 进度圆环 */}
-              <svg className="absolute inset-0 w-full h-full -rotate-90">
-                <circle
-                  cx="128"
-                  cy="128"
-                  r="120"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.1)"
-                  strokeWidth="2"
-                />
-                <circle
-                  cx="128"
-                  cy="128"
-                  r="120"
-                  fill="none"
-                  stroke="#E0D6C8"
-                  strokeWidth="2"
-                  strokeDasharray={2 * Math.PI * 120}
-                  strokeDashoffset={2 * Math.PI * 120 * (1 - meditationTime / 900)}
-                  className="transition-all duration-1000 ease-linear"
-                />
-              </svg>
+            <div className="relative w-64 h-80 flex items-center justify-center mb-12">
+              {/* 一柱心香 */}
+              <div className="absolute inset-0">
+                <DigitalIncense progress={meditationTime / 900} />
+              </div>
               
-              <div className="text-center">
-                <div className="text-4xl font-light text-white tabular-nums tracking-widest mb-2">
+              {/* 倒计时悬浮显示 (底部) */}
+              <div className="absolute bottom-0 left-0 right-0 text-center translate-y-8">
+                <div className="text-xl font-light text-white/60 tabular-nums tracking-widest">
                   {formatMeditationTime(meditationTime)}
-                </div>
-                <div className="text-xs text-white/40 tracking-widest">
-                  / 15:00
                 </div>
               </div>
             </div>

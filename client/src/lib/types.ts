@@ -52,7 +52,7 @@ export interface HexagramData {
 
 export interface MeritRecord {
   id: string;
-  type: 'check_in' | 'guardian' | 'pray' | 'altruism' | 'reflection' | 'first_ritual' | 'first_insight' | 'consume';
+  type: 'check_in' | 'guardian' | 'pray' | 'altruism' | 'reflection' | 'first_ritual' | 'first_insight' | 'consume' | 'wooden_fish';
   amount: number;
   timestamp: number;
   desc: string;

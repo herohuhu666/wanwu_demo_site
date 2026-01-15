@@ -7,6 +7,7 @@ import { LifeParameters } from "@/lib/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import FiveElementsChart from "@/components/FiveElementsChart";
+import { CyberWoodenFish } from "@/components/CyberWoodenFish";
 
 interface MemberPageProps {
   onNavigate?: (tab: string) => void;
@@ -17,6 +18,7 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
   const [showLogin, setShowLogin] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showWoodenFish, setShowWoodenFish] = useState(false);
   const [tempProfile, setTempProfile] = useState<LifeParameters>({
     nickname: "",
     birthDate: "",
@@ -487,6 +489,11 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
             </motion.div>
           </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* 赛博木鱼 */}
+      <AnimatePresence>
+        {showWoodenFish && <CyberWoodenFish onClose={() => setShowWoodenFish(false)} />}
       </AnimatePresence>
 
       {/* 升级确认弹窗 */}

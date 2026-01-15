@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ChevronRight, Lock, MessageCircle, Mic, History, X, Sparkles } from "lucide-react";
+import { Send, ChevronRight, Lock, MessageCircle, Mic, History, X, Sparkles, Trash2 } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 import { AudioAnchor } from "@/components/AudioAnchor";
 import { GenerativeArtCard } from "@/components/GenerativeArtCard";
+import { WorryShredder } from "@/components/WorryShredder";
 
 // Categories
 const CATEGORIES = [
@@ -40,6 +41,7 @@ export default function LingxiPage() {
   }>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showWorryShredder, setShowWorryShredder] = useState(false);
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -166,12 +168,20 @@ export default function LingxiPage() {
             <h1 className="text-2xl text-white font-medium tracking-[0.2em]">灵犀</h1>
             <p className="text-[10px] text-white/60 tracking-[0.3em] uppercase mt-1">Insight</p>
           </div>
-          <button 
-            onClick={() => setShowHistory(true)}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors backdrop-blur-sm"
-          >
-            <History className="w-5 h-5 text-white/60" />
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => setShowWorryShredder(true)}
+              className="p-2 rounded-full hover:bg-white/10 transition-colors backdrop-blur-sm"
+            >
+              <Trash2 className="w-5 h-5 text-white/60" />
+            </button>
+            <button 
+              onClick={() => setShowHistory(true)}
+              className="p-2 rounded-full hover:bg-white/10 transition-colors backdrop-blur-sm"
+            >
+              <History className="w-5 h-5 text-white/60" />
+            </button>
+          </div>
         </div>
 
         <AnimatePresence mode="wait">
@@ -330,6 +340,11 @@ export default function LingxiPage() {
               </div>
             </motion.div>
           )}
+        </AnimatePresence>
+
+        {/* 烦恼粉碎机 */}
+        <AnimatePresence>
+          {showWorryShredder && <WorryShredder onClose={() => setShowWorryShredder(false)} />}
         </AnimatePresence>
 
         {/* 历史记录弹窗 */}
