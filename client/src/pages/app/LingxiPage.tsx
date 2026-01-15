@@ -13,7 +13,7 @@ const CATEGORIES = [
   { id: 'career', label: '事业', icon: '💼' },
   { id: 'relationship', label: '人际', icon: '🤝' },
   { id: 'health', label: '健康', icon: '🌿' },
-  { id: 'emotion', label: '情绪', icon: '💭' },
+  { id: 'emotion', label: '情感', icon: '💭' },
   { id: 'life', label: '生活', icon: '🏠' },
   { id: 'random', label: '随心', icon: '✨' },
 ];
@@ -117,17 +117,17 @@ export default function LingxiPage() {
 
       const answer = response.message;
       
-      // Generate deep reading content for members
+      // Generate deep reading content for members - plain language direct reply
       let deepContent = "";
       if (isDeep) {
         try {
           const deepResponse = await qwenChatMutation.mutateAsync({
             messages: [
-              { role: "system", content: "你是东方哲学智慧导师，提供深层的人生启示分析。每个维度用2-3句话。" },
-              { role: "user", content: `基于用户所见的"${seenThing}"和所念的"${categoryLabel}"，请从以下维度提供更深层的分析：\n1. 象征意义：这个事物在传统文化中的深层含义\n2. 人生映照：它如何映照用户当前的人生状态\n3. 行动建议：基于这个启示，用户可以如何调整心态或行动\n4. 长期启示：这个启示对用户未来的指导意义` }
+              { role: "system", content: "你是一个贴心的朋友，用大白话直接回复用户的问题。简洁、亲切、实用。" },
+              { role: "user", content: `我看到了"${seenThing}"，我想问关于"${categoryLabel}"的事。你直接告诉我应该怎么办吧。` }
             ],
             temperature: 0.8,
-            max_tokens: 500
+            max_tokens: 300
           });
           deepContent = deepResponse.message;
         } catch (error) {
