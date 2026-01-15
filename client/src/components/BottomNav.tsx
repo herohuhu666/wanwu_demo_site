@@ -7,11 +7,11 @@ interface BottomNavProps {
 
 export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const tabs = [
-    { id: 'today_image', icon: Sun, label: '天' },
-    { id: 'ritual', icon: Hexagon, label: '地' },
-    { id: 'insight', icon: Eye, label: '人' },
-    { id: 'guardian', icon: BookOpen, label: '神' },
-    { id: 'member', icon: User, label: '我' },
+    { id: 'today_image', icon: Sun, label: '今日' },
+    { id: 'ritual', icon: Hexagon, label: '功德' },
+    { id: 'insight', icon: Eye, label: '灵犀' },
+    { id: 'guardian', icon: BookOpen, label: '守望' },
+    { id: 'member', icon: User, label: '我的' },
   ];
 
   return (
