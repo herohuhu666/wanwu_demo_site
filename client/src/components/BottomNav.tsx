@@ -1,4 +1,4 @@
-import { Sun, Eye, Hexagon, BookOpen, User } from "lucide-react";
+import { Compass, Sprout, Sparkles, Flame, Fingerprint } from "lucide-react";
 
 interface BottomNavProps {
   activeTab: string;
@@ -7,11 +7,11 @@ interface BottomNavProps {
 
 export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const tabs = [
-    { id: 'today_image', icon: Sun, label: '观象' },
-    { id: 'ritual', icon: Hexagon, label: '积善' },
-    { id: 'insight', icon: Eye, label: '问心' },
-    { id: 'guardian', icon: BookOpen, label: '入定' },
-    { id: 'member', icon: User, label: '本我' },
+    { id: 'today_image', icon: Compass, label: '观象' },
+    { id: 'ritual', icon: Sprout, label: '积善' },
+    { id: 'insight', icon: Sparkles, label: '问心' },
+    { id: 'guardian', icon: Flame, label: '入定' },
+    { id: 'member', icon: Fingerprint, label: '本我' },
   ];
 
   return (
