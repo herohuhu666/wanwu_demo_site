@@ -170,7 +170,7 @@ export default function RitualPage() {
             transition={{ duration: 0.5 }}
             className="absolute inset-0 z-10"
           >
-            <Suspense fallback={null}>
+            <Suspense fallback={<div className="absolute inset-0 z-50 flex items-center justify-center text-white/50">Loading 3D Assets...</div>}>
               <RitualCanvas isShaking={isShaking} onFinish={handle3DFinish} />
             </Suspense>
           </motion.div>
