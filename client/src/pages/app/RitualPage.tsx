@@ -68,13 +68,12 @@ export default function RitualPage() {
     setTimeout(() => {
       setIsShaking(false);
       stopSound();
-      
-      // Wait for 3D animation to finish (coin drop) before generating result
-      // The 3D component will call onFinish
-    }, 1500);
+      // The 3D component will detect isShaking change and call onFinish after animation
+    }, 2000);
   };
 
   const handle3DFinish = () => {
+    console.log("3D Finish Triggered");
     // Weighted Yao Generation based on Energy
     let yangProb = 0.5;
     if (coreStructure?.currentEnergy) {
@@ -130,7 +129,7 @@ export default function RitualPage() {
       stopSound();
       setIsShaking(false);
       // handle3DFinish will be called by RitualCanvas
-    }, 2000);
+    }, 2500);
   };
 
   const generateResult = (finalYaos: Yao[]) => {

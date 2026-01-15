@@ -30,9 +30,9 @@ export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
 
   const tabs = [
     { id: 'today_image', icon: Compass, label: '观象' },
-    { id: 'ritual', icon: Sprout, label: '积善' },
+    { id: 'ritual', icon: Sprout, label: '乾坤' },
     { id: 'insight', icon: Sparkles, label: '问心' },
-    { id: 'guardian', icon: Flame, label: '入定' },
+    { id: 'guardian', icon: Flame, label: '守望' },
     { id: 'member', icon: Fingerprint, label: '本我' },
   ];
 
