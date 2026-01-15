@@ -26,9 +26,6 @@ export function MobileSimulator({ children, className }: MobileSimulatorProps) {
         <div className="flex-1 overflow-hidden relative bg-white">
           {children}
         </div>
-        
-        {/* Home Indicator */}
-        <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-black/20 rounded-full z-20"></div>
       </div>
     </div>
   );
