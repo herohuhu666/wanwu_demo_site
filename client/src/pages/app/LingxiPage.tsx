@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AudioAnchor } from "@/components/AudioAnchor";
 import { GenerativeArtCard } from "@/components/GenerativeArtCard";
 import { WorryShredder } from "@/components/WorryShredder";
+import { trpc } from "@/lib/trpc";
 
 // Categories
 const CATEGORIES = [
@@ -43,12 +44,15 @@ export default function LingxiPage() {
   const [showHistory, setShowHistory] = useState(false);
   const [showWorryShredder, setShowWorryShredder] = useState(false);
 
+  // tRPC mutation for Qwen API
+  const qwenChatMutation = trpc.qwen.chat.useMutation();
+
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId);
     setStep('input');
   };
 
-  const handleAsk = () => {
+  const handleAsk = async () => {
     if (!input.trim()) return;
     
     const availability = checkInsightAvailability();
@@ -65,45 +69,40 @@ export default function LingxiPage() {
 
     setIsLoading(true);
     
-    // Mock Logic: Generate response
-    setTimeout(() => {
+    try {
       const state = dailyRecord?.state || 'steady';
-      let answer = "";
       const isDeep = isMember;
+      
+      // Build system prompt based on user state and category
+      const categoryLabel = CATEGORIES.find(c => c.id === selectedCategory)?.label || '随心';
+      let systemPrompt = `你是"万物"App 中的"灵犀"智慧导师，擅长以东方哲学和禅意语言提供人生指引。
+你的回答风格应该：
+1. 简洁克制，不超过150字
+2. 使用诗意、禅意的语言，避免说教
+3. 提供启发性的思考角度，而非直接的答案
+4. 根据用户当前状态（${state === 'advance' ? '进（行）' : state === 'retreat' ? '收（省）' : '稳（守）'}）调整建议
+5. 问询分类：${categoryLabel}
 
-      // 风格化回答库 (提示/映照/收敛/行动)
-      const answerStyles = {
-        hint: [
-          "风起于青萍之末。细微之处，藏着转机。留意身边的变化，顺势而为。",
-          "当局者迷。试着跳出当前的视角，以旁观者的心态重新审视。",
+当前用户状态：${state === 'advance' ? '势头向上，能量充沛' : state === 'retreat' ? '势头收敛，能量内藏' : '势头平稳，能量均衡'}`;
+
+      if (isDeep && profile.birthCity) {
+        systemPrompt += `\n用户出生地：${profile.birthCity}`;
+      }
+
+      // Call Qwen API via tRPC
+      const response = await qwenChatMutation.mutateAsync({
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: input }
         ],
-        reflect: [
-          "心如止水，鉴常明。当下困惑，皆因心动。试着放下执念，退一步海阔天空。",
-          "外境是内心的投射。你所抗拒的，往往是你需要接纳的。",
-        ],
-        converge: [
-          "静坐常思己过，闲谈莫论人非。内求诸己，外顺天时。",
-          "多言数穷，不如守中。与其向外驰求，不如向内安顿。",
-        ],
-        action: [
-          "知行合一。不要停留在思考层面，迈出第一步，路自然会显现。",
-          "君子以自强不息。既然认定了方向，就坚定地走下去。",
-        ]
-      };
+        temperature: 0.8,
+        max_tokens: 300
+      });
 
-      // 根据功德值决定回答清晰度 (模拟“诚则灵”)
-      // 功德越高，回答越倾向于具体的“行动”或深刻的“映照”
-      // 功德较低，回答倾向于模糊的“提示”或保守的“收敛”
-      let style: 'hint' | 'reflect' | 'converge' | 'action' = 'hint';
-      if (merit > 100) style = Math.random() > 0.5 ? 'action' : 'reflect';
-      else if (merit > 50) style = Math.random() > 0.5 ? 'reflect' : 'converge';
-      else style = Math.random() > 0.5 ? 'hint' : 'converge';
+      let answer = response.success ? response.message : "抱歉，灵犀暂时无法回应。请稍后再试。";
 
-      const selectedPool = answerStyles[style];
-      answer = selectedPool[Math.floor(Math.random() * selectedPool.length)];
-
-      // Deep answer logic for members (结构化解读)
-      if (isDeep) {
+      // Add deep analysis for members
+      if (isDeep && response.success) {
         answer += "\n\n【深度解读】\n";
         answer += `当前状态：${state === 'advance' ? '进（行）' : state === 'retreat' ? '收（省）' : '稳（守）'}\n`;
         
@@ -131,9 +130,13 @@ export default function LingxiPage() {
       addInsightRecord(newRecord);
       
       setResult(newRecord);
-      setIsLoading(false);
       setStep('result');
-    }, 2000);
+    } catch (error) {
+      console.error("[Lingxi Error]", error);
+      toast.error("灵犀感应失败，请稍后再试");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const reset = () => {
@@ -291,7 +294,7 @@ export default function LingxiPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="flex-1 flex flex-col"
             >
-              <div className={`flex-1 rounded-3xl p-8 border relative overflow-hidden flex flex-col ${
+              <div className={`flex-1 flex flex-col rounded-2xl p-6 border shadow-lg relative ${
                 isMember ? 'bg-white/10 border-[#FFD700]/30 backdrop-blur-md' : 'bg-white/5 border-white/10 backdrop-blur-md'
               }`}>
                 {/* 装饰 */}
