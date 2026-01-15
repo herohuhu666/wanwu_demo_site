@@ -11,77 +11,78 @@ import LibraryPage from "./app/LibraryPage";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("guardian");
+  const [activeTab, setActiveTab] = useState("today_image");
   const [showIntro, setShowIntro] = useState(true);
 
   const renderGuide = () => {
     switch (activeTab) {
-      case "guardian":
+      case "today_image":
         return (
           <div className="space-y-4">
-            <h3 className="text-xl font-serif font-bold text-stone-800">守望 (Guardian)</h3>
+            <h3 className="text-xl font-serif font-bold text-stone-800">天 (Sky)</h3>
             <p className="text-stone-600 leading-relaxed">
-              点击中央的命灯，向系统发送平安信号。
+              观天象，知时节。每日能量仪表盘。
               <br/><br/>
               <span className="font-bold">演示要点：</span>
-              <br/>1. 命灯呼吸光效与倒计时。
-              <br/>2. 点击右上角太阳图标查看“能量天气”。
-              <br/>3. 解释“72小时未点亮触发遗泽锦囊”的安全逻辑。
-            </p>
-          </div>
-        );
-      case "insight":
-        return (
-          <div className="space-y-4">
-            <h3 className="text-xl font-serif font-bold text-stone-800">灵犀 (Insight)</h3>
-            <p className="text-stone-600 leading-relaxed">
-              输入当下观察到的细节，获取 AI 的即时指引。
-              <br/><br/>
-              <span className="font-bold">演示要点：</span>
-              <br/>1. 体验“外应速断”的三段式反馈。
-              <br/>2. 开启右上角“模拟会员”，展示分级反馈差异。
-              <br/>3. 强调“军师”角色的价值。
+              <br/>1. 二十四节气感知与候应文案。
+              <br/>2. 今日五行能量状态展示。
+              <br/>3. 每日修行智慧一言。
             </p>
           </div>
         );
       case "ritual":
         return (
           <div className="space-y-4">
-            <h3 className="text-xl font-serif font-bold text-stone-800">乾坤 (Ritual)</h3>
+            <h3 className="text-xl font-serif font-bold text-stone-800">地 (Earth)</h3>
             <p className="text-stone-600 leading-relaxed">
-              点击黑色圆环进行摇卦，体验数字化的仪式感。
+              法地仪，定吉凶。行动与决策的工具。
               <br/><br/>
               <span className="font-bold">演示要点：</span>
-              <br/>1. 摇卦过程中的震动与动画。
-              <br/>2. 卦象生成后的“智慧语义”解读。
-              <br/>3. 说明未来将接入 3D 引擎以增强沉浸感。
+              <br/>1. 六爻卜卦的数字化仪式感。
+              <br/>2. 震动反馈与沉浸式动画。
+              <br/>3. 智慧语义解读卦象。
             </p>
           </div>
         );
-      case "merit":
+      case "insight":
         return (
           <div className="space-y-4">
-            <h3 className="text-xl font-serif font-bold text-stone-800">功德 (Merit)</h3>
+            <h3 className="text-xl font-serif font-bold text-stone-800">人 (Human)</h3>
             <p className="text-stone-600 leading-relaxed">
-              记录善行，积累功德，建立内心的秩序。
+              通人心，解疑惑。思考与内省的空间。
               <br/><br/>
               <span className="font-bold">演示要点：</span>
-              <br/>1. 尝试记录不同类型的功德（如利他）。
-              <br/>2. 点击右上角爱心图标体验“回向”功能。
-              <br/>3. 解释功德值作为“精神资产”的意义。
+              <br/>1. AI 深度问答解析。
+              <br/>2. 心境生成画作（Generative Art）。
+              <br/>3. 烦恼粉碎机（情绪释放）。
+            </p>
+          </div>
+        );
+      case "guardian":
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-serif font-bold text-stone-800">神 (Spirit)</h3>
+            <p className="text-stone-600 leading-relaxed">
+              守心神，见众生。冥想与连接的圣地。
+              <br/><br/>
+              <span className="font-bold">演示要点：</span>
+              <br/>1. 一柱心香/命灯视觉冥想。
+              <br/>2. 万家灯火（萤火虫模式）共修体验。
+              <br/>3. 72小时平安信号机制。
             </p>
           </div>
         );
       case "member":
         return (
           <div className="space-y-4">
-            <h3 className="text-xl font-serif font-bold text-stone-800">我的 (Me)</h3>
+            <h3 className="text-xl font-serif font-bold text-stone-800">我 (Self)</h3>
             <p className="text-stone-600 leading-relaxed">
-              管理会员状态与个人设置。
+              归本我，藏智慧。沉淀与回顾。
               <br/><br/>
               <span className="font-bold">演示要点：</span>
-              <br/>1. 展示会员权益对比。
-              <br/>2. 模拟订阅流程。
+              <br/>1. 个人命理结构档案。
+              <br/>2. 万物藏经（知识库）。
+              <br/>3. 灵犀手账与历史回顾。
             </p>
           </div>
         );

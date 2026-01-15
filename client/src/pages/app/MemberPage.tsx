@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Crown, Check, Lock, User, Calendar, MapPin, ChevronRight, LogOut, Sparkles, ArrowRight, Book, Hexagon, Heart, TrendingUp, X, BookOpen, Shield, Music } from "lucide-react";
+import { Crown, Check, Lock, User, Calendar, MapPin, ChevronRight, LogOut, Sparkles, ArrowRight, Book, Hexagon, Heart, TrendingUp, X, BookOpen, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/contexts/UserContext";
 import { LifeParameters } from "@/lib/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import FiveElementsChart from "@/components/FiveElementsChart";
-import { CyberWoodenFish } from "@/components/CyberWoodenFish";
+
 
 interface MemberPageProps {
   onNavigate?: (tab: string) => void;
@@ -18,7 +18,7 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
   const [showLogin, setShowLogin] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
-  const [showWoodenFish, setShowWoodenFish] = useState(false);
+
   const [tempProfile, setTempProfile] = useState<LifeParameters>({
     nickname: "",
     birthDate: "",
@@ -209,31 +209,7 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
           </div>
         )}
 
-        {/* 赛博木鱼 (全员可见) */}
-        <div className="mb-8">
-          <button 
-            onClick={() => setShowWoodenFish(true)}
-            className="w-full relative overflow-hidden rounded-2xl p-6 text-left group shadow-lg bg-gradient-to-r from-white/10 to-white/5 border border-white/10 backdrop-blur-sm hover:border-[#FFD700]/30 transition-all"
-          >
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Music className="w-24 h-24 text-white" />
-            </div>
-            <div className="relative z-10 flex items-center gap-6">
-              <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 border border-white/20">
-                <Music className="w-8 h-8 text-[#FFD700]" />
-              </div>
-              <div>
-                <h3 className="text-xl font-kai tracking-widest text-white mb-2 group-hover:text-[#FFD700] transition-colors">赛博木鱼</h3>
-                <p className="text-xs text-white/60 tracking-wider">指尖修行 · 积攒功德 · 净化心灵</p>
-              </div>
-              <div className="ml-auto">
-                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#FFD700]/20 transition-colors">
-                  <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-[#FFD700]" />
-                </div>
-              </div>
-            </div>
-          </button>
-        </div>
+
 
         {/* 功能入口区 (登录后可见) */}
         {isLoggedIn && (
@@ -515,11 +491,6 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
-
-      {/* 赛博木鱼 */}
-      <AnimatePresence>
-        {showWoodenFish && <CyberWoodenFish onClose={() => setShowWoodenFish(false)} />}
       </AnimatePresence>
 
       {/* 升级确认弹窗 */}
