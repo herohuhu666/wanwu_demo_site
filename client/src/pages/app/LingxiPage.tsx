@@ -4,6 +4,7 @@ import { Send, ChevronRight, Lock, MessageCircle, Mic, History, X, Sparkles } fr
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 import { AudioAnchor } from "@/components/AudioAnchor";
+import { GenerativeArtCard } from "@/components/GenerativeArtCard";
 
 // Categories
 const CATEGORIES = [
@@ -34,6 +35,8 @@ export default function LingxiPage() {
   const [result, setResult] = useState<null | {
     answer: string;
     isDeep: boolean;
+    question: string;
+    timestamp: number;
   }>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -299,6 +302,12 @@ export default function LingxiPage() {
                       {result.answer}
                     </p>
                   </div>
+
+                  {/* 心境生成画 */}
+                  <GenerativeArtCard 
+                    state={dailyRecord?.state || 'steady'} 
+                    seed={result.question + result.timestamp}
+                  />
 
                   {!isMember && (
                     <div className="mt-8 pt-6 border-t border-white/10 text-center">
