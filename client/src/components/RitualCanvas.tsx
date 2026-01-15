@@ -1,7 +1,30 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, Component, ReactNode } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useTexture, PerspectiveCamera, Environment } from '@react-three/drei';
 import * as THREE from 'three';
+
+// Simple Error Boundary for 3D context
+class ThreeErrorBoundary extends Component<{ children: ReactNode, fallback: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode, fallback: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("3D Scene Error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
 
 // Coin Component
 function Coin({ position, rotation, texture, visible }: { position: [number, number, number], rotation: [number, number, number], texture: THREE.Texture, visible: boolean }) {
@@ -15,8 +38,8 @@ function Coin({ position, rotation, texture, visible }: { position: [number, num
   );
 }
 
-// Turtle Shell Component (represented as a 3D plane with texture for now)
-function TurtleShell({ isShaking, onShakeEnd, texture }: { isShaking: boolean, onShakeEnd: () => void, texture: THREE.Texture }) {
+// Turtle Shell Component
+function TurtleShell({ isShaking, texture }: { isShaking: boolean, texture: THREE.Texture }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const shakeTime = useRef(0);
   
@@ -49,6 +72,8 @@ function TurtleShell({ isShaking, onShakeEnd, texture }: { isShaking: boolean, o
 
 // Main Scene Component
 function Scene({ isShaking, onFinish }: { isShaking: boolean, onFinish: () => void }) {
+  // Preload textures to avoid suspense issues during render if possible, 
+  // but useTexture inside component is standard.
   const shellTexture = useTexture('/images/turtle_shell.png');
   const coinTexture = useTexture('/images/coin_texture.png');
   
@@ -64,21 +89,6 @@ function Scene({ isShaking, onFinish }: { isShaking: boolean, onFinish: () => vo
     [Math.PI / 2, 0, 0]
   ]);
 
-  useEffect(() => {
-    if (!isShaking && coinsVisible) {
-      // Reset for next time
-      setCoinsVisible(false);
-    }
-    
-    if (isShaking) {
-      // Hide coins while shaking
-      setCoinsVisible(false);
-      
-      // Schedule coin drop after shaking stops (simulated by parent passing isShaking=false)
-      // Actually, the parent controls isShaking. We need to detect when isShaking goes from true to false.
-    }
-  }, [isShaking]);
-
   // Detect shake end
   const prevShaking = useRef(isShaking);
   useEffect(() => {
@@ -86,7 +96,7 @@ function Scene({ isShaking, onFinish }: { isShaking: boolean, onFinish: () => vo
       // Shake just ended, drop coins
       setCoinsVisible(true);
       
-      // Randomize coin results (visual only, logic is in parent)
+      // Randomize coin results
       const newRotations = coinRotations.map(() => [
         Math.PI / 2 + (Math.random() > 0.5 ? 0 : Math.PI), // Flip
         Math.random() * Math.PI * 2, // Rotate
@@ -104,6 +114,8 @@ function Scene({ isShaking, onFinish }: { isShaking: boolean, onFinish: () => vo
 
       // Notify parent animation finished after a delay
       setTimeout(onFinish, 2000);
+    } else if (isShaking) {
+      setCoinsVisible(false);
     }
     prevShaking.current = isShaking;
   }, [isShaking]);
@@ -115,7 +127,7 @@ function Scene({ isShaking, onFinish }: { isShaking: boolean, onFinish: () => vo
       <directionalLight position={[5, 5, 5]} intensity={1} />
       <Environment preset="sunset" />
 
-      <TurtleShell isShaking={isShaking} onShakeEnd={() => {}} texture={shellTexture} />
+      <TurtleShell isShaking={isShaking} texture={shellTexture} />
       
       {coinsVisible && coinPositions.map((pos, i) => (
         <Coin 
@@ -133,9 +145,11 @@ function Scene({ isShaking, onFinish }: { isShaking: boolean, onFinish: () => vo
 export default function RitualCanvas({ isShaking, onFinish }: { isShaking: boolean, onFinish: () => void }) {
   return (
     <div className="absolute inset-0 z-30 pointer-events-none">
-      <Canvas gl={{ alpha: true, antialias: true }}>
-        <Scene isShaking={isShaking} onFinish={onFinish} />
-      </Canvas>
+      <ThreeErrorBoundary fallback={<div className="w-full h-full flex items-center justify-center text-white/50">3D View Unavailable</div>}>
+        <Canvas gl={{ alpha: true, antialias: true }}>
+          <Scene isShaking={isShaking} onFinish={onFinish} />
+        </Canvas>
+      </ThreeErrorBoundary>
     </div>
   );
 }
