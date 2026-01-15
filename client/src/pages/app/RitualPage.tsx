@@ -32,6 +32,9 @@ export default function RitualPage() {
     explanation?: string;
   }>(null);
   const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
+  
+  // Initialize mutation hook at component level
+  const explainMutation = trpc.qwen.explainHexagram.useMutation();
 
   // Initialize audio
   useEffect(() => {
@@ -174,8 +177,7 @@ export default function RitualPage() {
     if (isMember) {
       setIsLoadingExplanation(true);
       try {
-        const utils = trpc.useUtils();
-        const response = await utils.client.qwen.explainHexagram.mutate({
+        const response = await explainMutation.mutateAsync({
           hexagramName: hexagram.name,
           judgment: hexagram.judgment,
           image: hexagram.image,
@@ -183,9 +185,13 @@ export default function RitualPage() {
         });
         if (response.success) {
           setResult(prev => prev ? { ...prev, explanation: response.explanation } : null);
+        } else {
+          console.error("API returned error:", response.error);
+          toast.error("生成解读失败");
         }
       } catch (error) {
         console.error("Failed to fetch explanation:", error);
+        toast.error("生成解读失败");
       } finally {
         setIsLoadingExplanation(false);
       }
