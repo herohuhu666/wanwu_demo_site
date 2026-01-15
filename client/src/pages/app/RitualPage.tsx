@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RefreshCw, Lock, Zap, Hand, Volume2, VolumeX } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 import { getHexagram } from "@/lib/knowledge_base";
+import RitualCanvas from "@/components/RitualCanvas";
 
 // Yao type: 0 for Yin, 1 for Yang
 type Yao = 0 | 1;
@@ -12,6 +13,7 @@ export default function RitualPage() {
   const { isMember, addRitualRecord } = useUser();
   const [mode, setMode] = useState<'manual' | 'auto' | null>(null);
   const [isShaking, setIsShaking] = useState(false);
+  const [show3D, setShow3D] = useState(false);
   const [yaos, setYaos] = useState<Yao[]>([]);
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -56,6 +58,8 @@ export default function RitualPage() {
   const handleManualShake = () => {
     if (isShaking || yaos.length >= 6) return;
     
+    // Switch to 3D mode immediately
+    setShow3D(true);
     setIsShaking(true);
     playSound();
     
@@ -64,28 +68,42 @@ export default function RitualPage() {
       setIsShaking(false);
       stopSound();
       
-      const newYao: Yao = Math.random() > 0.5 ? 1 : 0;
-      const newYaos: Yao[] = [...yaos, newYao];
-      setYaos(newYaos);
-
-      if (newYaos.length === 6) {
-        generateResult(newYaos);
-      }
+      // Wait for 3D animation to finish (coin drop) before generating result
+      // The 3D component will call onFinish
     }, 1500);
+  };
+
+  const handle3DFinish = () => {
+    const newYao: Yao = Math.random() > 0.5 ? 1 : 0;
+    const newYaos: Yao[] = [...yaos, newYao];
+    setYaos(newYaos);
+
+    if (newYaos.length === 6) {
+      generateResult(newYaos);
+      // Hide 3D after a short delay to show result
+      setTimeout(() => setShow3D(false), 1000);
+    } else {
+      // Keep 3D visible for next shake? Or hide it?
+      // Requirement says: "After coins land... show result panel... then hide 3D"
+      // Since we need 6 shakes, we should probably keep 3D or revert to 2D between shakes?
+      // The requirement says "Ritual End: ... automatically unload or hide 3D Canvas, restore to Idle State"
+      // This implies 3D might be transient per shake or persist until full hexagram.
+      // Let's keep it simple: Hide 3D after each shake result is processed to return to "Idle" state for next shake.
+      setTimeout(() => setShow3D(false), 2000);
+    }
   };
 
   const handleAutoShake = () => {
     if (isShaking) return;
+    setShow3D(true);
     setIsShaking(true);
     playSound();
     
     // Simulate quick generation
     setTimeout(() => {
       stopSound();
-      const newYaos: Yao[] = Array.from({ length: 6 }, () => Math.random() > 0.5 ? 1 : 0);
-      setYaos(newYaos);
       setIsShaking(false);
-      generateResult(newYaos);
+      // handle3DFinish will be called by RitualCanvas
     }, 2000);
   };
 
@@ -126,11 +144,12 @@ export default function RitualPage() {
     setYaos([]);
     setResult(null);
     setMode(null);
+    setShow3D(false);
   };
 
   return (
     <div className="h-full flex flex-col relative overflow-hidden font-serif text-white/90 bg-black">
-      {/* 背景图片 */}
+      {/* 背景图片 (Persistent Layer) */}
       <div className="absolute inset-0 z-0">
         <img 
           src="/images/qiankun_bg.png" 
@@ -141,14 +160,32 @@ export default function RitualPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90" />
       </div>
 
+      {/* 3D Canvas Layer (Conditional) */}
+      <AnimatePresence>
+        {show3D && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0 z-10"
+          >
+            <Suspense fallback={null}>
+              <RitualCanvas isShaking={isShaking} onFinish={handle3DFinish} />
+            </Suspense>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* 内容区域 */}
-      <div className="relative z-20 flex-1 flex flex-col px-8 pt-20 pb-24 overflow-y-auto scrollbar-hide">
+      <div className="relative z-20 flex-1 flex flex-col px-8 pt-20 pb-24 overflow-y-auto scrollbar-hide pointer-events-none">
+        {/* Enable pointer events for interactive elements */}
         
         {/* 顶部栏 */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex justify-between items-start"
+          className="mb-8 flex justify-between items-start pointer-events-auto"
         >
           <div>
             <h1 className="text-3xl tracking-[0.2em] font-medium mb-2 font-kai text-white drop-shadow-lg">乾坤</h1>
@@ -173,7 +210,7 @@ export default function RitualPage() {
         </motion.div>
 
         {/* 核心交互区 */}
-        <div className="flex-1 flex flex-col items-center justify-center">
+        <div className="flex-1 flex flex-col items-center justify-center pointer-events-auto">
           <AnimatePresence mode="wait">
             {!mode ? (
               // 模式选择
@@ -236,23 +273,17 @@ export default function RitualPage() {
                   ))}
                 </div>
 
-                {mode === 'manual' && (
+                {/* 2D 触发器 (Idle State) - Only visible when NOT in 3D mode */}
+                {!show3D && mode === 'manual' && (
                   <div className="relative w-64 h-64 flex items-center justify-center">
-                    {/* 龟壳主体 */}
+                    {/* 龟壳主体 (2D Static) */}
                     <motion.div
-                      animate={isShaking ? {
-                        x: [-10, 10, -8, 8, -5, 5, 0],
-                        y: [-5, 5, -3, 3, 0],
-                        rotate: [-5, 5, -3, 3, 0],
-                        scale: [1, 1.05, 0.95, 1.02, 1]
-                      } : {}}
-                      transition={{ 
-                        duration: 0.4, 
-                        repeat: isShaking ? Infinity : 0,
-                        ease: "easeInOut"
-                      }}
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={handleManualShake}
-                      className="relative w-56 h-56 cursor-pointer active:scale-95 transition-transform"
+                      className="relative w-56 h-56 cursor-pointer transition-transform"
                     >
                       <img 
                         src="/images/turtle_shell.png" 
@@ -261,16 +292,17 @@ export default function RitualPage() {
                       />
                       
                       {/* 提示文字 */}
-                      {!isShaking && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <span className="px-4 py-2 bg-black/40 backdrop-blur-sm rounded-full text-xs text-white/80 tracking-widest border border-white/10">
-                            点击摇卦
-                          </span>
-                        </div>
-                      )}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <span className="px-4 py-2 bg-black/40 backdrop-blur-sm rounded-full text-xs text-white/80 tracking-widest border border-white/10">
+                          点击摇卦
+                        </span>
+                      </div>
                     </motion.div>
                   </div>
                 )}
+                
+                {/* Placeholder for layout stability when 3D is active */}
+                {show3D && <div className="w-64 h-64" />}
                 
                 <div className="mt-8 text-center">
                   <p className="text-sm text-white tracking-[0.3em] font-medium mb-2 drop-shadow-md">
