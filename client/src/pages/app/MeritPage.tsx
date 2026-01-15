@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, ShoppingBag, Plus, TrendingUp, Lock, ShieldCheck, Calendar, Hand, BookOpen, PenTool, Sparkles } from "lucide-react";
+import { Heart, ShoppingBag, Plus, TrendingUp, Lock, ShieldCheck, Calendar, Hand, BookOpen, PenTool, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { useUser } from "@/contexts/UserContext";
 
-type LogType = 'check_in' | 'pray' | 'altruism' | 'reflection' | 'consume' | 'first_ritual' | 'first_insight' | 'guardian';
+type LogType = 'check_in' | 'pray' | 'altruism' | 'reflection' | 'consume' | 'first_ritual' | 'first_insight' | 'guardian' | 'wooden_fish';
 
 interface Log {
   id: string;
@@ -23,6 +23,7 @@ const LOG_TYPES: { type: LogType; label: string; value: number; icon: any; color
   { type: 'pray', label: '祈福', value: 5, icon: Heart, color: 'bg-[#E0C38C]', desc: '善念回向，广结善缘' },
   { type: 'altruism', label: '利他', value: 10, icon: Hand, color: 'bg-[#8C8478]', desc: '赠人玫瑰，手有余香' },
   { type: 'reflection', label: '自省', value: 5, icon: BookOpen, color: 'bg-[#2C2C2C]', desc: '静思己过，日进有功' },
+  { type: 'wooden_fish', label: '木鱼', value: 1, icon: Sparkles, color: 'bg-[#FFD700]', desc: '敲击木鱼，积功德' },
   // System types (not for manual add)
   { type: 'consume', label: '兑换', value: -50, icon: Sparkles, color: 'bg-white/10', desc: '功德兑换' },
   { type: 'first_ritual', label: '初卦', value: 3, icon: Sparkles, color: 'bg-[#FFD700]', desc: '初次立命' },
@@ -43,6 +44,9 @@ export default function MeritPage() {
   const [activeAction, setActiveAction] = useState<LogType | null>(null);
   const [input, setInput] = useState("");
   const [showTrend, setShowTrend] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const handleAddLog = () => {
     if (!activeAction) return;
@@ -60,6 +64,33 @@ export default function MeritPage() {
     setInput("");
     setActiveAction(null);
     toast.success(`功德 +${typeConfig.value}`);
+  };
+
+  const handleWoodenFishClick = (e: React.MouseEvent) => {
+    // Play sound
+    if (!isMuted) {
+      const audio = new Audio('/sounds/wooden_fish.mp3');
+      audio.volume = 0.6;
+      audio.play().catch(() => {}); // Ignore auto-play errors
+    }
+
+    // Haptic feedback
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+
+    // Add ripple effect
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const id = Date.now();
+    setRipples(prev => [...prev, { id, x, y }]);
+    setTimeout(() => {
+      setRipples(prev => prev.filter(r => r.id !== id));
+    }, 1000);
+
+    // Add merit (debounced or limited in real app, here simple)
+    addMerit(1, 'wooden_fish', '敲击木鱼');
   };
 
   return (
@@ -89,28 +120,57 @@ export default function MeritPage() {
           </motion.div>
           
           <div className="flex gap-3">
+            <button 
+              onClick={() => setIsMuted(!isMuted)}
+              className="p-3 rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-colors backdrop-blur-sm"
+            >
+              {isMuted ? <VolumeX className="w-5 h-5 opacity-70" /> : <Volume2 className="w-5 h-5 opacity-70" />}
+            </button>
             <button className="p-3 rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-colors backdrop-blur-sm">
               <ShoppingBag className="w-5 h-5 opacity-70" />
             </button>
           </div>
         </div>
 
-        {/* 功德值展示 */}
-        <div className="text-center mb-10 relative">
+        {/* 赛博木鱼 (Cyber Wooden Fish) */}
+        <div className="flex-1 flex flex-col items-center justify-center mb-10 relative">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={handleWoodenFishClick}
+            className="relative w-48 h-48 rounded-full bg-[#FFD700]/10 border border-[#FFD700]/30 flex items-center justify-center backdrop-blur-sm shadow-[0_0_30px_rgba(255,215,0,0.1)] group overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-[#FFD700]/20 to-transparent opacity-50 rounded-full" />
+            <span className="text-6xl font-kai text-[#FFD700] drop-shadow-[0_0_10px_rgba(255,215,0,0.5)] select-none z-10">
+              功德
+            </span>
+            <span className="absolute bottom-8 text-xs text-[#FFD700]/60 tracking-[0.2em] uppercase z-10">Tap to Accumulate</span>
+            
+            {/* Ripples */}
+            <AnimatePresence>
+              {ripples.map(ripple => (
+                <motion.div
+                  key={ripple.id}
+                  initial={{ width: 0, height: 0, opacity: 0.8 }}
+                  animate={{ width: 300, height: 300, opacity: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  className="absolute rounded-full bg-[#FFD700]/30 pointer-events-none"
+                  style={{ left: ripple.x, top: ripple.y, transform: 'translate(-50%, -50%)' }}
+                />
+              ))}
+            </AnimatePresence>
+          </motion.button>
+          
           <motion.div 
             key={merit}
-            initial={{ scale: 1.2, opacity: 0.8 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="text-6xl font-light text-[#FFD700] tabular-nums font-kai drop-shadow-[0_0_15px_rgba(255,215,0,0.3)]"
+            initial={{ scale: 1.2, opacity: 0.8, y: -20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            className="mt-8 text-4xl font-light text-[#FFD700] tabular-nums font-kai drop-shadow-[0_0_15px_rgba(255,215,0,0.3)]"
           >
             {merit}
           </motion.div>
-          <div className="flex items-center justify-center gap-2 mt-2">
-            <ShieldCheck className="w-3 h-3 text-[#FFD700]" />
-            <p className="text-xs text-[#FFD700] uppercase tracking-[0.3em]">Trust Indicator</p>
-          </div>
           <p className="text-[10px] text-white/40 mt-2 tracking-wider">
-            功德即信任，信任即力量
+            当前功德值
           </p>
         </div>
 
