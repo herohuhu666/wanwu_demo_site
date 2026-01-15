@@ -8,11 +8,33 @@ import MeritPage from "./app/MeritPage";
 import MemberPage from "./app/MemberPage";
 import TodayImagePage from "./app/TodayImagePage";
 import LibraryPage from "./app/LibraryPage";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, PanInfo } from "framer-motion";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("today_image");
   const [showIntro, setShowIntro] = useState(true);
+
+  // Define the order of tabs for swipe navigation
+  const tabOrder = ['today_image', 'ritual', 'insight', 'guardian', 'member'];
+
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const threshold = 50; // Minimum distance to trigger swipe
+    const currentIndex = tabOrder.indexOf(activeTab);
+
+    if (currentIndex === -1) return; // Current tab not in swipe order (e.g., library)
+
+    if (info.offset.x < -threshold) {
+      // Swipe Left -> Next Tab
+      if (currentIndex < tabOrder.length - 1) {
+        setActiveTab(tabOrder[currentIndex + 1]);
+      }
+    } else if (info.offset.x > threshold) {
+      // Swipe Right -> Previous Tab
+      if (currentIndex > 0) {
+        setActiveTab(tabOrder[currentIndex - 1]);
+      }
+    }
+  };
 
   const renderGuide = () => {
     switch (activeTab) {
@@ -130,7 +152,13 @@ export default function Home() {
                 )}
               </AnimatePresence>
 
-              <div className="flex-1 overflow-hidden relative">
+              <motion.div 
+                className="flex-1 overflow-hidden relative"
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.2}
+                onDragEnd={handleDragEnd}
+              >
                 <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'guardian' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <GuardianPage />
                 </div>
@@ -152,7 +180,7 @@ export default function Home() {
                 <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'library' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <LibraryPage onBack={() => setActiveTab('member')} />
                 </div>
-              </div>
+              </motion.div>
               <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
             </div>
           </MobileSimulator>
