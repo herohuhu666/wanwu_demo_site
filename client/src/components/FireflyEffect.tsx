@@ -34,16 +34,17 @@ export function FireflyEffect() {
     resize();
 
     // Initialize fireflies
-    const count = 30; // Number of "other users"
+    // Increased count and size for better visibility
+    const count = 60; // Increased from 30 to 60
     firefliesRef.current = Array.from({ length: count }).map((_, i) => ({
       id: i,
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      size: Math.random() * 2 + 1, // 1-3px
-      opacity: Math.random() * 0.5 + 0.2,
-      speedX: (Math.random() - 0.5) * 0.2,
-      speedY: (Math.random() - 0.5) * 0.2,
-      pulseSpeed: Math.random() * 0.02 + 0.01,
+      size: Math.random() * 3 + 2, // Increased from 1-3px to 2-5px
+      opacity: Math.random() * 0.6 + 0.4, // Increased base opacity
+      speedX: (Math.random() - 0.5) * 0.3, // Slightly faster movement
+      speedY: (Math.random() - 0.5) * 0.3,
+      pulseSpeed: Math.random() * 0.03 + 0.02,
       pulseOffset: Math.random() * Math.PI * 2,
     }));
 
@@ -58,25 +59,31 @@ export function FireflyEffect() {
         fly.y += fly.speedY;
 
         // Wrap around screen
-        if (fly.x < 0) fly.x = canvas.width;
-        if (fly.x > canvas.width) fly.x = 0;
-        if (fly.y < 0) fly.y = canvas.height;
-        if (fly.y > canvas.height) fly.y = 0;
+        if (fly.x < -20) fly.x = canvas.width + 20;
+        if (fly.x > canvas.width + 20) fly.x = -20;
+        if (fly.y < -20) fly.y = canvas.height + 20;
+        if (fly.y > canvas.height + 20) fly.y = -20;
 
         // Pulse opacity
         const pulse = Math.sin(time * 0.002 * fly.pulseSpeed + fly.pulseOffset);
-        const currentOpacity = fly.opacity + pulse * 0.2;
+        const currentOpacity = fly.opacity + pulse * 0.3;
 
         // Draw
         ctx.beginPath();
-        ctx.arc(fly.x, fly.y, fly.size, 0, Math.PI * 2);
-        
-        // Glow effect
-        const gradient = ctx.createRadialGradient(fly.x, fly.y, 0, fly.x, fly.y, fly.size * 4);
+        // Draw larger glow area
+        const gradient = ctx.createRadialGradient(fly.x, fly.y, 0, fly.x, fly.y, fly.size * 6);
         gradient.addColorStop(0, `rgba(255, 215, 0, ${Math.max(0, currentOpacity)})`); // Gold center
+        gradient.addColorStop(0.4, `rgba(255, 165, 0, ${Math.max(0, currentOpacity * 0.5)})`); // Orange mid
         gradient.addColorStop(1, 'rgba(255, 215, 0, 0)'); // Transparent edge
         
         ctx.fillStyle = gradient;
+        ctx.arc(fly.x, fly.y, fly.size * 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw core for sharpness
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(255, 255, 200, ${Math.max(0, currentOpacity)})`;
+        ctx.arc(fly.x, fly.y, fly.size * 0.5, 0, Math.PI * 2);
         ctx.fill();
       });
 
@@ -97,7 +104,7 @@ export function FireflyEffect() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 2 }}
-      className="absolute inset-0 pointer-events-none z-0"
+      className="absolute inset-0 pointer-events-none z-10" 
       style={{ mixBlendMode: 'screen' }}
     />
   );
