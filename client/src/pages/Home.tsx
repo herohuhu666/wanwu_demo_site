@@ -172,7 +172,7 @@ export default function Home() {
                   <MeritPage />
                 </div>
                 <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'member' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}>
-                  <MemberPage />
+                  <MemberPage onNavigate={setActiveTab} />
                 </div>
                 <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'today_image' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <TodayImagePage onBack={() => setActiveTab('member')} onNavigate={setActiveTab} />

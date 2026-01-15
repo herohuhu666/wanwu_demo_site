@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Crown, Settings, ChevronRight, Star, Moon, Sun, Wind, Cloud, Droplets, Flame, X, Check, Hexagon, Heart, Shield, LogOut } from "lucide-react";
+import { User, Crown, Settings, ChevronRight, Star, Moon, Sun, Wind, Cloud, Droplets, Flame, X, Check, Hexagon, Heart, Shield, LogOut, BookOpen } from "lucide-react";
 import { useUser } from "../../contexts/UserContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,7 +23,11 @@ const mockLegacyArchives = [
   { timestamp: "2023-11-08", title: "立冬锦囊", content: "水始冰，地始冻。收藏之时，不宜远行，宜温补，宜读书。" },
 ];
 
-export default function MemberPage() {
+interface MemberPageProps {
+  onNavigate?: (tab: string) => void;
+}
+
+export default function MemberPage({ onNavigate }: MemberPageProps) {
   const { profile, login, logout, isMember, toggleMember } = useUser();
   const [showLogin, setShowLogin] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
@@ -112,27 +116,39 @@ export default function MemberPage() {
             </div>
           </div>
           
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="p-2 rounded-full hover:bg-white/5 transition-colors">
-                <Settings className="w-6 h-6 text-white/40" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-[#1C1C1C] border-white/10 text-white">
-              {isLoggedIn && (
-                <DropdownMenuItem onClick={logout} className="text-red-400 focus:text-red-400 focus:bg-white/5 cursor-pointer">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  退出登录
-                </DropdownMenuItem>
-              )}
-              {!isLoggedIn && (
-                <DropdownMenuItem onClick={() => setShowLogin(true)} className="focus:bg-white/5 cursor-pointer">
-                  <User className="w-4 h-4 mr-2" />
-                  登录/注册
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            {/* 万物藏经快捷入口 */}
+            <button 
+              onClick={() => onNavigate && onNavigate('library')}
+              className="p-2 rounded-full hover:bg-white/5 transition-colors group relative"
+              title="万物藏经"
+            >
+              <div className="absolute inset-0 bg-[#FFD700]/10 rounded-full scale-0 group-hover:scale-100 transition-transform" />
+              <BookOpen className="w-5 h-5 text-white/60 group-hover:text-[#FFD700] transition-colors" />
+            </button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2 rounded-full hover:bg-white/5 transition-colors">
+                  <Settings className="w-6 h-6 text-white/40" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-[#1C1C1C] border-white/10 text-white">
+                {isLoggedIn && (
+                  <DropdownMenuItem onClick={logout} className="text-red-400 focus:text-red-400 focus:bg-white/5 cursor-pointer">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    退出登录
+                  </DropdownMenuItem>
+                )}
+                {!isLoggedIn && (
+                  <DropdownMenuItem onClick={() => setShowLogin(true)} className="focus:bg-white/5 cursor-pointer">
+                    <User className="w-4 h-4 mr-2" />
+                    登录/注册
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* 核心数据概览 (Stats) */}
