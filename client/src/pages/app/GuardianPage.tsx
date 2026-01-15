@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sun, Shield, Sparkles, Activity, Moon, Battery, AlertTriangle, CheckCircle2, X, Flame, Timer } from "lucide-react";
+import { Sun, Shield, Sparkles, Activity, Moon, Battery, AlertTriangle, CheckCircle2, X, Flame, Timer, CloudSun } from "lucide-react";
 import { toast } from "sonner";
 import { useUser, DailyState, EnergyLevel, SleepQuality } from "@/contexts/UserContext";
 import { AudioAnchor } from "@/components/AudioAnchor";
+import { FireflyEffect } from "@/components/FireflyEffect";
+import { getCurrentSolarTerm, SolarTerm } from "@/lib/solar-terms";
 
 // Zen Quotes
 const ZEN_QUOTES = [
@@ -22,6 +24,7 @@ export default function GuardianPage() {
   const [currentQuote, setCurrentQuote] = useState("");
   const [showLegacyCapsule, setShowLegacyCapsule] = useState(false);
   const [legacyContent, setLegacyContent] = useState("");
+  const [solarTerm, setSolarTerm] = useState<SolarTerm | null>(null);
   
   // Daily Mainline State
   const [showDailyCheckIn, setShowDailyCheckIn] = useState(false);
@@ -36,6 +39,9 @@ export default function GuardianPage() {
 
   // Initialize state based on UserContext
   useEffect(() => {
+    // Load Solar Term
+    setSolarTerm(getCurrentSolarTerm());
+
     if (lastGuardianTime) {
       const now = Date.now();
       const elapsed = Math.floor((now - lastGuardianTime) / 1000);
@@ -191,6 +197,10 @@ export default function GuardianPage() {
         >
           <source src="/videos/candle_loop.mp4" type="video/mp4" />
         </video>
+        
+        {/* 万家灯火：萤火虫特效 */}
+        <FireflyEffect />
+
         {/* 动态光影遮罩 */}
         <motion.div 
           animate={{ opacity: [0.3, 0.5, 0.3] }}
@@ -214,7 +224,19 @@ export default function GuardianPage() {
             animate={{ opacity: 1, y: 0 }}
           >
             <h1 className="text-3xl tracking-[0.2em] font-medium mb-2 font-kai text-white drop-shadow-lg">守望</h1>
-            <p className="text-xs text-white/60 tracking-[0.3em] uppercase drop-shadow-md">Guardian</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-white/60 tracking-[0.3em] uppercase drop-shadow-md">Guardian</p>
+              {solarTerm && (
+                <motion.div 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm"
+                >
+                  <CloudSun className="w-3 h-3 text-[#FFD700]/80" />
+                  <span className="text-[10px] text-[#FFD700]/80 font-kai tracking-widest">{solarTerm.name}</span>
+                </motion.div>
+              )}
+            </div>
           </motion.div>
 
           <button 
@@ -224,6 +246,22 @@ export default function GuardianPage() {
             <Flame className="w-5 h-5 text-[#E0D6C8]" />
           </button>
         </div>
+
+        {/* 节气智慧提示 (仅在未点亮时显示) */}
+        <AnimatePresence>
+          {!isActive && solarTerm && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="mb-8 text-center"
+            >
+              <p className="text-xs text-white/40 font-kai tracking-widest leading-relaxed max-w-[80%] mx-auto">
+                {solarTerm.wisdom}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* 命灯核心区 */}
         <div className="flex-1 flex flex-col items-center justify-center relative">
