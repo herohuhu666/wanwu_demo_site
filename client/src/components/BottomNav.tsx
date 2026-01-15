@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Compass, Sprout, Sparkles, Flame, Fingerprint } from "lucide-react";
 
 interface BottomNavProps {
@@ -6,6 +7,27 @@ interface BottomNavProps {
 }
 
 export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
+  const [heading, setHeading] = useState(0);
+
+  useEffect(() => {
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      if (event.alpha !== null) {
+        // alpha is the compass heading in degrees (0-360)
+        // We invert it so the compass points 'north' relative to the device
+        setHeading(360 - event.alpha);
+      }
+    };
+
+    // Check if DeviceOrientationEvent is supported
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+
+    return () => {
+      window.removeEventListener('deviceorientation', handleOrientation);
+    };
+  }, []);
+
   const tabs = [
     { id: 'today_image', icon: Compass, label: '观象' },
     { id: 'ritual', icon: Sprout, label: '积善' },
@@ -19,6 +41,8 @@ export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
+        const isCompass = tab.id === 'today_image';
+        
         return (
           <button
             key={tab.id}
@@ -27,7 +51,14 @@ export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
               isActive ? 'text-stone-900' : 'text-stone-400 hover:text-stone-600'
             }`}
           >
-            <Icon className={`w-6 h-6 mb-1 ${isActive ? 'stroke-[2.5px]' : 'stroke-[1.5px]'}`} />
+            <div 
+              style={isCompass ? { 
+                transform: `rotate(${heading}deg)`,
+                transition: 'transform 0.3s ease-out'
+              } : undefined}
+            >
+              <Icon className={`w-6 h-6 mb-1 ${isActive ? 'stroke-[2.5px]' : 'stroke-[1.5px]'}`} />
+            </div>
             <span className="text-[10px] font-medium tracking-wide">{tab.label}</span>
           </button>
         );
