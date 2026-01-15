@@ -101,7 +101,7 @@ export default function LingxiPage() {
 
   return (
     <div className="h-screen overflow-y-auto bg-cover bg-center p-4 pb-20" style={{
-      backgroundImage: 'url("/images/lingxi_bg_new.png")',
+      backgroundImage: 'url("/images/lingxi_bg.png")',
       backgroundAttachment: 'fixed'
     }}>
       {/* Header */}
