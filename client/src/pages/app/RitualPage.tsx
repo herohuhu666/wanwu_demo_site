@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Hexagon, RefreshCw, Lock, Zap, Hand } from "lucide-react";
+import { RefreshCw, Lock, Zap, Hand, Volume2, VolumeX } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 import { getHexagram } from "@/lib/knowledge_base";
@@ -13,6 +13,9 @@ export default function RitualPage() {
   const [mode, setMode] = useState<'manual' | 'auto' | null>(null);
   const [isShaking, setIsShaking] = useState(false);
   const [yaos, setYaos] = useState<Yao[]>([]);
+  const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  
   const [result, setResult] = useState<null | {
     gua: string;
     name: string;
@@ -25,14 +28,42 @@ export default function RitualPage() {
     lines?: string[];
   }>(null);
 
+  // Initialize audio
+  useEffect(() => {
+    audioRef.current = new Audio("/sounds/coins_rattle.mp3");
+    audioRef.current.loop = true;
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const playSound = () => {
+    if (audioRef.current && !isMuted) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+    }
+  };
+
+  const stopSound = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+  };
+
   const handleManualShake = () => {
     if (isShaking || yaos.length >= 6) return;
     
     setIsShaking(true);
+    playSound();
     
     // Simulate shaking duration
     setTimeout(() => {
       setIsShaking(false);
+      stopSound();
+      
       const newYao: Yao = Math.random() > 0.5 ? 1 : 0;
       const newYaos: Yao[] = [...yaos, newYao];
       setYaos(newYaos);
@@ -46,9 +77,11 @@ export default function RitualPage() {
   const handleAutoShake = () => {
     if (isShaking) return;
     setIsShaking(true);
+    playSound();
     
     // Simulate quick generation
     setTimeout(() => {
+      stopSound();
       const newYaos: Yao[] = Array.from({ length: 6 }, () => Math.random() > 0.5 ? 1 : 0);
       setYaos(newYaos);
       setIsShaking(false);
@@ -102,10 +135,10 @@ export default function RitualPage() {
         <img 
           src="/images/qiankun_bg.png" 
           alt="Qiankun Background" 
-          className="w-full h-full object-cover opacity-80"
+          className="w-full h-full object-cover opacity-60"
         />
         {/* 渐变遮罩，确保文字可读性 */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90" />
       </div>
 
       {/* 内容区域 */}
@@ -118,17 +151,25 @@ export default function RitualPage() {
           className="mb-8 flex justify-between items-start"
         >
           <div>
-            <h1 className="text-3xl tracking-[0.2em] font-medium mb-2 font-kai text-white">乾坤</h1>
-            <p className="text-xs text-white/60 tracking-[0.3em] uppercase">Ritual</p>
+            <h1 className="text-3xl tracking-[0.2em] font-medium mb-2 font-kai text-white drop-shadow-lg">乾坤</h1>
+            <p className="text-xs text-white/60 tracking-[0.3em] uppercase drop-shadow-md">Ritual</p>
           </div>
-          {(yaos.length > 0 || mode) && !result && (
+          <div className="flex gap-4">
             <button 
-              onClick={resetRitual}
+              onClick={() => setIsMuted(!isMuted)}
               className="p-2 rounded-full hover:bg-white/10 transition-colors backdrop-blur-sm"
             >
-              <RefreshCw className="w-4 h-4 text-white/60" />
+              {isMuted ? <VolumeX className="w-4 h-4 text-white/60" /> : <Volume2 className="w-4 h-4 text-white/60" />}
             </button>
-          )}
+            {(yaos.length > 0 || mode) && !result && (
+              <button 
+                onClick={resetRitual}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors backdrop-blur-sm"
+              >
+                <RefreshCw className="w-4 h-4 text-white/60" />
+              </button>
+            )}
+          </div>
         </motion.div>
 
         {/* 核心交互区 */}
@@ -145,7 +186,7 @@ export default function RitualPage() {
               >
                 <button
                   onClick={() => setMode('manual')}
-                  className="group relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-6 text-left hover:bg-white/10 hover:border-[#FFD700]/30 transition-all backdrop-blur-sm"
+                  className="group relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-6 text-left hover:bg-white/10 hover:border-[#FFD700]/30 transition-all backdrop-blur-sm shadow-lg"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-lg font-kai tracking-widest text-white/90">手动六摇</span>
@@ -159,7 +200,7 @@ export default function RitualPage() {
                     setMode('auto');
                     handleAutoShake();
                   }}
-                  className="group relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-6 text-left hover:bg-white/10 hover:border-[#FFD700]/30 transition-all backdrop-blur-sm"
+                  className="group relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl p-6 text-left hover:bg-white/10 hover:border-[#FFD700]/30 transition-all backdrop-blur-sm shadow-lg"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-lg font-kai tracking-widest text-white/90">一键起卦</span>
@@ -185,7 +226,7 @@ export default function RitualPage() {
                       className={`h-3 w-full rounded-sm transition-all duration-500 ${
                         i < yaos.length 
                           ? 'bg-[#FFD700] shadow-[0_0_10px_rgba(255,215,0,0.3)]' 
-                          : 'bg-white/10 border border-white/10'
+                          : 'bg-white/5 border border-white/5'
                       }`}
                     >
                       {i < yaos.length && yaos[i] === 0 && (
@@ -196,21 +237,43 @@ export default function RitualPage() {
                 </div>
 
                 {mode === 'manual' && (
-                  <motion.div
-                    animate={isShaking ? {
-                      x: [-5, 5, -5, 5, 0],
-                      rotate: [-2, 2, -2, 2, 0],
-                    } : {}}
-                    transition={{ duration: 0.5, repeat: isShaking ? Infinity : 0 }}
-                    onClick={handleManualShake}
-                    className="w-32 h-32 bg-white/5 rounded-full border border-[#FFD700]/30 flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors shadow-[0_0_20px_rgba(255,215,0,0.1)] backdrop-blur-sm"
-                  >
-                    <Hexagon className="w-10 h-10 text-[#FFD700] opacity-80" strokeWidth={1} />
-                  </motion.div>
+                  <div className="relative w-64 h-64 flex items-center justify-center">
+                    {/* 龟壳主体 */}
+                    <motion.div
+                      animate={isShaking ? {
+                        x: [-10, 10, -8, 8, -5, 5, 0],
+                        y: [-5, 5, -3, 3, 0],
+                        rotate: [-5, 5, -3, 3, 0],
+                        scale: [1, 1.05, 0.95, 1.02, 1]
+                      } : {}}
+                      transition={{ 
+                        duration: 0.4, 
+                        repeat: isShaking ? Infinity : 0,
+                        ease: "easeInOut"
+                      }}
+                      onClick={handleManualShake}
+                      className="relative w-56 h-56 cursor-pointer active:scale-95 transition-transform"
+                    >
+                      <img 
+                        src="/images/turtle_shell.png" 
+                        alt="Turtle Shell" 
+                        className="w-full h-full object-contain drop-shadow-2xl"
+                      />
+                      
+                      {/* 提示文字 */}
+                      {!isShaking && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <span className="px-4 py-2 bg-black/40 backdrop-blur-sm rounded-full text-xs text-white/80 tracking-widest border border-white/10">
+                            点击摇卦
+                          </span>
+                        </div>
+                      )}
+                    </motion.div>
+                  </div>
                 )}
                 
                 <div className="mt-8 text-center">
-                  <p className="text-sm text-white tracking-[0.3em] font-medium mb-2">
+                  <p className="text-sm text-white tracking-[0.3em] font-medium mb-2 drop-shadow-md">
                     {isShaking ? "感应天地..." : mode === 'auto' ? "正在起卦..." : `第 ${yaos.length + 1} 摇`}
                   </p>
                   <p className="text-[10px] text-white/60 tracking-widest">
