@@ -320,6 +320,7 @@ export default function LingxiPage() {
                   <GenerativeArtCard 
                     state={dailyRecord?.state || 'steady'} 
                     seed={result.question + result.timestamp}
+                    question={result.question}
                   />
 
                   {!isMember && (

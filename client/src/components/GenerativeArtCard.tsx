@@ -1,104 +1,81 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Download, Share2 } from 'lucide-react';
+import { Download, Share2, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import { trpc } from '@/lib/trpc';
 
 interface GenerativeArtCardProps {
   state: 'steady' | 'advance' | 'retreat';
   seed: string; // Use question or timestamp as seed
+  question: string; // The actual question text for AI generation
   title?: string;
 }
 
-export function GenerativeArtCard({ state, seed, title = "心境映照" }: GenerativeArtCardProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+export function GenerativeArtCard({ state, seed, question, title = "心境映照" }: GenerativeArtCardProps) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [hasGenerated, setHasGenerated] = useState(false);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const generateImageMutation = trpc.qwen.generateHeartImage.useMutation();
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Set resolution
-    const dpr = window.devicePixelRatio || 1;
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    ctx.scale(dpr, dpr);
-
-    // Seeded random function
-    let seedValue = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const random = () => {
-      const x = Math.sin(seedValue++) * 10000;
-      return x - Math.floor(x);
-    };
-
-    // Color Palettes based on state
-    const palettes = {
-      steady: ['#E0D6C8', '#8B7E66', '#4A4A4A', '#1C1C1C'], // Earth/Metal (Calm)
-      advance: ['#FFD700', '#FF4500', '#8B0000', '#2F1B1B'], // Fire/Gold (Active)
-      retreat: ['#87CEEB', '#4682B4', '#191970', '#000000'], // Water/Deep (Introspective)
-    };
+  const handleGenerate = async () => {
+    if (hasGenerated) return; // Only generate once per question
     
-    const colors = palettes[state];
-
-    // Clear canvas
-    ctx.fillStyle = colors[3]; // Darkest background
-    ctx.fillRect(0, 0, width, height);
-
-    // Draw Abstract Flow
-    const particles = 50;
+    setIsGenerating(true);
     
-    ctx.globalCompositeOperation = 'screen'; // Additive blending for glowing effect
+    try {
+      const response = await generateImageMutation.mutateAsync({
+        question,
+        state,
+      });
 
-    for (let i = 0; i < particles; i++) {
-      const x = random() * width;
-      const y = random() * height;
-      const size = random() * 100 + 50;
-      const color = colors[Math.floor(random() * 3)]; // Pick from first 3 colors
-
-      const gradient = ctx.createRadialGradient(x, y, 0, x, y, size);
-      gradient.addColorStop(0, `${color}88`); // Semi-transparent
-      gradient.addColorStop(1, `${color}00`); // Transparent
-
-      ctx.fillStyle = gradient;
-      ctx.beginPath();
-      ctx.arc(x, y, size, 0, Math.PI * 2);
-      ctx.fill();
+      if (response.success && response.imageUrl) {
+        setImageUrl(response.imageUrl);
+        setHasGenerated(true);
+        toast.success("心境画卷已生成");
+      } else {
+        toast.error("生成失败，请稍后再试");
+      }
+    } catch (error) {
+      console.error("[Generate Heart Image Error]", error);
+      toast.error("生成失败，请稍后再试");
+    } finally {
+      setIsGenerating(false);
     }
-
-    // Add some "Structure" lines
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.strokeStyle = `${colors[0]}44`;
-    ctx.lineWidth = 1;
-    
-    ctx.beginPath();
-    for (let i = 0; i < 5; i++) {
-      ctx.moveTo(random() * width, 0);
-      ctx.bezierCurveTo(
-        random() * width, random() * height,
-        random() * width, random() * height,
-        random() * width, height
-      );
-    }
-    ctx.stroke();
-
-    // Add Noise/Texture
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-      const noise = (Math.random() - 0.5) * 20;
-      data[i] += noise;
-      data[i + 1] += noise;
-      data[i + 2] += noise;
-    }
-    ctx.putImageData(imageData, 0, 0);
-
-  }, [state, seed]);
+  };
 
   const handleSave = () => {
-    toast.success("心境画卷已保存至相册");
+    if (!imageUrl) return;
+    
+    // Create a temporary link to download the image
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = `wanwu-heart-mirror-${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("心境画卷已保存");
+  };
+
+  const handleShare = async () => {
+    if (!imageUrl) return;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: '万物 - 心境映照',
+          text: '我的心境画卷',
+          url: imageUrl,
+        });
+      } catch (error) {
+        console.error('Share failed:', error);
+      }
+    } else {
+      // Fallback: copy link to clipboard
+      navigator.clipboard.writeText(imageUrl);
+      toast.success("链接已复制到剪贴板");
+    }
   };
 
   return (
@@ -110,30 +87,60 @@ export function GenerativeArtCard({ state, seed, title = "心境映照" }: Gener
     >
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-sm text-white/80 font-kai tracking-widest">{title}</h3>
-        <div className="flex gap-2">
-          <button onClick={handleSave} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-            <Download className="w-4 h-4 text-white/60" />
-          </button>
-          <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
-            <Share2 className="w-4 h-4 text-white/60" />
-          </button>
-        </div>
+        {imageUrl && (
+          <div className="flex gap-2">
+            <button onClick={handleSave} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+              <Download className="w-4 h-4 text-white/60" />
+            </button>
+            <button onClick={handleShare} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+              <Share2 className="w-4 h-4 text-white/60" />
+            </button>
+          </div>
+        )}
       </div>
       
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg shadow-inner bg-black/20">
-        <canvas 
-          ref={canvasRef}
-          className="w-full h-full object-cover"
-        />
-        
-        {/* Watermark */}
-        <div className="absolute bottom-3 right-3 opacity-50">
-          <p className="text-[10px] text-white font-serif tracking-widest">万物 WANWU</p>
-        </div>
+        {!imageUrl && !isGenerating && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <button
+              onClick={handleGenerate}
+              className="flex flex-col items-center gap-3 p-6 hover:bg-white/5 rounded-2xl transition-all group"
+            >
+              <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Sparkles className="w-8 h-8 text-amber-500" />
+              </div>
+              <span className="text-sm text-white/80 tracking-widest">生成心境画卷</span>
+              <span className="text-xs text-white/40">AI 将为你创作独特的艺术作品</span>
+            </button>
+          </div>
+        )}
+
+        {isGenerating && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <Loader2 className="w-12 h-12 text-amber-500 animate-spin mb-4" />
+            <span className="text-sm text-white/80 tracking-widest">正在生成画卷...</span>
+            <span className="text-xs text-white/40 mt-2">这可能需要 10-20 秒</span>
+          </div>
+        )}
+
+        {imageUrl && (
+          <>
+            <img 
+              src={imageUrl} 
+              alt="Heart Mirror Art" 
+              className="w-full h-full object-cover"
+            />
+            
+            {/* Watermark */}
+            <div className="absolute bottom-3 right-3 opacity-50">
+              <p className="text-[10px] text-white font-serif tracking-widest">万物 WANWU</p>
+            </div>
+          </>
+        )}
       </div>
       
       <p className="mt-3 text-[10px] text-white/40 text-center tracking-wider">
-        此画由心而生，独一无二
+        {imageUrl ? "此画由心而生，独一无二" : "点击生成专属于你的心境画卷"}
       </p>
     </motion.div>
   );
