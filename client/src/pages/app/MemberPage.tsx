@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Crown, Settings, ChevronRight, Star, Moon, Sun, Wind, Cloud, Droplets, Flame, X, Check, Hexagon, Heart, Shield } from "lucide-react";
+import { User, Crown, Settings, ChevronRight, Star, Moon, Sun, Wind, Cloud, Droplets, Flame, X, Check, Hexagon, Heart, Shield, LogOut } from "lucide-react";
 import { useUser } from "../../contexts/UserContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 // 模拟历史数据
 const mockRitualArchives = [
@@ -23,7 +24,7 @@ const mockLegacyArchives = [
 ];
 
 export default function MemberPage() {
-  const { profile, login, isMember, toggleMember } = useUser();
+  const { profile, login, logout, isMember, toggleMember } = useUser();
   const [showLogin, setShowLogin] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [tempProfile, setTempProfile] = useState({
@@ -37,7 +38,7 @@ export default function MemberPage() {
   const ritualArchives = profile ? mockRitualArchives : [];
   const insightArchives = profile ? mockInsightArchives : [];
 
-  const isLoggedIn = !!profile;
+  const isLoggedIn = !!profile.nickname;
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,11 +70,11 @@ export default function MemberPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white pb-24 relative overflow-hidden">
+    <div className="h-full bg-[#0A0A0A] text-white relative overflow-y-auto scrollbar-hide">
       {/* 背景光效 */}
       <div className="absolute top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-[#1C1C1C] to-transparent pointer-events-none" />
       
-      <div className="relative z-10 px-6 pt-12">
+      <div className="relative z-10 px-6 pt-12 pb-24">
         {/* 头部用户信息 */}
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-4">
@@ -110,9 +111,28 @@ export default function MemberPage() {
               </p>
             </div>
           </div>
-          <button className="p-2 rounded-full hover:bg-white/5 transition-colors">
-            <Settings className="w-6 h-6 text-white/40" />
-          </button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-2 rounded-full hover:bg-white/5 transition-colors">
+                <Settings className="w-6 h-6 text-white/40" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-[#1C1C1C] border-white/10 text-white">
+              {isLoggedIn && (
+                <DropdownMenuItem onClick={logout} className="text-red-400 focus:text-red-400 focus:bg-white/5 cursor-pointer">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  退出登录
+                </DropdownMenuItem>
+              )}
+              {!isLoggedIn && (
+                <DropdownMenuItem onClick={() => setShowLogin(true)} className="focus:bg-white/5 cursor-pointer">
+                  <User className="w-4 h-4 mr-2" />
+                  登录/注册
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* 核心数据概览 (Stats) */}
