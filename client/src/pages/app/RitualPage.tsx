@@ -118,18 +118,50 @@ export default function RitualPage() {
     }
   };
 
-  const handleAutoShake = () => {
+  const handleAutoShake = async () => {
     if (isShaking) return;
-    setShow3D(true);
+    setMode('auto');
     setIsShaking(true);
     playSound();
     
-    // Simulate quick generation
-    setTimeout(() => {
-      stopSound();
-      setIsShaking(false);
-      // handle3DFinish will be called by RitualCanvas
-    }, 2500);
+    // Generate all 6 yaos automatically
+    const newYaos: Yao[] = [];
+    
+    for (let i = 0; i < 6; i++) {
+      // Calculate weighted probability based on energy
+      let yangProb = 0.5;
+      if (coreStructure?.currentEnergy) {
+        const e = coreStructure.currentEnergy;
+        const total = e.wood + e.fire + e.earth + e.metal + e.water;
+        if (total > 0) {
+          const yangScore = e.wood + e.fire + e.metal;
+          yangProb = yangScore / total;
+          yangProb = Math.max(0.2, Math.min(0.8, yangProb));
+        }
+      }
+      
+      const yao: Yao = Math.random() < yangProb ? 1 : 0;
+      newYaos.push(yao);
+      setYaos([...newYaos]);
+      
+      // Wait 400ms between each yao generation for visual effect
+      await new Promise(resolve => setTimeout(resolve, 400));
+    }
+    
+    stopSound();
+    setIsShaking(false);
+    
+    // Generate result
+    generateResult(newYaos);
+    
+    // Update energy state
+    const now = new Date();
+    const hour = now.getHours();
+    if (hour >= 22 || hour < 5) {
+      updateEnergyState('ritual_late');
+    } else {
+      updateEnergyState('ritual_frequent');
+    }
   };
 
   const generateResult = (finalYaos: Yao[]) => {
@@ -302,33 +334,35 @@ export default function RitualPage() {
                   ))}
                 </div>
 
-                {/* 2D 触发器 (Idle State) - Only visible when NOT in 3D mode */}
-                {!show3D && mode === 'manual' && (
-                  <div className="relative w-64 h-64 flex items-center justify-center">
-                    {/* 点击区域 (无龟壳) */}
-                    <motion.div
-                      initial={{ scale: 0.9, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleManualShake}
-                      className="relative w-64 h-64 cursor-pointer flex items-center justify-center"
-                    >
-                      <div className="w-48 h-48 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.05)]">
-                        <motion.span 
-                          animate={{ scale: [1, 1.1, 1], opacity: [0.8, 1, 0.8] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                          className="text-sm text-white/80 tracking-[0.2em] font-kai"
-                        >
-                          点击起卦
-                        </motion.span>
-                      </div>
-                    </motion.div>
-                  </div>
+                {/* 平面乌龟壳图片 */}
+                {mode === 'manual' && (
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    whileHover={!isShaking ? { scale: 1.05 } : {}}
+                    whileTap={!isShaking ? { scale: 0.95 } : {}}
+                    onClick={!isShaking ? handleManualShake : undefined}
+                    className="relative w-64 h-64 cursor-pointer flex items-center justify-center"
+                  >
+                    <img 
+                      src="/images/turtle_shell.png" 
+                      alt="Turtle Shell" 
+                      className="w-full h-full object-contain opacity-80 hover:opacity-100 transition-opacity"
+                    />
+                    {!isShaking && (
+                      <motion.span 
+                        animate={{ scale: [1, 1.1, 1], opacity: [0.8, 1, 0.8] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="absolute text-sm text-white/80 tracking-[0.2em] font-kai drop-shadow-lg"
+                      >
+                        点击起卦
+                      </motion.span>
+                    )}
+                  </motion.div>
                 )}
                 
-                {/* Placeholder for layout stability when 3D is active */}
-                {show3D && <div className="w-64 h-64" />}
+                {/* 自动模式占位符 */}
+                {mode === 'auto' && <div className="w-64 h-64" />}
                 
                 <div className="mt-8 text-center">
                   <p className="text-sm text-white tracking-[0.3em] font-medium mb-2 drop-shadow-md">
