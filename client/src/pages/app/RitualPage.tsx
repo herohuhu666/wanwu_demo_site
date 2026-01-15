@@ -33,8 +33,9 @@ export default function RitualPage() {
   }>(null);
   const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
   
-  // Initialize mutation hook at component level
+  // Initialize mutation hooks at component level
   const explainMutation = trpc.qwen.explainHexagram.useMutation();
+  const explainYaoLinesMutation = trpc.qwen.explainYaoLines.useMutation();
 
   // Initialize audio
   useEffect(() => {
@@ -188,6 +189,18 @@ export default function RitualPage() {
         } else {
           console.error("API returned error:", response.error);
           toast.error("生成解读失败");
+        }
+        
+        // Fetch yao lines explanations
+        if (hexagram.lines && hexagram.lines.length > 0) {
+          const yaoResponse = await explainYaoLinesMutation.mutateAsync({
+            hexagramName: hexagram.name,
+            yaoLines: hexagram.lines,
+            isMember: true,
+          });
+          if (yaoResponse.success) {
+            setResult(prev => prev ? { ...prev, lines: yaoResponse.explanations } : null);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch explanation:", error);
@@ -375,33 +388,43 @@ export default function RitualPage() {
                     <p className="text-sm text-white/80 font-serif">{result.structure}</p>
                   </div>
 
-                  {/* 会员通俗解释 */}
-                  {isMember && (
-                    <div className="mb-6 pt-6 border-t border-white/10 text-left">
-                      <div className="flex items-center justify-between mb-3">
-                        <p className="text-xs text-white/60 tracking-widest uppercase">会员深度解读</p>
-                        {isLoadingExplanation && <Loader2 className="w-4 h-4 text-[#FFD700] animate-spin" />}
-                      </div>
+                  {/* 会员深度解读 */}
+                  <div className="mb-6 pt-6 border-t border-white/10 text-left">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs text-white/60 tracking-widest uppercase">会员深度解读</p>
+                      {isMember && isLoadingExplanation && <Loader2 className="w-4 h-4 text-[#FFD700] animate-spin" />}
+                    </div>
+                    {isMember ? (
                       <p className="text-sm text-white/80 leading-relaxed font-serif">
                         {result.explanation || "生成中..."}
                       </p>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-white/5 border border-white/10">
+                        <Lock className="w-4 h-4 text-white/60" />
+                        <span className="text-xs text-white/60">升级为会员查看深度解读</span>
+                      </div>
+                    )}
+                  </div>
 
-                  {/* 会员深度解读 */}
-                  {isMember && result.lines && result.lines.length > 0 && (
-                    <div className="mt-6 pt-6 border-t border-white/10 text-left">
-                      <p className="text-xs text-white/60 tracking-widest uppercase mb-3">爻辞解析</p>
+                  {/* 爷辞解析 */}
+                  <div className="mt-6 pt-6 border-t border-white/10 text-left">
+                    <p className="text-xs text-white/60 tracking-widest uppercase mb-3">爷辞解析</p>
+                    {isMember && result.lines && result.lines.length > 0 ? (
                       <div className="space-y-3">
                         {result.lines.map((line, i) => (
                           <div key={i} className="text-xs text-white/70 leading-relaxed">
-                            <span className="text-[#FFD700]">第{i + 1}爻：</span>
+                            <span className="text-[#FFD700]">第{i + 1}爷：</span>
                             <span>{line}</span>
                           </div>
                         ))}
                       </div>
-                    </div>
-                  )}
+                    ) : !isMember ? (
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-white/5 border border-white/10">
+                        <Lock className="w-4 h-4 text-white/60" />
+                        <span className="text-xs text-white/60">升级为会员查看爷辞解析</span>
+                      </div>
+                    ) : null}
+                  </div>
 
                   {/* 操作按钮 */}
                   <div className="mt-8 flex gap-3 justify-center">

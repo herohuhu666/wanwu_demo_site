@@ -238,6 +238,81 @@ ${timeInfo}
         }
       }),
     
+    // Explain Yao Lines (Hexagram lines) in easy-to-understand language
+    explainYaoLines: publicProcedure
+      .input(
+        z.object({
+          hexagramName: z.string(),
+          yaoLines: z.array(z.string()),
+          isMember: z.boolean(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        try {
+          if (!input.isMember) {
+            // Non-members don't get explanations
+            return {
+              success: true,
+              explanations: input.yaoLines,
+              isMember: false,
+            };
+          }
+
+          // Members get AI-generated easy-to-understand explanations for each yao line
+          const yaoExplanations = await Promise.all(
+            input.yaoLines.map(async (yaoLine, index) => {
+              try {
+                const prompt = `你是一位精通周易的传统文化学者。用户得到了卦象"${input.hexagramName}"的第${index + 1}爻。
+
+原文爻辞：${yaoLine}
+
+请用通俗易懂的现代语言，用1-2句话解释这条爻辞的含义。避免使用晦涩的古文术语，要让普通人也能理解。
+
+解释要点：
+1. 这条爻代表什么状态
+2. 对当下生活的实际意义
+
+回答不超过50字。`;
+
+                const response = await callQwen({
+                  messages: [
+                    {
+                      role: "system",
+                      content: "你是一位精通周易的传统文化学者，用通俗易懂的语言解释爻辞。",
+                    },
+                    {
+                      role: "user",
+                      content: prompt,
+                    },
+                  ],
+                  temperature: 0.7,
+                  max_tokens: 100,
+                });
+
+                return response.choices[0]?.message.content || yaoLine;
+              } catch (error) {
+                console.error(`[Yao Line ${index + 1} Explanation Error]`, error);
+                return yaoLine;
+              }
+            })
+          );
+
+          return {
+            success: true,
+            explanations: yaoExplanations,
+            isMember: true,
+          };
+        } catch (error) {
+          console.error("[Yao Lines Explanation Error]", error);
+          return {
+            success: false,
+            explanations: input.yaoLines,
+            isMember: input.isMember,
+            error: error instanceof Error ? error.message : "Unknown error",
+          };
+        }
+      }),
+    
     // Heart Mirror Image Generation
     generateHeartImage: publicProcedure
       .input(
