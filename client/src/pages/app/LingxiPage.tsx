@@ -45,6 +45,8 @@ export default function LingxiPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showWorryShredder, setShowWorryShredder] = useState(false);
+  const [showDeepReading, setShowDeepReading] = useState(false);
+  const [deepReadingContent, setDeepReadingContent] = useState("");
 
   // tRPC mutation for Qwen API
   const qwenChatMutation = trpc.qwen.chat.useMutation();
@@ -115,6 +117,24 @@ export default function LingxiPage() {
 
       const answer = response.message;
       
+      // Generate deep reading content for members
+      let deepContent = "";
+      if (isDeep) {
+        try {
+          const deepResponse = await qwenChatMutation.mutateAsync({
+            messages: [
+              { role: "system", content: "你是东方哲学智慧导师，提供深层的人生启示分析。每个维度用2-3句话。" },
+              { role: "user", content: `基于用户所见的"${seenThing}"和所念的"${categoryLabel}"，请从以下维度提供更深层的分析：\n1. 象征意义：这个事物在传统文化中的深层含义\n2. 人生映照：它如何映照用户当前的人生状态\n3. 行动建议：基于这个启示，用户可以如何调整心态或行动\n4. 长期启示：这个启示对用户未来的指导意义` }
+            ],
+            temperature: 0.8,
+            max_tokens: 500
+          });
+          deepContent = deepResponse.message;
+        } catch (error) {
+          deepContent = "深度解读暂时无法生成，请稍后再试";
+        }
+      }
+      
       const newResult = {
         answer,
         isDeep,
@@ -124,6 +144,8 @@ export default function LingxiPage() {
       };
       
       setResult(newResult);
+      setDeepReadingContent(deepContent);
+      setShowDeepReading(false);
       setStep('result');
       addInsightRecord({
         answer,
@@ -145,6 +167,8 @@ export default function LingxiPage() {
     setSeenThing("");
     setSelectedCategory("");
     setResult(null);
+    setShowDeepReading(false);
+    setDeepReadingContent("");
   };
 
   return (
@@ -296,10 +320,18 @@ export default function LingxiPage() {
                   </div>
 
                   {result.isDeep && (
-                    <div className="bg-[#FFD700]/5 border border-[#FFD700]/20 rounded-lg p-4">
-                      <p className="text-xs text-[#FFD700] tracking-widest">会员深度解读</p>
-                      <p className="text-xs text-white/60 mt-2">此为会员专属内容</p>
-                    </div>
+                    <button
+                      onClick={() => setShowDeepReading(!showDeepReading)}
+                      className="w-full bg-[#FFD700]/5 border border-[#FFD700]/20 rounded-lg p-4 hover:bg-[#FFD700]/10 transition-colors text-left"
+                    >
+                      <div className="flex justify-between items-center">
+                        <p className="text-xs text-[#FFD700] tracking-widest">会员深度解读</p>
+                        <ChevronRight className={`w-4 h-4 text-[#FFD700] transition-transform ${showDeepReading ? 'rotate-90' : ''}`} />
+                      </div>
+                      {showDeepReading && deepReadingContent && (
+                        <p className="text-xs text-white/70 mt-3 leading-relaxed">{deepReadingContent}</p>
+                      )}
+                    </button>
                   )}
 
                   <div className="flex gap-3 pt-4">
