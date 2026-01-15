@@ -31,12 +31,7 @@ export const HEXAGRAMS: Record<number, { name: string; description: string; imag
 // 五行基础
 export type WuXing = 'wood' | 'fire' | 'earth' | 'metal' | 'water';
 
-export interface LifeParameters {
-  name: string;
-  birthDate: string; // YYYY-MM-DD
-  birthTime: string; // HH:mm
-  birthCity: string;
-}
+import { LifeParameters } from './types';
 
 export interface DestinyResult {
   baseHexagram: { id: number; name: string; nature: string }; // 本命卦
@@ -57,7 +52,7 @@ function simpleHash(str: string): number {
 
 // 计算本命卦 (基于生辰)
 export function calculateBaseHexagram(params: LifeParameters): { id: number; name: string; nature: string } {
-  const seed = `${params.name}-${params.birthDate}-${params.birthTime}`;
+  const seed = `${params.nickname}-${params.birthDate}-${params.birthTime}`;
   const hash = simpleHash(seed);
   // 映射到 1-64
   const hexagramId = (hash % 64) + 1;
@@ -73,7 +68,7 @@ export function calculateBaseHexagram(params: LifeParameters): { id: number; nam
 // 计算今日状态卦 (基于本命 + 今日日期)
 export function calculateDailyHexagram(params: LifeParameters): { id: number; name: string; nature: string } {
   const today = new Date().toISOString().split('T')[0];
-  const seed = `${params.name}-${params.birthDate}-${today}`;
+  const seed = `${params.nickname}-${params.birthDate}-${today}`;
   const hash = simpleHash(seed);
   const hexagramId = (hash % 64) + 1;
   const hexagram = HEXAGRAMS[hexagramId] || HEXAGRAMS[2]; // Fallback to Kun

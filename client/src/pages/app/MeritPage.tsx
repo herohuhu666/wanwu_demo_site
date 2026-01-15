@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, ShoppingBag, Plus, TrendingUp, Lock, ShieldCheck, Calendar, Hand, BookOpen, PenTool } from "lucide-react";
+import { Heart, ShoppingBag, Plus, TrendingUp, Lock, ShieldCheck, Calendar, Hand, BookOpen, PenTool, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { useUser } from "@/contexts/UserContext";
 
-type LogType = 'check-in' | 'pray' | 'altruism' | 'reflect';
+type LogType = 'check_in' | 'pray' | 'altruism' | 'reflection' | 'consume' | 'first_ritual' | 'first_insight' | 'guardian';
 
 interface Log {
   id: string;
@@ -19,18 +19,27 @@ interface Log {
 }
 
 const LOG_TYPES: { type: LogType; label: string; value: number; icon: any; color: string; desc: string }[] = [
-  { type: 'check-in', label: '签到', value: 1, icon: Calendar, color: 'bg-[#789262]', desc: '每日守望，心安路顺' },
+  { type: 'check_in', label: '签到', value: 1, icon: Calendar, color: 'bg-[#789262]', desc: '每日守望，心安路顺' },
   { type: 'pray', label: '祈福', value: 5, icon: Heart, color: 'bg-[#E0C38C]', desc: '善念回向，广结善缘' },
   { type: 'altruism', label: '利他', value: 10, icon: Hand, color: 'bg-[#8C8478]', desc: '赠人玫瑰，手有余香' },
-  { type: 'reflect', label: '自省', value: 5, icon: BookOpen, color: 'bg-[#2C2C2C]', desc: '静思己过，日进有功' },
+  { type: 'reflection', label: '自省', value: 5, icon: BookOpen, color: 'bg-[#2C2C2C]', desc: '静思己过，日进有功' },
+  // System types (not for manual add)
+  { type: 'consume', label: '兑换', value: -50, icon: Sparkles, color: 'bg-white/10', desc: '功德兑换' },
+  { type: 'first_ritual', label: '初卦', value: 3, icon: Sparkles, color: 'bg-[#FFD700]', desc: '初次立命' },
+  { type: 'first_insight', label: '初灵', value: 3, icon: Sparkles, color: 'bg-[#FFD700]', desc: '初次灵犀' },
+  { type: 'guardian', label: '守望', value: 2, icon: ShieldCheck, color: 'bg-[#789262]', desc: '守望点亮' },
 ];
 
 export default function MeritPage() {
-  const { merit, addMerit, isMember } = useUser();
-  const [logs, setLogs] = useState<Log[]>([
-    { id: '1', type: 'check-in', content: '每日守望', value: 1, time: '08:30' },
-    { id: '2', type: 'altruism', content: '帮邻居收快递', value: 10, time: 'Yesterday' },
-  ]);
+  const { merit, addMerit, isMember, meritHistory } = useUser();
+  // Map meritHistory to logs format for display
+  const logs = meritHistory.map(h => ({
+    id: h.id,
+    type: h.type as LogType,
+    content: h.desc,
+    value: h.amount,
+    time: new Date(h.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }));
   const [activeAction, setActiveAction] = useState<LogType | null>(null);
   const [input, setInput] = useState("");
   const [showTrend, setShowTrend] = useState(false);
@@ -39,7 +48,7 @@ export default function MeritPage() {
     if (!activeAction) return;
     
     // For check-in, no input needed
-    if (activeAction === 'check-in') {
+    if (activeAction === 'check_in') {
       // Logic handled in Guardian page usually, but allowed here for demo
     } else if (!input.trim()) {
       toast.error("请填写内容");
@@ -47,15 +56,7 @@ export default function MeritPage() {
     }
 
     const typeConfig = LOG_TYPES.find(t => t.type === activeAction)!;
-    const newLog: Log = {
-      id: Date.now().toString(),
-      type: activeAction,
-      content: input || typeConfig.label,
-      value: typeConfig.value,
-      time: '刚刚'
-    };
-    setLogs([newLog, ...logs]);
-    addMerit(typeConfig.value);
+    addMerit(typeConfig.value, activeAction, input || typeConfig.label);
     setInput("");
     setActiveAction(null);
     toast.success(`功德 +${typeConfig.value}`);
@@ -113,9 +114,9 @@ export default function MeritPage() {
           </p>
         </div>
 
-        {/* 四大行为入口 */}
+        {/* 四大行为入口 (Only manual types) */}
         <div className="grid grid-cols-2 gap-4 mb-8">
-          {LOG_TYPES.map((item) => (
+          {LOG_TYPES.filter(t => ['check_in', 'pray', 'altruism', 'reflection'].includes(t.type)).map((item) => (
             <Dialog key={item.type}>
               <DialogTrigger asChild>
                 <button 
@@ -140,7 +141,7 @@ export default function MeritPage() {
                   <p className="text-center text-xs text-white/60 tracking-wide">{item.desc}</p>
                 </DialogHeader>
                 <div className="space-y-6 py-4">
-                  {item.type !== 'check-in' && (
+                  {item.type !== 'check_in' && (
                     <div className="relative">
                       <Input 
                         value={input}
@@ -181,7 +182,10 @@ export default function MeritPage() {
             {isMember ? (
               <div className="text-xs text-white/80 tracking-widest">查看详情</div>
             ) : (
-              <Lock className="w-4 h-4 text-white/40" />
+              <div className="flex items-center gap-1">
+                <Lock className="w-3 h-3 text-white/40" />
+                <span className="text-[10px] text-white/40">会员</span>
+              </div>
             )}
           </button>
 
@@ -256,7 +260,7 @@ export default function MeritPage() {
                         {(() => {
                           const typeConfig = LOG_TYPES.find(t => t.type === log.type);
                           const Icon = typeConfig?.icon;
-                          return Icon ? <Icon className="w-4 h-4" /> : typeConfig?.label[0];
+                          return Icon ? <Icon className="w-4 h-4" /> : (typeConfig?.label[0] || '?');
                         })()}
                       </div>
                       <div>
@@ -264,8 +268,8 @@ export default function MeritPage() {
                         <p className="text-xs text-white/40 tracking-wider">{log.time}</p>
                       </div>
                     </div>
-                    <span className={`font-medium text-sm ${log.value > 0 ? 'text-[#FFD700]' : 'text-white'}`}>
-                      +{log.value}
+                    <span className={`font-medium text-sm ${log.value > 0 ? 'text-[#FFD700]' : 'text-white/60'}`}>
+                      {log.value > 0 ? '+' : ''}{log.value}
                     </span>
                   </motion.div>
                 ))}

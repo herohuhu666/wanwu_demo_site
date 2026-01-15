@@ -54,7 +54,7 @@ export default function LingxiPage() {
 
     if (availability.reason === 'merit') {
       if (!confirm("今日免费次数已尽，是否消耗 50 功德进行问询？")) return;
-      consumeMerit(50);
+      consumeMerit(50, '灵犀问询');
     }
 
     setIsLoading(true);
@@ -102,11 +102,11 @@ export default function LingxiPage() {
         answer += `当前状态：${state === 'advance' ? '进（行）' : state === 'retreat' ? '收（省）' : '稳（守）'}\n`;
         
         if (state === 'advance') {
-          answer += `势头向上，能量充沛。${profile.name || '阁下'}可大胆尝试，但需注意节奏，避免急躁。`;
+          answer += `势头向上，能量充沛。${profile.nickname || '阁下'}可大胆尝试，但需注意节奏，避免急躁。`;
         } else if (state === 'retreat') {
-          answer += `势头收敛，能量内藏。${profile.name || '阁下'}宜静不宜动，韬光养晦是上策。`;
+          answer += `势头收敛，能量内藏。${profile.nickname || '阁下'}宜静不宜动，韬光养晦是上策。`;
         } else {
-          answer += `势头平稳，能量均衡。${profile.name || '阁下'}适合巩固根基，徐徐图之。`;
+          answer += `势头平稳，能量均衡。${profile.nickname || '阁下'}适合巩固根基，徐徐图之。`;
         }
         
         if (profile.birthCity) {
@@ -116,9 +116,10 @@ export default function LingxiPage() {
 
       const newRecord = {
         question: input,
-        category: CATEGORIES.find(c => c.id === selectedCategory)?.label || '随心',
+        category: (CATEGORIES.find(c => c.id === selectedCategory)?.id || 'random') as any,
         answer,
-        isDeep
+        isDeep,
+        timestamp: Date.now()
       };
 
       addInsightRecord(newRecord);
@@ -290,82 +291,74 @@ export default function LingxiPage() {
                   </div>
 
                   <div className="prose prose-invert max-w-none">
-                    <p className="text-white/90 text-base leading-loose font-light whitespace-pre-wrap text-justify">
+                    <p className="text-white/90 text-lg leading-loose font-kai whitespace-pre-wrap">
                       {result.answer}
                     </p>
                   </div>
+
+                  {!isMember && (
+                    <div className="mt-8 pt-6 border-t border-white/10 text-center">
+                      <p className="text-xs text-white/40 mb-2">解锁无限问询与深度解读</p>
+                      <button className="text-xs text-[#FFD700] border border-[#FFD700]/30 px-4 py-1 rounded-full hover:bg-[#FFD700]/10 transition-colors">
+                        升级会员
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                {isMember && (
-                  <div className="mt-8 pt-6 border-t border-[#2C2C2C]/5 flex justify-between items-center">
-                    <div className="flex items-center gap-2 text-[#789262]">
-                      <Mic className="w-4 h-4" />
-                      <span className="text-xs tracking-widest">语音解读</span>
-                    </div>
-                    <span className="text-[10px] text-[#8C8478] bg-[#2C2C2C]/5 px-2 py-1 rounded">会员专属</span>
-                  </div>
-                )}
-
-                <div className="mt-8 text-center">
-                  <p className="text-[10px] text-[#8C8478]/60 mb-4">
-                    * 本内容为传统文化趣味参考，不构成决策依据
-                  </p>
-                  <button 
+                <div className="mt-8 flex justify-center">
+                  <button
                     onClick={reset}
-                    className="text-[#2C2C2C] text-xs tracking-[0.2em] hover:text-[#789262] transition-colors flex items-center justify-center gap-2"
+                    className="px-6 py-2 bg-white/5 rounded-full text-sm text-white/60 hover:bg-white/10 transition-colors"
                   >
-                    再次叩问 <ChevronRight className="w-3 h-3" />
+                    再次问询
                   </button>
                 </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
-      {/* 历史记录弹窗 */}
-      <AnimatePresence>
-        {showHistory && (
-          <motion.div
-            initial={{ opacity: 0, x: '100%' }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: '100%' }}
-            className="absolute inset-0 z-50 bg-[#FAF9F6] flex flex-col"
-          >
-            <div className="p-6 border-b border-[#2C2C2C]/5 flex justify-between items-center bg-[#FAF9F6]/90 backdrop-blur-sm">
-              <h3 className="text-lg text-[#2C2C2C] tracking-widest font-medium">灵犀记录</h3>
-              <button onClick={() => setShowHistory(false)} className="p-2">
-                <X className="w-5 h-5 text-[#2C2C2C]/60" />
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {insightHistory.length === 0 ? (
-                <div className="text-center py-12 text-[#8C8478]">
-                  <p className="text-sm tracking-widest">暂无记录</p>
-                </div>
-              ) : (
-                insightHistory.map((record) => (
-                  <div key={record.id} className={`p-4 rounded-xl border ${
-                    record.isDeep ? 'bg-gradient-to-br from-[#FAF9F6] to-[#789262]/5 border-[#789262]/20' : 'bg-[#FAF9F6] border-[#2C2C2C]/10'
-                  }`}>
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-xs text-[#789262] border border-[#789262]/30 px-2 py-0.5 rounded-full">
-                        {record.category}
-                      </span>
-                      <span className="text-[10px] text-[#8C8478]">
-                        {new Date(record.date).toLocaleDateString()}
-                      </span>
+        {/* 历史记录弹窗 */}
+        <AnimatePresence>
+          {showHistory && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-50 bg-black/90 backdrop-blur-md p-6 flex flex-col"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg text-white font-medium tracking-widest">问询记录</h3>
+                <button onClick={() => setShowHistory(false)}>
+                  <X className="w-6 h-6 text-white/60" />
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto space-y-4">
+                {insightHistory.length === 0 ? (
+                  <div className="text-center text-white/40 py-12 text-sm">暂无记录</div>
+                ) : (
+                  insightHistory.map((record, i) => (
+                    <div key={i} className="bg-white/5 rounded-xl p-4 border border-white/10">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-xs text-[#FFD700] border border-[#FFD700]/30 px-2 py-0.5 rounded-full">
+                          {CATEGORIES.find(c => c.id === record.category)?.label}
+                        </span>
+                        <span className="text-[10px] text-white/40">
+                          {new Date(record.timestamp).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-sm text-white/80 mb-2 font-medium">{record.question}</p>
+                      <p className="text-xs text-white/60 line-clamp-2">{record.answer}</p>
                     </div>
-                    <p className="text-sm text-[#2C2C2C] font-medium mb-2 line-clamp-1">{record.question}</p>
-                    <p className="text-xs text-[#8C8478] line-clamp-2 leading-relaxed">{record.answer}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

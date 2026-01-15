@@ -18,7 +18,7 @@ export default function TodayImagePage({ onBack, onNavigate }: TodayImagePagePro
   const [advice, setAdvice] = useState<{ recommend: string; avoid: string } | null>(null);
 
   useEffect(() => {
-    if (profile.name && profile.birthDate) {
+    if (profile.nickname && profile.birthDate) {
       const base = calculateBaseHexagram(profile);
       const daily = calculateDailyHexagram(profile);
       const elems = calculateElements(profile);

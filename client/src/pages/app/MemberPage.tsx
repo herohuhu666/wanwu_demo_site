@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Crown, Check, Lock, User, Calendar, MapPin, ChevronRight, LogOut, Sparkles, ArrowRight, Book, Hexagon, Heart, TrendingUp, X, BookOpen } from "lucide-react";
+import { Crown, Check, Lock, User, Calendar, MapPin, ChevronRight, LogOut, Sparkles, ArrowRight, Book, Hexagon, Heart, TrendingUp, X, BookOpen, Shield } from "lucide-react";
 import { toast } from "sonner";
-import { useUser, UserProfile } from "@/contexts/UserContext";
+import { useUser } from "@/contexts/UserContext";
+import { LifeParameters } from "@/lib/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -11,12 +12,12 @@ interface MemberPageProps {
 }
 
 export default function MemberPage({ onNavigate }: MemberPageProps) {
-  const { isLoggedIn, isMember, profile, login, logout, toggleMember, archives } = useUser();
+  const { isLoggedIn, isMember, profile, coreStructure, login, logout, toggleMember, archives } = useUser();
   const [showLogin, setShowLogin] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
-  const [tempProfile, setTempProfile] = useState<UserProfile>({
-    name: "",
+  const [tempProfile, setTempProfile] = useState<LifeParameters>({
+    nickname: "",
     birthDate: "",
     birthTime: "",
     birthCity: ""
@@ -76,6 +77,20 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
     return "生于冬日，水气潜藏";
   };
 
+  // Filter archives by type
+  const ritualArchives = archives.filter(a => a.type === 'ritual');
+  const insightArchives = archives.filter(a => a.type === 'insight');
+  const legacyArchives = archives.filter(a => a.type === 'legacy'); // Assuming legacy type exists or we mock it
+
+  // Mock legacy archives if not in context yet (UserContext update needed for real legacy tracking)
+  const mockLegacyArchives = Object.keys(localStorage).filter(k => k.startsWith('wanwu_legacy_capsule_')).map(k => ({
+    id: k,
+    type: 'legacy',
+    title: '遗泽锦囊',
+    content: localStorage.getItem(k) || '',
+    timestamp: parseInt(k.split('_').pop() || '0')
+  }));
+
   return (
     <div className="h-full flex flex-col relative overflow-hidden font-serif text-white/90 bg-black">
       {/* 背景图片 */}
@@ -127,7 +142,7 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
             <div className="flex-1">
               {isLoggedIn ? (
                 <>
-                  <h2 className="text-xl font-medium tracking-widest text-white mb-1 font-kai">{profile.name || "悟道者"}</h2>
+                  <h2 className="text-xl font-medium tracking-widest text-white mb-1 font-kai">{profile.nickname || "悟道者"}</h2>
                   <p className="text-xs text-white/60 tracking-wider flex items-center gap-2">
                     <MapPin className="w-3 h-3" /> {profile.birthCity || "未知之地"}
                   </p>
@@ -143,6 +158,59 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
             {!isLoggedIn && <ChevronRight className="w-5 h-5 text-white/40" />}
           </div>
         </div>
+
+        {/* 命理结构 (User Core Structure) */}
+        {isLoggedIn && coreStructure && (
+          <div className="mb-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-5">
+              <Hexagon className="w-32 h-32 text-white" />
+            </div>
+            
+            <h3 className="text-sm font-medium text-white/80 tracking-[0.2em] mb-6 font-kai flex items-center gap-2">
+              <span className="w-1 h-4 bg-[#FFD700] rounded-full" />
+              命理结构
+            </h3>
+
+            <div className="grid grid-cols-2 gap-6">
+              {/* 命卦 */}
+              <div className="space-y-1">
+                <p className="text-[10px] text-white/40 tracking-widest uppercase">Life Hexagram</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl text-[#FFD700] font-kai">{coreStructure.lifeHexagramName}</span>
+                  <span className="text-xs text-white/60">卦</span>
+                </div>
+              </div>
+
+              {/* 修行主轴 */}
+              <div className="space-y-1">
+                <p className="text-[10px] text-white/40 tracking-widest uppercase">Cultivation</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl text-white font-kai">{coreStructure.cultivationAxis}</span>
+                </div>
+              </div>
+
+              {/* 气质类型 */}
+              <div className="space-y-1">
+                <p className="text-[10px] text-white/40 tracking-widest uppercase">Temperament</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl text-white font-kai">{coreStructure.temperament}</span>
+                </div>
+              </div>
+
+              {/* 五行倾向 (简略) */}
+              <div className="space-y-1">
+                <p className="text-[10px] text-white/40 tracking-widest uppercase">Elements</p>
+                <div className="flex gap-1 h-1.5 mt-2 rounded-full overflow-hidden bg-white/10 w-full max-w-[100px]">
+                  <div style={{ width: `${coreStructure.elements.wood}%` }} className="bg-green-500/70" />
+                  <div style={{ width: `${coreStructure.elements.fire}%` }} className="bg-red-500/70" />
+                  <div style={{ width: `${coreStructure.elements.earth}%` }} className="bg-yellow-500/70" />
+                  <div style={{ width: `${coreStructure.elements.metal}%` }} className="bg-gray-300/70" />
+                  <div style={{ width: `${coreStructure.elements.water}%` }} className="bg-blue-500/70" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 功能入口区 */}
         {isLoggedIn && (
@@ -186,96 +254,100 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
           <div className="mb-8">
             <h3 className="text-sm font-medium text-white/80 tracking-[0.2em] mb-4 font-kai">档案归集</h3>
             <div className="grid grid-cols-3 gap-3">
+              {/* 卦象记录 */}
               <Dialog>
                 <DialogTrigger asChild>
                   <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors backdrop-blur-sm">
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-2 text-white/80">
-                      <Book className="w-5 h-5" />
-                    </div>
-                    <span className="text-xs text-white/90 tracking-widest">灵犀</span>
-                    <span className="text-[10px] text-white/50 mt-1">{archives?.filter((a: any) => a.type === 'insight').length || 0} 条</span>
+                    <Hexagon className="w-6 h-6 text-white/60 mb-2" />
+                    <span className="text-xs text-white/80 tracking-wider">卦象记录</span>
+                    <span className="text-[10px] text-white/40 mt-1">{ritualArchives.length} 条</span>
                   </button>
                 </DialogTrigger>
-                <DialogContent className="bg-[#FAF9F6] border border-[#789262]/20 max-w-[320px] max-h-[80vh] flex flex-col">
+                <DialogContent className="bg-[#1C1C1C] border border-white/10 shadow-2xl max-w-[320px] rounded-3xl text-white h-[80vh] flex flex-col">
                   <DialogHeader>
-                    <DialogTitle className="font-kai text-center text-xl text-[#2C2C2C] tracking-widest">灵犀档案</DialogTitle>
+                    <DialogTitle className="font-kai text-center text-xl text-white tracking-widest">卦象记录</DialogTitle>
                   </DialogHeader>
-                  <ScrollArea className="flex-1 pr-4">
+                  <ScrollArea className="flex-1 px-4">
                     <div className="space-y-4 py-4">
-                      {archives?.filter((a: any) => a.type === 'insight').length > 0 ? (
-                        archives.filter((a: any) => a.type === 'insight').map((a: any, i: number) => (
-                          <div key={i} className="p-4 rounded-xl bg-[#2C2C2C]/5 border border-[#2C2C2C]/10">
-                            <p className="text-sm font-medium text-[#2C2C2C] mb-2">{a.title}</p>
-                            <p className="text-xs text-[#8C8478] line-clamp-3">{a.content}</p>
-                          </div>
-                        ))
+                      {ritualArchives.length === 0 ? (
+                        <div className="text-center text-white/40 py-8 text-xs">暂无记录</div>
                       ) : (
-                        <p className="text-center text-xs text-[#8C8478] py-8">暂无记录</p>
-                      )}
-                    </div>
-                  </ScrollArea>
-                </DialogContent>
-              </Dialog>
-
-              <Dialog>
-                <DialogTrigger asChild>
-                  <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors backdrop-blur-sm">
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-2 text-white/80">
-                      <Hexagon className="w-5 h-5" />
-                    </div>
-                    <span className="text-xs text-white/90 tracking-widest">乾坤</span>
-                    <span className="text-[10px] text-white/50 mt-1">{archives?.filter((a: any) => a.type === 'ritual').length || 0} 条</span>
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="bg-[#FAF9F6] border border-[#789262]/20 max-w-[320px] max-h-[80vh] flex flex-col">
-                  <DialogHeader>
-                    <DialogTitle className="font-kai text-center text-xl text-[#2C2C2C] tracking-widest">乾坤档案</DialogTitle>
-                  </DialogHeader>
-                  <ScrollArea className="flex-1 pr-4">
-                    <div className="space-y-4 py-4">
-                      {archives?.filter((a: any) => a.type === 'ritual').length > 0 ? (
-                        archives.filter((a: any) => a.type === 'ritual').map((a: any, i: number) => (
-                          <div key={i} className="p-4 rounded-xl bg-[#2C2C2C]/5 border border-[#2C2C2C]/10">
+                        ritualArchives.map((a, i) => (
+                          <div key={i} className="bg-white/5 rounded-xl p-4 border border-white/10">
                             <div className="flex justify-between items-center mb-2">
-                              <p className="text-sm font-medium text-[#2C2C2C]">{a.title}</p>
-                              <span className="text-[10px] px-2 py-0.5 rounded-full border border-[#789262]/30 text-[#789262]">{a.tags?.[0]}</span>
+                              <span className="text-sm font-kai text-[#FFD700]">{a.title}</span>
+                              <span className="text-[10px] text-white/40">{new Date(a.timestamp || 0).toLocaleDateString()}</span>
                             </div>
-                            <p className="text-xs text-[#8C8478] line-clamp-3">{a.content}</p>
+                            <p className="text-xs text-white/60 line-clamp-2">{a.content}</p>
                           </div>
                         ))
-                      ) : (
-                        <p className="text-center text-xs text-[#8C8478] py-8">暂无记录</p>
                       )}
                     </div>
                   </ScrollArea>
                 </DialogContent>
               </Dialog>
 
+              {/* 灵犀记录 */}
               <Dialog>
                 <DialogTrigger asChild>
                   <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors backdrop-blur-sm">
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-2 text-white/80">
-                      <Heart className="w-5 h-5" />
-                    </div>
-                    <span className="text-xs text-white/90 tracking-widest">功德</span>
-                    <span className="text-[10px] text-white/50 mt-1">{archives?.filter((a: any) => a.type === 'merit').length || 0} 条</span>
+                    <Heart className="w-6 h-6 text-white/60 mb-2" />
+                    <span className="text-xs text-white/80 tracking-wider">灵犀记录</span>
+                    <span className="text-[10px] text-white/40 mt-1">{insightArchives.length} 条</span>
                   </button>
                 </DialogTrigger>
-                <DialogContent className="bg-[#FAF9F6] border border-[#789262]/20 max-w-[320px] max-h-[80vh] flex flex-col">
+                <DialogContent className="bg-[#1C1C1C] border border-white/10 shadow-2xl max-w-[320px] rounded-3xl text-white h-[80vh] flex flex-col">
                   <DialogHeader>
-                    <DialogTitle className="font-kai text-center text-xl text-[#2C2C2C] tracking-widest">遗泽锦囊</DialogTitle>
+                    <DialogTitle className="font-kai text-center text-xl text-white tracking-widest">灵犀记录</DialogTitle>
                   </DialogHeader>
-                  <ScrollArea className="flex-1 pr-4">
+                  <ScrollArea className="flex-1 px-4">
                     <div className="space-y-4 py-4">
-                      {archives?.filter((a: any) => a.type === 'gift').length > 0 ? (
-                        archives.filter((a: any) => a.type === 'gift').map((a: any, i: number) => (
-                          <div key={i} className="p-4 rounded-xl bg-[#2C2C2C]/5 border border-[#2C2C2C]/10">
-                            <p className="text-sm font-medium text-[#2C2C2C] mb-2">{a.title}</p>
-                            <p className="text-xs text-[#8C8478]">{a.content}</p>
+                      {insightArchives.length === 0 ? (
+                        <div className="text-center text-white/40 py-8 text-xs">暂无记录</div>
+                      ) : (
+                        insightArchives.map((a, i) => (
+                          <div key={i} className="bg-white/5 rounded-xl p-4 border border-white/10">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-xs text-[#FFD700] border border-[#FFD700]/30 px-2 py-0.5 rounded-full">问询</span>
+                              <span className="text-[10px] text-white/40">{new Date(a.timestamp || 0).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-sm text-white/80 mb-2 font-medium">{a.title}</p>
+                            <p className="text-xs text-white/60 line-clamp-3">{a.content}</p>
                           </div>
                         ))
+                      )}
+                    </div>
+                  </ScrollArea>
+                </DialogContent>
+              </Dialog>
+
+              {/* 遗泽锦囊 */}
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="flex flex-col items-center justify-center p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors backdrop-blur-sm">
+                    <Shield className="w-6 h-6 text-white/60 mb-2" />
+                    <span className="text-xs text-white/80 tracking-wider">遗泽锦囊</span>
+                    <span className="text-[10px] text-white/40 mt-1">{mockLegacyArchives.length} 个</span>
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="bg-[#1C1C1C] border border-white/10 shadow-2xl max-w-[320px] rounded-3xl text-white h-[80vh] flex flex-col">
+                  <DialogHeader>
+                    <DialogTitle className="font-kai text-center text-xl text-white tracking-widest">遗泽锦囊</DialogTitle>
+                  </DialogHeader>
+                  <ScrollArea className="flex-1 px-4">
+                    <div className="space-y-4 py-4">
+                      {mockLegacyArchives.length === 0 ? (
+                        <div className="text-center text-white/40 py-8 text-xs">暂无锦囊</div>
                       ) : (
-                        <p className="text-center text-xs text-[#8C8478] py-8">暂无记录</p>
+                        mockLegacyArchives.map((a, i) => (
+                          <div key={i} className="bg-white/5 rounded-xl p-4 border border-white/10">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-sm font-kai text-[#FFD700]">{a.title}</span>
+                              <span className="text-[10px] text-white/40">{new Date(a.timestamp).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-xs text-white/60">{a.content}</p>
+                          </div>
+                        ))
                       )}
                     </div>
                   </ScrollArea>
@@ -285,79 +357,54 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
           </div>
         )}
 
-        {/* 会员卡片 */}
-        <div className="relative h-48 rounded-3xl overflow-hidden mb-8 group shadow-lg">
-          <div className={`absolute inset-0 transition-colors duration-500 ${isMember ? 'bg-[#2C2C2C]' : 'bg-[#FAF9F6] border border-[#789262]/20'}`} />
-          
-          {/* 装饰纹理 */}
-          <div className="absolute inset-0 opacity-10 bg-[url('/images/paper_texture.jpg')] mix-blend-overlay" />
-          
-          <div className="relative z-10 h-full p-8 flex flex-col justify-between">
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className={`text-xl tracking-[0.2em] font-medium mb-2 font-kai ${isMember ? 'text-[#FAF9F6]' : 'text-[#2C2C2C]'}`}>
-                  {isMember ? "万物会员" : "普通用户"}
-                </h2>
-                <p className={`text-xs tracking-wider ${isMember ? 'text-[#FAF9F6]/60' : 'text-[#8C8478]'}`}>
-                  {isMember ? "已解锁深度洞察" : "升级解锁完整体验"}
-                </p>
+        {/* 会员订阅卡片 */}
+        {isLoggedIn && (
+          <div className="mb-8">
+            <div className="relative overflow-hidden rounded-2xl p-6 border border-[#FFD700]/30 bg-gradient-to-br from-[#FFD700]/10 to-transparent backdrop-blur-sm">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-lg font-kai tracking-widest text-[#FFD700] flex items-center gap-2">
+                    <Crown className="w-5 h-5" />
+                    万物会员
+                  </h3>
+                  <p className="text-xs text-[#FFD700]/60 mt-1 tracking-wider">
+                    {isMember ? "已解锁全部特权" : "解锁更深层的生命指引"}
+                  </p>
+                </div>
+                {isMember && (
+                  <span className="px-3 py-1 rounded-full bg-[#FFD700]/20 text-[#FFD700] text-xs font-medium border border-[#FFD700]/20">
+                    已订阅
+                  </span>
+                )}
               </div>
-              <Crown className={`w-6 h-6 ${isMember ? 'text-[#E0C38C]' : 'text-[#2C2C2C]/40'}`} />
-            </div>
 
-            <div className="flex gap-2">
+              <div className="space-y-3 mb-6">
+                {[
+                  "无限次灵犀问询",
+                  "深度卦象爻辞解析",
+                  "完整功德趋势分析",
+                  "永久保存历史记录"
+                ].map((feature, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs text-white/80">
+                    <Check className="w-3 h-3 text-[#FFD700]" />
+                    {feature}
+                  </div>
+                ))}
+              </div>
+
               <button
                 onClick={handleToggleMember}
-                className={`flex-1 py-3 rounded-xl text-xs tracking-[0.2em] transition-colors ${
+                className={`w-full py-3 rounded-xl text-sm font-medium tracking-widest transition-all ${
                   isMember 
-                    ? 'bg-[#FAF9F6]/10 text-[#FAF9F6] hover:bg-[#FAF9F6]/20' 
-                    : 'bg-[#2C2C2C] text-[#FAF9F6] hover:bg-[#2C2C2C]/90'
+                    ? "bg-white/5 text-white/60 hover:bg-white/10" 
+                    : "bg-[#FFD700] text-black hover:bg-[#E5C100] shadow-[0_0_20px_rgba(255,215,0,0.3)]"
                 }`}
               >
                 {isMember ? "管理订阅" : "立即升级"}
               </button>
-              {!isMember && (
-                <button
-                  onClick={() => setShowUpgrade(true)}
-                  className="px-4 py-3 rounded-xl text-xs tracking-[0.2em] transition-colors bg-[#FAF9F6] border border-[#2C2C2C]/10 text-[#2C2C2C] hover:bg-[#FAF9F6]/80"
-                >
-                  查看价格
-                </button>
-              )}
             </div>
           </div>
-        </div>
-
-        {/* 权益列表 */}
-        <div className="flex-1 overflow-y-auto pr-2 -mr-2">
-          <h3 className="text-sm font-medium text-[#2C2C2C] tracking-[0.2em] mb-6 font-kai">会员权益</h3>
-          <div className="space-y-4">
-            {[
-              { title: "深度 · 态势对照", desc: "节奏 × 态势 × 健康 多维分析", locked: !isMember },
-              { title: "趋势 · 周期洞察", desc: "7天 / 14天 状态趋势总结", locked: !isMember },
-              { title: "灵犀 · 无限问询", desc: "解除每日提问次数限制", locked: !isMember },
-              { title: "乾坤 · 完整解读", desc: "解锁卦象深层智慧语义", locked: !isMember },
-            ].map((item, i) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="flex items-center justify-between p-4 rounded-xl bg-[#FAF9F6] border border-[#789262]/10"
-              >
-                <div>
-                  <h4 className="text-sm font-medium text-[#2C2C2C] mb-1">{item.title}</h4>
-                  <p className="text-xs text-[#8C8478]">{item.desc}</p>
-                </div>
-                {item.locked ? (
-                  <Lock className="w-4 h-4 text-[#2C2C2C]/30" />
-                ) : (
-                  <Check className="w-4 h-4 text-[#789262]" />
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </div>
+        )}
       </div>
 
       {/* 登录弹窗 */}
@@ -367,79 +414,79 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 bg-[#2C2C2C]/40 backdrop-blur-sm flex items-center justify-center p-6"
+            className="absolute inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-6"
           >
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-[#FAF9F6] w-full max-w-sm rounded-3xl p-8 shadow-2xl relative overflow-hidden"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-full max-w-xs bg-[#1C1C1C] rounded-3xl p-8 border border-white/10 shadow-2xl relative overflow-hidden"
             >
               <button 
                 onClick={() => setShowLogin(false)}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-[#2C2C2C]/5"
+                className="absolute top-4 right-4 p-2 text-white/40 hover:text-white"
               >
-                <X className="w-5 h-5 text-[#8C8478]" />
+                <X className="w-5 h-5" />
               </button>
 
-              <h2 className="text-2xl font-medium tracking-[0.2em] text-[#2C2C2C] mb-2 font-kai text-center">完善信息</h2>
-              <p className="text-xs text-[#8C8478] text-center mb-8 tracking-wider">建立您的个人能量档案</p>
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 mx-auto bg-white/5 rounded-full flex items-center justify-center mb-4 border border-white/10">
+                  <User className="w-8 h-8 text-white/80" />
+                </div>
+                <h2 className="text-xl text-white font-medium tracking-widest font-kai">完善资料</h2>
+                <p className="text-xs text-white/40 mt-2">建立您的数字生命档案</p>
+              </div>
 
-              <form onSubmit={handleLogin} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-xs text-[#2C2C2C] tracking-widest uppercase">称呼</label>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-white/40 uppercase tracking-widest ml-1">Nickname</label>
                   <input
                     type="text"
                     required
-                    value={tempProfile.name}
-                    onChange={e => setTempProfile({...tempProfile, name: e.target.value})}
-                    className="w-full bg-transparent border-b border-[#2C2C2C]/20 py-2 text-[#2C2C2C] focus:outline-none focus:border-[#789262] transition-colors font-kai text-lg"
-                    placeholder="请输入您的称呼"
+                    value={tempProfile.nickname}
+                    onChange={e => setTempProfile({...tempProfile, nickname: e.target.value})}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#FFD700]/50 transition-colors"
+                    placeholder="您的称呼"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-xs text-[#2C2C2C] tracking-widest uppercase flex items-center gap-2">
-                      <Calendar className="w-3 h-3" /> 出生日期
-                    </label>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-white/40 uppercase tracking-widest ml-1">Date</label>
                     <input
                       type="date"
                       required
                       value={tempProfile.birthDate}
                       onChange={e => setTempProfile({...tempProfile, birthDate: e.target.value})}
-                      className="w-full bg-transparent border-b border-[#2C2C2C]/20 py-2 text-[#2C2C2C] focus:outline-none focus:border-[#789262] transition-colors"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#FFD700]/50 transition-colors"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-xs text-[#2C2C2C] tracking-widest uppercase">出生时间</label>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-white/40 uppercase tracking-widest ml-1">Time</label>
                     <input
                       type="time"
                       required
                       value={tempProfile.birthTime}
                       onChange={e => setTempProfile({...tempProfile, birthTime: e.target.value})}
-                      className="w-full bg-transparent border-b border-[#2C2C2C]/20 py-2 text-[#2C2C2C] focus:outline-none focus:border-[#789262] transition-colors"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#FFD700]/50 transition-colors"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs text-[#2C2C2C] tracking-widest uppercase flex items-center gap-2">
-                    <MapPin className="w-3 h-3" /> 出生城市
-                  </label>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-white/40 uppercase tracking-widest ml-1">City</label>
                   <input
                     type="text"
                     required
                     value={tempProfile.birthCity}
                     onChange={e => setTempProfile({...tempProfile, birthCity: e.target.value})}
-                    className="w-full bg-transparent border-b border-[#2C2C2C]/20 py-2 text-[#2C2C2C] focus:outline-none focus:border-[#789262] transition-colors"
-                    placeholder="例如：北京"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#FFD700]/50 transition-colors"
+                    placeholder="出生城市 (用于定气)"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full bg-[#2C2C2C] text-[#FAF9F6] py-4 rounded-xl text-sm tracking-[0.3em] hover:bg-[#2C2C2C]/90 transition-colors mt-4 shadow-lg shadow-[#2C2C2C]/20"
+                  className="w-full py-3 bg-[#FFD700] text-black rounded-xl font-medium tracking-widest hover:bg-[#E5C100] transition-colors mt-4 shadow-[0_0_20px_rgba(255,215,0,0.2)]"
                 >
                   开启旅程
                 </button>
@@ -449,74 +496,50 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
         )}
       </AnimatePresence>
 
-      {/* 升级弹窗 */}
+      {/* 升级确认弹窗 */}
       <AnimatePresence>
         {showUpgrade && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 bg-[#2C2C2C]/40 backdrop-blur-sm flex items-center justify-center p-6"
+            className="absolute inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-6"
           >
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-[#FAF9F6] w-full max-w-sm rounded-3xl p-8 shadow-2xl relative overflow-hidden"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-full max-w-xs bg-[#1C1C1C] rounded-3xl p-8 border border-[#FFD700]/30 shadow-2xl text-center relative overflow-hidden"
             >
               <button 
                 onClick={() => setShowUpgrade(false)}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-[#2C2C2C]/5"
+                className="absolute top-4 right-4 p-2 text-white/40 hover:text-white"
               >
-                <X className="w-5 h-5 text-[#8C8478]" />
+                <X className="w-5 h-5" />
               </button>
 
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 rounded-full bg-[#E0C38C]/20 flex items-center justify-center mx-auto mb-4">
-                  <Crown className="w-8 h-8 text-[#E0C38C]" />
-                </div>
-                <h2 className="text-2xl font-medium tracking-[0.2em] text-[#2C2C2C] mb-2 font-kai">升级会员</h2>
-                <p className="text-xs text-[#8C8478] tracking-wider">解锁完整智慧与深度洞察</p>
+              <div className="w-16 h-16 mx-auto bg-[#FFD700]/10 rounded-full flex items-center justify-center mb-6 border border-[#FFD700]/20">
+                <Crown className="w-8 h-8 text-[#FFD700]" />
               </div>
+              
+              <h2 className="text-xl text-white font-medium tracking-widest font-kai mb-2">升级会员</h2>
+              <p className="text-xs text-white/60 mb-8">解锁全部高级功能</p>
 
-              <div className="space-y-4 mb-8">
-                <div className="p-4 rounded-xl border border-[#2C2C2C]/10 hover:border-[#789262] cursor-pointer transition-colors relative overflow-hidden group">
-                  <div className="flex justify-between items-center relative z-10">
-                    <div>
-                      <p className="text-sm font-medium text-[#2C2C2C]">月度会员</p>
-                      <p className="text-xs text-[#8C8478]">灵活订阅，随时取消</p>
-                    </div>
-                    <p className="text-lg font-serif text-[#2C2C2C]">¥18<span className="text-xs text-[#8C8478]">/月</span></p>
-                  </div>
+              <div className="space-y-4 mb-8 text-left bg-white/5 p-4 rounded-xl border border-white/10">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-white/80">月度会员</span>
+                  <span className="text-lg font-medium text-[#FFD700]">¥ 18.00</span>
                 </div>
-
-                <div className="p-4 rounded-xl border-2 border-[#789262] bg-[#789262]/5 cursor-pointer relative overflow-hidden">
-                  <div className="absolute top-0 right-0 bg-[#789262] text-[#FAF9F6] text-[10px] px-2 py-1 rounded-bl-lg">推荐</div>
-                  <div className="flex justify-between items-center relative z-10">
-                    <div>
-                      <p className="text-sm font-medium text-[#2C2C2C]">年度会员</p>
-                      <p className="text-xs text-[#8C8478]">每日仅需 0.46 元</p>
-                    </div>
-                    <p className="text-lg font-serif text-[#2C2C2C]">¥168<span className="text-xs text-[#8C8478]">/年</span></p>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-xl border border-[#2C2C2C]/10 hover:border-[#789262] cursor-pointer transition-colors relative overflow-hidden">
-                  <div className="flex justify-between items-center relative z-10">
-                    <div>
-                      <p className="text-sm font-medium text-[#2C2C2C]">终身会员</p>
-                      <p className="text-xs text-[#8C8478]">一次付费，永久享有</p>
-                    </div>
-                    <p className="text-lg font-serif text-[#2C2C2C]">¥598</p>
-                  </div>
-                </div>
+                <div className="h-[1px] bg-white/10" />
+                <p className="text-[10px] text-white/40">
+                  * 模拟支付，点击确认直接开通
+                </p>
               </div>
 
               <button
                 onClick={confirmUpgrade}
-                className="w-full bg-[#2C2C2C] text-[#FAF9F6] py-4 rounded-xl text-sm tracking-[0.3em] hover:bg-[#2C2C2C]/90 transition-colors shadow-lg shadow-[#2C2C2C]/20"
+                className="w-full py-3 bg-[#FFD700] text-black rounded-xl font-medium tracking-widest hover:bg-[#E5C100] transition-colors shadow-[0_0_20px_rgba(255,215,0,0.2)]"
               >
-                立即开通
+                确认支付
               </button>
             </motion.div>
           </motion.div>

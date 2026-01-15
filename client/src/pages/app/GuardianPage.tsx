@@ -14,7 +14,7 @@ const ZEN_QUOTES = [
 ];
 
 export default function GuardianPage() {
-  const { dailyRecord, submitDailyRecord, addMerit } = useUser();
+  const { dailyRecord, submitDailyRecord, addMerit, guardianCheckIn, lastGuardianTime } = useUser();
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(259200); // 72 hours
   const [showZenQuote, setShowZenQuote] = useState(false);
@@ -33,6 +33,23 @@ export default function GuardianPage() {
   const [meditationTime, setMeditationTime] = useState(0);
   const [isMeditating, setIsMeditating] = useState(false);
 
+  // Initialize state based on UserContext
+  useEffect(() => {
+    if (lastGuardianTime) {
+      const now = Date.now();
+      const elapsed = Math.floor((now - lastGuardianTime) / 1000);
+      const remaining = Math.max(0, 259200 - elapsed);
+      setTimeLeft(remaining);
+      
+      // Check if checked in today
+      const lastDate = new Date(lastGuardianTime).toDateString();
+      const today = new Date().toDateString();
+      if (lastDate === today) {
+        setIsActive(true);
+      }
+    }
+  }, [lastGuardianTime]);
+
   // Mock: Check if within 08:30 - 24:00
   const isLightUpTime = () => {
     const now = new Date();
@@ -47,7 +64,7 @@ export default function GuardianPage() {
       setTimeLeft((prev) => {
         if (prev <= 0) {
           clearInterval(timer);
-          if (!showLegacyCapsule) {
+          if (!showLegacyCapsule && !isActive) { // Only trigger if not active (expired)
             triggerLegacyCapsule();
           }
           return 0;
@@ -56,7 +73,7 @@ export default function GuardianPage() {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [showLegacyCapsule, isActive]);
 
   // Meditation Timer
   useEffect(() => {
@@ -67,7 +84,7 @@ export default function GuardianPage() {
           if (prev >= 900) { // 15 minutes (one incense stick)
             clearInterval(interval);
             setIsMeditating(false);
-            addMerit(5);
+            addMerit(5, 'pray', '一柱香时间');
             toast.success("一柱香时间已到，功德+5");
             return 900;
           }
@@ -88,7 +105,7 @@ export default function GuardianPage() {
   };
 
   const handleLegacyClaim = () => {
-    addMerit(28);
+    addMerit(28, 'guardian', '遗泽锦囊');
     // Add 1 free insight (mock logic handled in UserContext or backend)
     toast.success("已领取遗泽锦囊：功德+28，灵犀问询+1");
     setShowLegacyCapsule(false);
@@ -109,6 +126,11 @@ export default function GuardianPage() {
   };
 
   const handleIgniteClick = () => {
+    if (isActive) {
+      toast.info("今日已点亮");
+      return;
+    }
+
     if (!isLightUpTime()) {
       toast.error("每日 08:30 - 24:00 方可点亮");
       return;
@@ -118,16 +140,22 @@ export default function GuardianPage() {
   };
 
   const confirmIgnite = () => {
-    setShowZenQuote(false);
-    setIsActive(true);
-    setTimeLeft(259200);
-    addMerit(2);
+    const result = guardianCheckIn();
     
-    if (!dailyRecord?.completed) {
-      setShowDailyCheckIn(true);
+    if (result.success) {
+      setShowZenQuote(false);
+      setIsActive(true);
+      setTimeLeft(259200);
+      
+      if (!dailyRecord?.completed) {
+        setShowDailyCheckIn(true);
+      } else {
+        toast.success(result.message);
+        // setTimeout(() => setIsActive(false), 2000); // Don't turn off active state immediately
+      }
     } else {
-      toast.success("命灯已点亮，功德+2");
-      setTimeout(() => setIsActive(false), 2000);
+      toast.error(result.message);
+      setShowZenQuote(false);
     }
   };
 
@@ -135,7 +163,6 @@ export default function GuardianPage() {
     submitDailyRecord(selectedState, energyLevel, sleepQuality);
     setShowDailyCheckIn(false);
     toast.success("今日状态已记录");
-    setTimeout(() => setIsActive(false), 2000);
   };
 
   // Calculate progress bars (mock: 1 day filled per light up, max 3)
@@ -276,9 +303,9 @@ export default function GuardianPage() {
                   e.stopPropagation();
                   confirmIgnite();
                 }}
-                className="relative z-10 w-full py-3 bg-white/10 hover:bg-white/20 text-white text-sm tracking-[0.2em] rounded-lg transition-colors border border-white/5 cursor-pointer"
+                className="relative z-10 w-full py-3 bg-[#E0D6C8]/10 border border-[#E0D6C8]/30 rounded-full text-[#E0D6C8] tracking-widest hover:bg-[#E0D6C8]/20 transition-colors"
               >
-                心安
+                确认点亮
               </button>
             </motion.div>
           </motion.div>
@@ -292,103 +319,99 @@ export default function GuardianPage() {
             initial={{ opacity: 0, y: "100%" }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className="absolute inset-0 z-50 bg-[#1C1C1C] flex flex-col"
           >
-            <div className="flex-1 px-8 pt-12 pb-8 overflow-y-auto">
+            <div className="flex-1 p-8 flex flex-col">
               <div className="flex justify-between items-center mb-8">
-                <h2 className="text-2xl font-medium tracking-[0.2em] text-white font-kai">今日状态</h2>
-                <button 
-                  onClick={() => setShowDailyCheckIn(false)}
-                  className="p-2 rounded-full hover:bg-white/10 text-white/60"
-                >
-                  <X className="w-6 h-6" />
+                <h2 className="text-xl text-white font-medium tracking-widest">今日状态</h2>
+                <button onClick={() => setShowDailyCheckIn(false)}>
+                  <X className="w-6 h-6 text-white/60" />
                 </button>
               </div>
 
-              {/* 状态选择 */}
               <div className="space-y-8">
-                <section>
-                  <h3 className="text-sm text-white/60 tracking-[0.2em] mb-4">心境</h3>
-                  <div className="grid grid-cols-3 gap-3">
+                {/* 状态选择 */}
+                <div>
+                  <p className="text-xs text-white/60 tracking-widest mb-4 uppercase">State</p>
+                  <div className="grid grid-cols-3 gap-4">
                     {[
-                      { id: 'anxious', label: '焦虑', icon: AlertTriangle },
-                      { id: 'steady', label: '平稳', icon: Activity },
-                      { id: 'joyful', label: '喜悦', icon: Sparkles },
-                    ].map((item) => (
+                      { id: 'steady', label: '稳', icon: <Shield className="w-5 h-5" /> },
+                      { id: 'advance', label: '进', icon: <Activity className="w-5 h-5" /> },
+                      { id: 'retreat', label: '收', icon: <Moon className="w-5 h-5" /> },
+                    ].map((s) => (
                       <button
-                        key={item.id}
-                        onClick={() => setSelectedState(item.id as DailyState)}
-                        className={`p-4 rounded-xl border transition-all flex flex-col items-center gap-2 ${
-                          selectedState === item.id
-                            ? 'bg-white/10 border-[#E0D6C8] text-[#E0D6C8]'
-                            : 'border-white/10 text-white/40 hover:border-white/20'
+                        key={s.id}
+                        onClick={() => setSelectedState(s.id as DailyState)}
+                        className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${
+                          selectedState === s.id 
+                            ? 'bg-[#E0D6C8] text-black border-[#E0D6C8]' 
+                            : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
                         }`}
                       >
-                        <item.icon className="w-5 h-5" />
-                        <span className="text-xs tracking-widest">{item.label}</span>
+                        {s.icon}
+                        <span className="text-sm font-medium">{s.label}</span>
                       </button>
                     ))}
                   </div>
-                </section>
+                </div>
 
-                <section>
-                  <h3 className="text-sm text-white/60 tracking-[0.2em] mb-4">能量</h3>
-                  <div className="grid grid-cols-3 gap-3">
+                {/* 能量水平 */}
+                <div>
+                  <p className="text-xs text-white/60 tracking-widest mb-4 uppercase">Energy</p>
+                  <div className="flex gap-4">
                     {[
-                      { id: 'low', label: '低', icon: Battery },
-                      { id: 'medium', label: '中', icon: Battery },
-                      { id: 'high', label: '高', icon: Battery },
-                    ].map((item) => (
+                      { id: 'low', label: '低' },
+                      { id: 'medium', label: '中' },
+                      { id: 'high', label: '高' },
+                    ].map((e) => (
                       <button
-                        key={item.id}
-                        onClick={() => setEnergyLevel(item.id as EnergyLevel)}
-                        className={`p-4 rounded-xl border transition-all flex flex-col items-center gap-2 ${
-                          energyLevel === item.id
-                            ? 'bg-white/10 border-[#E0D6C8] text-[#E0D6C8]'
-                            : 'border-white/10 text-white/40 hover:border-white/20'
+                        key={e.id}
+                        onClick={() => setEnergyLevel(e.id as EnergyLevel)}
+                        className={`flex-1 py-3 rounded-full border text-sm transition-all ${
+                          energyLevel === e.id
+                            ? 'bg-[#E0D6C8] text-black border-[#E0D6C8]'
+                            : 'bg-transparent border-white/10 text-white/60'
                         }`}
                       >
-                        <item.icon className="w-5 h-5" />
-                        <span className="text-xs tracking-widest">{item.label}</span>
+                        {e.label}
                       </button>
                     ))}
                   </div>
-                </section>
+                </div>
 
-                <section>
-                  <h3 className="text-sm text-white/60 tracking-[0.2em] mb-4">睡眠</h3>
-                  <div className="grid grid-cols-3 gap-3">
+                {/* 睡眠质量 */}
+                <div>
+                  <p className="text-xs text-white/60 tracking-widest mb-4 uppercase">Sleep</p>
+                  <div className="flex gap-4">
                     {[
-                      { id: 'poor', label: '差', icon: Moon },
-                      { id: 'fair', label: '一般', icon: Moon },
-                      { id: 'good', label: '好', icon: Moon },
-                    ].map((item) => (
+                      { id: 'poor', label: '差' },
+                      { id: 'fair', label: '一般' },
+                      { id: 'good', label: '好' },
+                    ].map((s) => (
                       <button
-                        key={item.id}
-                        onClick={() => setSleepQuality(item.id as SleepQuality)}
-                        className={`p-4 rounded-xl border transition-all flex flex-col items-center gap-2 ${
-                          sleepQuality === item.id
-                            ? 'bg-white/10 border-[#E0D6C8] text-[#E0D6C8]'
-                            : 'border-white/10 text-white/40 hover:border-white/20'
+                        key={s.id}
+                        onClick={() => setSleepQuality(s.id as SleepQuality)}
+                        className={`flex-1 py-3 rounded-full border text-sm transition-all ${
+                          sleepQuality === s.id
+                            ? 'bg-[#E0D6C8] text-black border-[#E0D6C8]'
+                            : 'bg-transparent border-white/10 text-white/60'
                         }`}
                       >
-                        <item.icon className="w-5 h-5" />
-                        <span className="text-xs tracking-widest">{item.label}</span>
+                        {s.label}
                       </button>
                     ))}
                   </div>
-                </section>
+                </div>
               </div>
-            </div>
 
-            <div className="p-8 border-t border-white/10 bg-[#1C1C1C]">
-              <button
-                onClick={handleDailySubmit}
-                className="w-full py-4 bg-[#E0D6C8] text-[#1C1C1C] rounded-xl font-medium tracking-[0.2em] hover:bg-[#D0C6B8] transition-colors"
-              >
-                记录此刻
-              </button>
+              <div className="mt-auto">
+                <button
+                  onClick={handleDailySubmit}
+                  className="w-full py-4 bg-[#E0D6C8] text-black rounded-full font-medium tracking-widest hover:bg-[#d4c5b5] transition-colors"
+                >
+                  确认记录
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
@@ -401,105 +424,78 @@ export default function GuardianPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
+            className="absolute inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-6"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="w-full max-w-xs bg-[#1C1C1C] rounded-2xl p-8 border border-white/10 shadow-2xl text-center"
+              className="w-full max-w-xs bg-[#1C1C1C] rounded-2xl p-8 border border-[#E0D6C8]/30 text-center"
             >
-              <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6">
-                <Shield className="w-8 h-8 text-[#E0D6C8]" />
+              <div className="w-16 h-16 mx-auto bg-[#E0D6C8]/10 rounded-full flex items-center justify-center mb-6">
+                <Sparkles className="w-8 h-8 text-[#E0D6C8]" />
               </div>
-              <h3 className="text-xl font-medium tracking-[0.2em] mb-4 text-white">遗泽锦囊</h3>
-              <p className="text-sm text-white/60 mb-8 leading-relaxed">
-                检测到您已超过72小时未点亮命灯。
-                <br />
-                系统已为您自动触发保护机制。
-              </p>
+              <h3 className="text-xl text-white font-medium tracking-widest mb-2">遗泽锦囊</h3>
+              <p className="text-xs text-white/60 mb-6">72小时守护达成，获赠先祖遗泽</p>
               
-              <div className="bg-white/5 p-4 rounded-lg mb-8 border border-white/5">
-                <p className="text-[#E0D6C8] font-kai text-lg">{legacyContent}</p>
+              <div className="bg-white/5 rounded-xl p-4 mb-8 border border-white/10">
+                <p className="text-[#E0D6C8] text-lg font-kai">{legacyContent}</p>
               </div>
 
               <button
                 onClick={handleLegacyClaim}
-                className="w-full py-3 bg-[#E0D6C8] text-[#1C1C1C] rounded-lg tracking-[0.2em] hover:bg-[#D0C6B8] transition-colors"
+                className="w-full py-3 bg-[#E0D6C8] text-black rounded-full tracking-widest hover:bg-[#d4c5b5] transition-colors"
               >
-                领取庇护
+                领取福报
               </button>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 一柱香冥想弹窗 */}
+      {/* 冥想计时器 */}
       <AnimatePresence>
         {showMeditation && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center"
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "100%" }}
+            className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center"
           >
             <button 
               onClick={() => {
                 setShowMeditation(false);
                 setIsMeditating(false);
+                setMeditationTime(0);
               }}
-              className="absolute top-8 right-8 p-2 text-white/40 hover:text-white transition-colors"
+              className="absolute top-8 right-8 p-2 text-white/60 hover:text-white"
             >
               <X className="w-6 h-6" />
             </button>
 
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-kai text-white tracking-[0.3em] mb-4">一柱香</h2>
-              <p className="text-xs text-white/40 tracking-[0.2em] uppercase">Meditation</p>
+              <Flame className={`w-12 h-12 mx-auto mb-6 transition-all duration-1000 ${isMeditating ? 'text-[#FF4500] animate-pulse' : 'text-white/20'}`} />
+              <h2 className="text-2xl text-white font-light tracking-[0.3em] mb-2">一柱香</h2>
+              <p className="text-xs text-white/40 tracking-widest">Meditation</p>
             </div>
 
-            {/* 香炉动画 */}
-            <div className="relative w-24 h-64 mb-12 flex justify-center items-end">
-              {/* 香身 */}
-              <div className="w-1 h-48 bg-gradient-to-t from-[#8B4513] to-[#D2691E] relative rounded-t-sm">
-                {/* 燃烧点 */}
-                <motion.div 
-                  animate={{ opacity: [0.6, 1, 0.6] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 bg-red-500 rounded-full blur-[1px]"
-                />
-                {/* 烟雾 */}
-                <motion.div
-                  animate={{ 
-                    y: [-10, -30, -50],
-                    x: [0, 5, -5, 0],
-                    opacity: [0.4, 0.2, 0]
-                  }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                  className="absolute -top-4 left-1/2 -translate-x-1/2 w-4 h-12 bg-gray-400/30 blur-md rounded-full"
-                />
-              </div>
-              {/* 香炉底座 */}
-              <div className="absolute bottom-0 w-16 h-8 bg-[#2C2C2C] rounded-b-xl border-t border-white/10" />
+            <div className="text-6xl font-thin text-white tabular-nums tracking-wider mb-12 font-variant-numeric">
+              {formatMeditationTime(meditationTime)}
             </div>
 
-            <div className="text-center">
-              <div className="text-4xl font-light text-white tracking-widest mb-8 font-variant-numeric tabular-nums">
-                {formatMeditationTime(meditationTime)}
-              </div>
-              
-              {!isMeditating ? (
-                <button
-                  onClick={() => setIsMeditating(true)}
-                  className="px-12 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full tracking-[0.2em] transition-all border border-white/10"
-                >
-                  开始静心
-                </button>
-              ) : (
-                <p className="text-white/40 tracking-[0.2em] text-sm animate-pulse">
-                  静心凝神...
-                </p>
-              )}
-            </div>
+            <button
+              onClick={() => setIsMeditating(!isMeditating)}
+              className={`px-12 py-3 rounded-full border tracking-[0.2em] transition-all ${
+                isMeditating 
+                  ? 'border-white/20 text-white/60 hover:bg-white/5' 
+                  : 'bg-[#E0D6C8] text-black border-[#E0D6C8] hover:bg-[#d4c5b5]'
+              }`}
+            >
+              {isMeditating ? "暂停" : "开始"}
+            </button>
+            
+            <p className="absolute bottom-12 text-xs text-white/30 tracking-widest">
+              静坐一柱香 (15分钟) 可获功德
+            </p>
           </motion.div>
         )}
       </AnimatePresence>

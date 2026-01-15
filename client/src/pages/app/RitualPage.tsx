@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Hexagon, ChevronRight, RefreshCw, Lock, Zap, Hand, Briefcase, Heart, Users } from "lucide-react";
+import { Hexagon, RefreshCw, Lock, Zap, Hand } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
-import { HEXAGRAMS } from "@/lib/hexagrams_data";
+import { getHexagram } from "@/lib/knowledge_base";
 
 // Yao type: 0 for Yin, 1 for Yang
 type Yao = 0 | 1;
@@ -22,6 +22,7 @@ export default function RitualPage() {
     tag: string;
     yaos: Yao[];
     element: string;
+    lines?: string[];
   }>(null);
 
   const handleManualShake = () => {
@@ -56,26 +57,25 @@ export default function RitualPage() {
   };
 
   const generateResult = (finalYaos: Yao[]) => {
-    // In a real I Ching algorithm, we would map the 6 yaos to a specific hexagram ID.
-    // For this demo with the provided whitelist data, we will simulate the mapping 
-    // by picking a random hexagram from the full 64 list to ensure rich content display,
-    // or we could implement the binary mapping if the order matches standard King Wen sequence.
-    // To ensure the user sees the rich content we just added, let's pick from HEXAGRAMS.
+    // Convert yaos to binary string (bottom to top)
+    const binary = finalYaos.join('');
+    const hexagram = getHexagram(binary);
     
-    // However, to be "authentic" to the random toss, we should ideally map it.
-    // Since we don't have the binary-to-id map ready for all 64 in the snippet, 
-    // we will select a random one from our rich database to guarantee high quality content.
-    const randomHexagram = HEXAGRAMS[Math.floor(Math.random() * HEXAGRAMS.length)];
-    
+    if (!hexagram) {
+      toast.error("卦象生成失败，请重试");
+      return;
+    }
+
     const newResult = {
       gua: finalYaos.map(y => y === 1 ? '—' : '--').reverse().join('\n'),
-      name: randomHexagram.nature,
-      desc: randomHexagram.judgment,
-      wisdom: `象曰：${randomHexagram.image}\n\n${randomHexagram.keywords.join(' · ')}`,
-      structure: `五行属性：${randomHexagram.element === 'metal' ? '金' : randomHexagram.element === 'wood' ? '木' : randomHexagram.element === 'water' ? '水' : randomHexagram.element === 'fire' ? '火' : '土'}`,
-      tag: randomHexagram.keywords[0],
+      name: hexagram.name,
+      desc: hexagram.judgment,
+      wisdom: `象曰：${hexagram.image}\n\n${hexagram.keywords?.join(' · ') || ''}`,
+      structure: `五行属性：${hexagram.element === 'metal' ? '金' : hexagram.element === 'wood' ? '木' : hexagram.element === 'water' ? '水' : hexagram.element === 'fire' ? '火' : '土'}`,
+      tag: hexagram.keywords?.[0] || '吉',
       yaos: finalYaos,
-      element: randomHexagram.element
+      element: hexagram.element,
+      lines: hexagram.lines // Add lines for member deep analysis
     };
 
     setResult(newResult);
@@ -267,66 +267,40 @@ export default function RitualPage() {
                         </p>
                       </div>
 
-                      {/* 会员专属结构分析 */}
-                      <div className={`rounded-xl border ${isMember ? 'border-[#789262]/20 bg-[#789262]/5' : 'border-[#2C2C2C]/10 bg-[#2C2C2C]/5'} p-5 relative overflow-hidden`}>
-                        <div className="flex items-center justify-between mb-4">
-                          <p className="text-xs text-[#8C8478] tracking-widest uppercase flex items-center gap-2">
-                            <span className="w-1 h-1 rounded-full bg-[#789262]" /> 深层结构
-                          </p>
-                          {!isMember && <Lock className="w-4 h-4 text-[#2C2C2C]/40" />}
-                        </div>
-
-                        {isMember ? (
-                          <div className="space-y-4">
-                            <div className="flex gap-2 items-start">
-                              <Briefcase className="w-3 h-3 text-[#789262] mt-1 shrink-0" />
-                              <p className="text-xs text-[#2C2C2C]/70 leading-relaxed">
-                                <span className="text-[#2C2C2C] font-medium">事业：</span>
-                                {result.element === 'metal' ? '金气主肃杀，宜大刀阔斧，革故鼎新。' : 
-                                 result.element === 'wood' ? '木气主生发，宜循序渐进，深根固柢。' :
-                                 result.element === 'water' ? '水气主智，宜以柔克刚，顺势而为。' :
-                                 result.element === 'fire' ? '火气主礼，宜光明正大，热情进取。' :
-                                 '土气主信，宜厚德载物，稳健经营。'}
-                              </p>
-                            </div>
-                            <div className="flex gap-2 items-start">
-                              <Heart className="w-3 h-3 text-[#789262] mt-1 shrink-0" />
-                              <p className="text-xs text-[#2C2C2C]/70 leading-relaxed">
-                                <span className="text-[#2C2C2C] font-medium">情感：</span>
-                                {result.element === 'metal' ? '情贵在真，切忌过于锋芒毕露。' : 
-                                 result.element === 'wood' ? '情如草木，需时间灌溉培养。' :
-                                 result.element === 'water' ? '情深似海，需防滥情或多疑。' :
-                                 result.element === 'fire' ? '情烈如火，需防来去匆匆。' :
-                                 '情稳如山，平淡中见真情。'}
-                              </p>
-                            </div>
-                            <div className="mt-4 pt-4 border-t border-[#789262]/10">
-                              <p className="text-xs text-[#2C2C2C]/60 whitespace-pre-line leading-relaxed font-mono">
-                                {result.structure}
-                              </p>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-center py-4">
-                            <p className="text-xs text-[#2C2C2C]/60 mb-3">解锁五行详解与多维运势分析</p>
-                            <button className="px-4 py-1.5 bg-[#2C2C2C] text-[#FAF9F6] text-[10px] tracking-widest rounded-full">
-                              开通会员
-                            </button>
-                          </div>
-                        )}
+                      <div>
+                        <p className="text-xs text-white/60 tracking-widest mb-2 uppercase flex items-center gap-2">
+                          <span className="w-1 h-1 rounded-full bg-[#FFD700]" /> 结构
+                        </p>
+                        <p className="text-white/80 text-sm leading-loose tracking-wide font-light">
+                          {result.structure}
+                        </p>
                       </div>
-                    </div>
 
-                    <div className="mt-8 pt-6 border-t border-[#2C2C2C]/5">
-                      <p className="text-[10px] text-[#8C8478] tracking-wider mb-4 scale-90 origin-center">
-                        * 本内容为传统文化趣味参考，不构成决策依据
-                      </p>
-                      <button 
-                        onClick={resetRitual}
-                        className="text-[#2C2C2C] text-xs tracking-[0.2em] hover:opacity-70 transition-opacity flex items-center justify-center gap-2 mx-auto"
-                      >
-                        再次起卦 <ChevronRight className="w-3 h-3" />
-                      </button>
+                      {/* 会员深度解析 (Member Deep Analysis) */}
+                      {isMember && result.lines && (
+                        <div className="pt-6 border-t border-white/10">
+                          <p className="text-xs text-[#FFD700]/80 tracking-widest mb-4 uppercase flex items-center gap-2">
+                            <Lock className="w-3 h-3" /> 深度爻辞解析 (会员)
+                          </p>
+                          <div className="space-y-4">
+                            {result.lines.map((line, idx) => (
+                              <div key={idx} className="text-xs text-white/70 leading-relaxed">
+                                <span className="text-[#FFD700]/60 mr-2">[{idx + 1}爻]</span>
+                                {line}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {!isMember && (
+                        <div className="pt-6 border-t border-white/10 text-center">
+                          <p className="text-xs text-white/40 mb-2">解锁深度爻辞解析与趋势分析</p>
+                          <button className="text-xs text-[#FFD700] border border-[#FFD700]/30 px-4 py-1 rounded-full hover:bg-[#FFD700]/10 transition-colors">
+                            升级会员
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
