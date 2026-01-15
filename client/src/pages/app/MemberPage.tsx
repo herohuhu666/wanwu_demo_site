@@ -45,8 +45,7 @@ export default function MemberPage() {
       nickname: tempProfile.nickname,
       birthDate: tempProfile.birthDate,
       birthTime: tempProfile.birthTime,
-      birthCity: tempProfile.birthCity,
-
+      birthCity: tempProfile.birthCity
     });
     setShowLogin(false);
   };
