@@ -107,15 +107,18 @@ ${user?.role === "admin" ? "为会员用户提供详细、通俗易懂的分析�
   };
 
   return (
-    <div className="h-screen overflow-y-auto bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 p-4 pb-20">
+    <div className="h-screen overflow-y-auto bg-cover bg-center p-4 pb-20" style={{
+      backgroundImage: 'url("/images/lingxi_bg.png")',
+      backgroundAttachment: 'fixed'
+    }}>
       {/* Header */}
-      <div className="mb-6 text-center sticky top-0 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 py-2 z-10">
+      <div className="mb-6 text-center sticky top-0 bg-black/40 backdrop-blur-sm py-2 z-10 rounded-lg">
         <h1 className="text-3xl font-serif font-bold text-amber-100 mb-2">灵犀</h1>
         <p className="text-amber-100/60 text-sm">所见即所得，所念即回响</p>
       </div>
 
       {/* Input Section */}
-      <Card className="bg-slate-800/50 border-amber-900/30 mb-6 flex-shrink-0">
+      <Card className="bg-black/50 border-amber-900/40 mb-6 flex-shrink-0 backdrop-blur-sm">
         <div className="p-6 space-y-4">
           {/* Question Input */}
           <div>
@@ -193,7 +196,7 @@ ${user?.role === "admin" ? "为会员用户提供详细、通俗易懂的分析�
 
       {/* Response Section */}
       {response && (
-        <Card className="bg-slate-800/50 border-amber-900/30 flex-shrink-0">
+        <Card className="bg-black/50 border-amber-900/40 flex-shrink-0 backdrop-blur-sm">
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-amber-100 font-serif text-lg">灵犀回应</h3>
