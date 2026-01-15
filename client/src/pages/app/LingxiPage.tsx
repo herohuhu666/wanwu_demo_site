@@ -107,15 +107,15 @@ ${user?.role === "admin" ? "为会员用户提供详细、通俗易懂的分析�
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 p-4 pb-20">
+    <div className="h-screen overflow-y-auto bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 p-4 pb-20">
       {/* Header */}
-      <div className="mb-8 text-center">
+      <div className="mb-6 text-center sticky top-0 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 py-2 z-10">
         <h1 className="text-3xl font-serif font-bold text-amber-100 mb-2">灵犀</h1>
         <p className="text-amber-100/60 text-sm">所见即所得，所念即回响</p>
       </div>
 
       {/* Input Section */}
-      <Card className="bg-slate-800/50 border-amber-900/30 mb-6">
+      <Card className="bg-slate-800/50 border-amber-900/30 mb-6 flex-shrink-0">
         <div className="p-6 space-y-4">
           {/* Question Input */}
           <div>
@@ -193,7 +193,7 @@ ${user?.role === "admin" ? "为会员用户提供详细、通俗易懂的分析�
 
       {/* Response Section */}
       {response && (
-        <Card className="bg-slate-800/50 border-amber-900/30">
+        <Card className="bg-slate-800/50 border-amber-900/30 flex-shrink-0">
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-amber-100 font-serif text-lg">灵犀回应</h3>
@@ -210,7 +210,7 @@ ${user?.role === "admin" ? "为会员用户提供详细、通俗易懂的分析�
             </div>
 
             {/* Response Content */}
-            <div className="text-amber-50/80">
+            <div className="text-amber-50/80 max-h-96 overflow-y-auto">
               <Streamdown>{response}</Streamdown>
             </div>
 
