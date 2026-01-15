@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, Suspense } from "react";
-import { RefreshCw, Lock, Zap, Hand, Volume2, VolumeX } from "lucide-react";
+import { RefreshCw, Lock, Zap, Hand, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 import { getHexagram } from "@/lib/knowledge_base";
 import RitualCanvas from "@/components/RitualCanvas";
 import { AudioAnchor } from "@/components/AudioAnchor";
+import { trpc } from "@/lib/trpc";
 
 // Yao type: 0 for Yin, 1 for Yang
 type Yao = 0 | 1;
@@ -28,7 +29,9 @@ export default function RitualPage() {
     yaos: Yao[];
     element: string;
     lines?: string[];
+    explanation?: string;
   }>(null);
+  const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
 
   // Initialize audio
   useEffect(() => {
@@ -131,7 +134,7 @@ export default function RitualPage() {
     setIsShaking(false);
     
     // Generate result
-    generateResult(newYaos);
+    await generateResult(newYaos);
     
     // Update energy state
     const now = new Date();
@@ -143,7 +146,7 @@ export default function RitualPage() {
     }
   };
 
-  const generateResult = (finalYaos: Yao[]) => {
+  const generateResult = async (finalYaos: Yao[]) => {
     // Convert yaos to binary string (bottom to top)
     const binary = finalYaos.join('');
     const hexagram = getHexagram(binary);
@@ -166,6 +169,27 @@ export default function RitualPage() {
     };
 
     setResult(newResult);
+    
+    // If member, fetch AI explanation
+    if (isMember) {
+      setIsLoadingExplanation(true);
+      try {
+        const utils = trpc.useUtils();
+        const response = await utils.client.qwen.explainHexagram.mutate({
+          hexagramName: hexagram.name,
+          judgment: hexagram.judgment,
+          image: hexagram.image,
+          isMember: true,
+        });
+        if (response.success) {
+          setResult(prev => prev ? { ...prev, explanation: response.explanation } : null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch explanation:", error);
+      } finally {
+        setIsLoadingExplanation(false);
+      }
+    }
     
     // Save to archive
     addRitualRecord({
@@ -344,6 +368,19 @@ export default function RitualPage() {
                     <p className="text-xs text-white/60 tracking-widest uppercase mb-2">五行</p>
                     <p className="text-sm text-white/80 font-serif">{result.structure}</p>
                   </div>
+
+                  {/* 会员通俗解释 */}
+                  {isMember && (
+                    <div className="mb-6 pt-6 border-t border-white/10 text-left">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-xs text-white/60 tracking-widest uppercase">会员深度解读</p>
+                        {isLoadingExplanation && <Loader2 className="w-4 h-4 text-[#FFD700] animate-spin" />}
+                      </div>
+                      <p className="text-sm text-white/80 leading-relaxed font-serif">
+                        {result.explanation || "生成中..."}
+                      </p>
+                    </div>
+                  )}
 
                   {/* 会员深度解读 */}
                   {isMember && result.lines && result.lines.length > 0 && (

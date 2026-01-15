@@ -170,6 +170,74 @@ ${timeInfo}
         }
       }),
     
+    // Ritual Hexagram Explanation for members
+    explainHexagram: publicProcedure
+      .input(
+        z.object({
+          hexagramName: z.string(),
+          judgment: z.string(),
+          image: z.string(),
+          isMember: z.boolean(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        try {
+          if (!input.isMember) {
+            // Non-members get the original text
+            return {
+              success: true,
+              explanation: input.judgment,
+              isMember: false,
+            };
+          }
+
+          // Members get AI-generated easy-to-understand explanation
+          const prompt = `你是一位精通周易的传统文化学者。用户得到了卦象"${input.hexagramName}"。
+
+原文：
+卦辞：${input.judgment}
+象曰：${input.image}
+
+请用通俗易懂的现代语言，用2-3句话解释这个卦象对当下生活的启示。避免使用晦涩的古文术语，要让普通人也能理解。
+
+解释要点：
+1. 这个卦象代表什么状态或趋势
+2. 对当下生活的实际意义
+3. 建议的行动方向（如果有的话）
+
+回答不超过100字，保持禅意和启发性。`;
+
+          const response = await callQwen({
+            messages: [
+              {
+                role: "system",
+                content: "你是一位精通周易的传统文化学者，用通俗易懂的语言解释卦象。",
+              },
+              {
+                role: "user",
+                content: prompt,
+              },
+            ],
+            temperature: 0.7,
+            max_tokens: 150,
+          });
+
+          return {
+            success: true,
+            explanation: response.choices[0]?.message.content || input.judgment,
+            isMember: true,
+          };
+        } catch (error) {
+          console.error("[Hexagram Explanation Error]", error);
+          return {
+            success: false,
+            explanation: input.judgment,
+            isMember: input.isMember,
+            error: error instanceof Error ? error.message : "Unknown error",
+          };
+        }
+      }),
+    
     // Heart Mirror Image Generation
     generateHeartImage: publicProcedure
       .input(
