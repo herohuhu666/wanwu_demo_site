@@ -15,7 +15,7 @@ export default function Home() {
   const [showIntro, setShowIntro] = useState(true);
 
   // Define the order of tabs for swipe navigation
-  const tabOrder = ['today_image', 'ritual', 'insight', 'guardian', 'member'];
+  const tabOrder = ['today_image', 'guardian', 'ritual', 'insight', 'member'];
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const threshold = 50; // Minimum distance to trigger swipe
@@ -52,6 +52,20 @@ export default function Home() {
             </p>
           </div>
         );
+      case "guardian":
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-serif font-bold text-stone-800">神 (Spirit)</h3>
+            <p className="text-stone-600 leading-relaxed">
+              守心神，见众生。冥想与连接的圣地。
+              <br/><br/>
+              <span className="font-bold">演示要点：</span>
+              <br/>1. 一柱心香/命灯视觉冥想。
+              <br/>2. 万家灯火（萤火虫模式）共修体验。
+              <br/>3. 72小时平安信号机制。
+            </p>
+          </div>
+        );
       case "ritual":
         return (
           <div className="space-y-4">
@@ -77,20 +91,6 @@ export default function Home() {
               <br/>1. AI 深度问答解析。
               <br/>2. 心境生成画作（Generative Art）。
               <br/>3. 烦恼粉碎机（情绪释放）。
-            </p>
-          </div>
-        );
-      case "guardian":
-        return (
-          <div className="space-y-4">
-            <h3 className="text-xl font-serif font-bold text-stone-800">神 (Spirit)</h3>
-            <p className="text-stone-600 leading-relaxed">
-              守心神，见众生。冥想与连接的圣地。
-              <br/><br/>
-              <span className="font-bold">演示要点：</span>
-              <br/>1. 一柱心香/命灯视觉冥想。
-              <br/>2. 万家灯火（萤火虫模式）共修体验。
-              <br/>3. 72小时平安信号机制。
             </p>
           </div>
         );

@@ -305,29 +305,22 @@ export default function RitualPage() {
                 {/* 2D 触发器 (Idle State) - Only visible when NOT in 3D mode */}
                 {!show3D && mode === 'manual' && (
                   <div className="relative w-64 h-64 flex items-center justify-center">
-                    {/* 龟壳主体 (2D Static) */}
+                    {/* 点击区域 (无龟壳) */}
                     <motion.div
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={handleManualShake}
-                      className="relative w-64 h-64 cursor-pointer transition-transform"
+                      className="relative w-64 h-64 cursor-pointer flex items-center justify-center"
                     >
-                      <img 
-                        src="/images/turtle_shell.png" 
-                        alt="Turtle Shell" 
-                        className="w-full h-full object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
-                      />
-                      
-                      {/* 提示文字 */}
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-48 h-48 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.05)]">
                         <motion.span 
                           animate={{ scale: [1, 1.1, 1], opacity: [0.8, 1, 0.8] }}
                           transition={{ duration: 2, repeat: Infinity }}
-                          className="px-4 py-2 bg-black/40 backdrop-blur-sm rounded-full text-xs text-white/90 tracking-widest border border-white/10 shadow-lg"
+                          className="text-sm text-white/80 tracking-[0.2em] font-kai"
                         >
-                          点击摇卦
+                          点击起卦
                         </motion.span>
                       </div>
                     </motion.div>
