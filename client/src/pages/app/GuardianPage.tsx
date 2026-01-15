@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sun, Shield, Sparkles, Activity, Moon, Battery, AlertTriangle, CheckCircle2, X, Flame, Timer } from "lucide-react";
 import { toast } from "sonner";
 import { useUser, DailyState, EnergyLevel, SleepQuality } from "@/contexts/UserContext";
+import { AudioAnchor } from "@/components/AudioAnchor";
 
 // Zen Quotes
 const ZEN_QUOTES = [
@@ -199,6 +200,9 @@ export default function GuardianPage() {
         {/* 额外的暗角遮罩 */}
         <div className="absolute inset-0 bg-radial-gradient from-transparent via-black/40 to-black/90" />
       </div>
+
+      {/* 听觉锚点：晨钟鸟鸣 */}
+      <AudioAnchor src="/sounds/morning_bell.mp3" volume={0.2} />
       
       {/* 内容区域 */}
       <div className="relative z-20 flex-1 flex flex-col px-8 pt-20 pb-24 overflow-y-auto scrollbar-hide">

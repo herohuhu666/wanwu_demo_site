@@ -5,6 +5,7 @@ import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 import { getHexagram } from "@/lib/knowledge_base";
 import RitualCanvas from "@/components/RitualCanvas";
+import { AudioAnchor } from "@/components/AudioAnchor";
 
 // Yao type: 0 for Yin, 1 for Yang
 type Yao = 0 | 1;
@@ -185,6 +186,9 @@ export default function RitualPage() {
         {/* 渐变遮罩，确保文字可读性 */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90" />
       </div>
+
+      {/* 听觉锚点：古刹琴音 */}
+      <AudioAnchor src="/sounds/temple_drone.mp3" volume={0.15} />
 
       {/* 3D Canvas Layer (Conditional) */}
       <AnimatePresence>

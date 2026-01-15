@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, ChevronRight, Lock, MessageCircle, Mic, History, X, Sparkles } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
+import { AudioAnchor } from "@/components/AudioAnchor";
 
 // Categories
 const CATEGORIES = [
@@ -149,6 +150,9 @@ export default function LingxiPage() {
         {/* 渐变遮罩，确保文字可读性 */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
       </div>
+
+      {/* 听觉锚点：雨打芭蕉 */}
+      <AudioAnchor src="/sounds/rain_banana.mp3" volume={0.15} />
 
       {/* 内容区域 */}
       <div className="relative z-20 flex-1 flex flex-col px-6 pt-16 pb-24 overflow-y-auto scrollbar-hide">
