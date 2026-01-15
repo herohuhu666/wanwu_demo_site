@@ -20,6 +20,7 @@ export default function TodayImagePage({ onBack, onNavigate }: TodayImagePagePro
   const [advice, setAdvice] = useState<{ recommend: string; avoid: string } | null>(null);
   const [solarTerm, setSolarTerm] = useState<SolarTerm | null>(null);
   const [showEnergyPlanner, setShowEnergyPlanner] = useState(false);
+  const [heading, setHeading] = useState(0);
 
   useEffect(() => {
     // Always load Solar Term
@@ -37,6 +38,21 @@ export default function TodayImagePage({ onBack, onNavigate }: TodayImagePagePro
       setElements(elems);
       setAdvice(adv);
     }
+
+    // Compass Logic
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      if (event.alpha !== null) {
+        setHeading(360 - event.alpha);
+      }
+    };
+
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+
+    return () => {
+      window.removeEventListener('deviceorientation', handleOrientation);
+    };
   }, [profile, isLoggedIn]);
 
   const handleShare = () => {
@@ -98,6 +114,33 @@ export default function TodayImagePage({ onBack, onNavigate }: TodayImagePagePro
             <p className="text-xs text-[#8C8478] tracking-widest mb-4">当前节气</p>
             <h2 className="text-4xl font-medium text-[#2C2C2C] font-kai mb-4">{solarTerm.name}</h2>
             <p className="text-sm text-[#789262] font-medium mb-6 tracking-widest uppercase">{solarTerm.meaning}</p>
+            
+            {/* Main Compass Display */}
+            <div className="relative w-48 h-48 mx-auto mb-8 flex items-center justify-center">
+              {/* Outer Ring (Static) */}
+              <div className="absolute inset-0 border-2 border-[#2C2C2C]/10 rounded-full" />
+              <div className="absolute inset-2 border border-[#2C2C2C]/5 rounded-full border-dashed" />
+              
+              {/* Cardinal Directions */}
+              <div className="absolute top-1 left-1/2 -translate-x-1/2 text-[10px] text-[#2C2C2C]/40 font-serif">北</div>
+              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[10px] text-[#2C2C2C]/40 font-serif">南</div>
+              <div className="absolute left-1 top-1/2 -translate-y-1/2 text-[10px] text-[#2C2C2C]/40 font-serif">西</div>
+              <div className="absolute right-1 top-1/2 -translate-y-1/2 text-[10px] text-[#2C2C2C]/40 font-serif">东</div>
+
+              {/* Rotating Compass Dial */}
+              <motion.div 
+                className="w-32 h-32 relative"
+                style={{ rotate: heading }}
+                transition={{ type: "spring", stiffness: 50, damping: 20 }}
+              >
+                {/* Needle */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-16 bg-gradient-to-b from-[#C15C5C] to-transparent origin-bottom rounded-t-full" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-16 bg-gradient-to-t from-[#2C2C2C] to-transparent origin-top rounded-b-full" />
+                
+                {/* Center Point */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-[#FAF9F6] border-2 border-[#2C2C2C] rounded-full z-10" />
+              </motion.div>
+            </div>
             
             <div className="w-12 h-px bg-[#2C2C2C]/10 mx-auto mb-6" />
             
