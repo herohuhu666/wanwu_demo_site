@@ -16,7 +16,8 @@ export interface LifeParameters {
 export interface UserCoreStructure {
   lifeHexagram: number; // 1-9 (Bagua + Center)
   lifeHexagramName: string; // 乾 / 兑 / 离 / 震 / 巽 / 坎 / 艮 / 坤 / 中
-  elements: Record<ElementType, number>; // Percentage
+  elements: Record<ElementType, number>; // Base Percentage (Static)
+  currentEnergy: Record<ElementType, number>; // Dynamic Energy State (0-100)
   cultivationAxis: CultivationType;
   temperament: TemperamentType;
 }
@@ -64,4 +65,14 @@ export interface InsightRecord {
   answer: string;
   timestamp: number;
   isDeep: boolean;
+}
+
+export interface RitualRecord {
+  id: string;
+  hexagramId: number;
+  hexagramName: string;
+  yaos: (0 | 1)[];
+  question?: string;
+  date: number;
+  note?: string;
 }

@@ -14,7 +14,7 @@ const ZEN_QUOTES = [
 ];
 
 export default function GuardianPage() {
-  const { dailyRecord, submitDailyRecord, addMerit, guardianCheckIn, lastGuardianTime } = useUser();
+  const { dailyRecord, submitDailyRecord, addMerit, guardianCheckIn, lastGuardianTime, updateEnergyState } = useUser();
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(259200); // 72 hours
   const [showZenQuote, setShowZenQuote] = useState(false);
@@ -143,6 +143,15 @@ export default function GuardianPage() {
     const result = guardianCheckIn();
     
     if (result.success) {
+      // Update Energy State based on time
+      const now = new Date();
+      const hour = now.getHours();
+      if (hour < 10) {
+        updateEnergyState('guardian_early');
+      } else {
+        updateEnergyState('guardian_late');
+      }
+
       setShowZenQuote(false);
       setIsActive(true);
       setTimeLeft(259200);

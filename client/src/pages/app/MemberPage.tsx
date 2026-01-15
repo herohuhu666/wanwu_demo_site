@@ -6,6 +6,7 @@ import { useUser } from "@/contexts/UserContext";
 import { LifeParameters } from "@/lib/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import FiveElementsChart from "@/components/FiveElementsChart";
 
 interface MemberPageProps {
   onNavigate?: (tab: string) => void;
@@ -78,9 +79,9 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
   };
 
   // Filter archives by type
-  const ritualArchives = archives.filter(a => a.type === 'ritual');
-  const insightArchives = archives.filter(a => a.type === 'insight');
-  const legacyArchives = archives.filter(a => a.type === 'legacy'); // Assuming legacy type exists or we mock it
+  const ritualArchives = (archives as any[]).filter(a => a.type === 'ritual');
+  const insightArchives = (archives as any[]).filter(a => a.type === 'insight');
+  const legacyArchives = (archives as any[]).filter(a => a.type === 'legacy');
 
   // Mock legacy archives if not in context yet (UserContext update needed for real legacy tracking)
   const mockLegacyArchives = Object.keys(localStorage).filter(k => k.startsWith('wanwu_legacy_capsule_')).map(k => ({
@@ -198,15 +199,9 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
               </div>
 
               {/* 五行倾向 (简略) */}
-              <div className="space-y-1">
-                <p className="text-[10px] text-white/40 tracking-widest uppercase">Elements</p>
-                <div className="flex gap-1 h-1.5 mt-2 rounded-full overflow-hidden bg-white/10 w-full max-w-[100px]">
-                  <div style={{ width: `${coreStructure.elements.wood}%` }} className="bg-green-500/70" />
-                  <div style={{ width: `${coreStructure.elements.fire}%` }} className="bg-red-500/70" />
-                  <div style={{ width: `${coreStructure.elements.earth}%` }} className="bg-yellow-500/70" />
-                  <div style={{ width: `${coreStructure.elements.metal}%` }} className="bg-gray-300/70" />
-                  <div style={{ width: `${coreStructure.elements.water}%` }} className="bg-blue-500/70" />
-                </div>
+              <div className="space-y-1 col-span-2">
+                <p className="text-[10px] text-white/40 tracking-widest uppercase mb-2">Energy State</p>
+                <FiveElementsChart data={coreStructure.currentEnergy || coreStructure.elements} />
               </div>
             </div>
           </div>
@@ -275,10 +270,10 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
                         ritualArchives.map((a, i) => (
                           <div key={i} className="bg-white/5 rounded-xl p-4 border border-white/10">
                             <div className="flex justify-between items-center mb-2">
-                              <span className="text-sm font-kai text-[#FFD700]">{a.title}</span>
-                              <span className="text-[10px] text-white/40">{new Date(a.timestamp || 0).toLocaleDateString()}</span>
+                              <span className="text-sm font-kai text-[#FFD700]">{a.hexagramName}</span>
+                              <span className="text-[10px] text-white/40">{new Date(a.date || 0).toLocaleDateString()}</span>
                             </div>
-                            <p className="text-xs text-white/60 line-clamp-2">{a.content}</p>
+                            <p className="text-xs text-white/60 line-clamp-2">{a.note || a.question}</p>
                           </div>
                         ))
                       )}
@@ -311,8 +306,8 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
                               <span className="text-xs text-[#FFD700] border border-[#FFD700]/30 px-2 py-0.5 rounded-full">问询</span>
                               <span className="text-[10px] text-white/40">{new Date(a.timestamp || 0).toLocaleDateString()}</span>
                             </div>
-                            <p className="text-sm text-white/80 mb-2 font-medium">{a.title}</p>
-                            <p className="text-xs text-white/60 line-clamp-3">{a.content}</p>
+                            <p className="text-sm text-white/80 mb-2 font-medium">{a.question}</p>
+                            <p className="text-xs text-white/60 line-clamp-3">{a.answer}</p>
                           </div>
                         ))
                       )}

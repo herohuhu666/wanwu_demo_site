@@ -4,7 +4,9 @@ import {
   UserCoreStructure, 
   FirstHexagram, 
   MeritRecord, 
-  InsightRecord
+  InsightRecord,
+  ElementType,
+  RitualRecord
 } from '@/lib/types';
 import { HEXAGRAM_KNOWLEDGE_BASE, getHexagram } from '@/lib/knowledge_base';
 
@@ -12,15 +14,6 @@ import { HEXAGRAM_KNOWLEDGE_BASE, getHexagram } from '@/lib/knowledge_base';
 export type DailyState = 'steady' | 'advance' | 'retreat'; // 稳 | 进 | 收
 export type EnergyLevel = 'low' | 'medium' | 'high';
 export type SleepQuality = 'poor' | 'fair' | 'good';
-
-export interface RitualRecord {
-  id: string;
-  date: string;
-  title: string;
-  content: string;
-  tags: string[];
-  isDeep: boolean;
-}
 
 interface UserContextType {
   isLoggedIn: boolean;
@@ -31,13 +24,13 @@ interface UserContextType {
   merit: number;
   meritHistory: MeritRecord[];
   dailyRecord: any | null;
-  insightCount: number; // 今日已用免费次数
+  insightCount: number;
   insightHistory: InsightRecord[];
   ritualHistory: RitualRecord[];
-  archives: any[];
-  lastGuardianTime: number | null; // Timestamp of last guardian check-in
+  archives: (RitualRecord | InsightRecord)[];
+  lastGuardianTime: number | null;
   
-  login: (profile: LifeParameters) => void;
+  login: (params: LifeParameters) => void;
   logout: () => void;
   toggleMember: () => void;
   addMerit: (amount: number, type: MeritRecord['type'], desc: string) => void;
@@ -47,24 +40,24 @@ interface UserContextType {
   addRitualRecord: (record: Omit<RitualRecord, 'id' | 'date'>) => void;
   checkInsightAvailability: () => { available: boolean; reason: 'free' | 'merit' | 'member' | 'none' };
   guardianCheckIn: () => { success: boolean; reward: number; message: string };
+  updateEnergyState: (action: 'guardian_early' | 'guardian_late' | 'ritual_late' | 'ritual_frequent' | 'merit_gain') => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Helper to generate deterministic hash
-const simpleHash = (str: string | undefined | null): number => {
+const simpleHash = (str: string): number => {
   if (!str) return 0;
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32bit integer
   }
   return Math.abs(hash);
 };
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  // State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isMember, setIsMember] = useState(false);
   const [profile, setProfile] = useState<LifeParameters>({
@@ -73,6 +66,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     birthTime: "",
     birthCity: ""
   });
+  
   const [coreStructure, setCoreStructure] = useState<UserCoreStructure | null>(null);
   const [firstHexagram, setFirstHexagram] = useState<FirstHexagram | null>(null);
   
@@ -96,7 +90,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       // Regenerate core structure if missing but profile exists
       const savedCore = localStorage.getItem('wanwu_core_structure');
       if (savedCore) {
-        setCoreStructure(JSON.parse(savedCore));
+        const parsedCore = JSON.parse(savedCore);
+        // Migration: Ensure currentEnergy exists
+        if (!parsedCore.currentEnergy && parsedCore.elements) {
+          parsedCore.currentEnergy = { ...parsedCore.elements };
+        }
+        setCoreStructure(parsedCore);
       } else {
         generateCoreEngine(parsedProfile);
       }
@@ -132,7 +131,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   // Core Engine Logic
   const generateCoreEngine = (p: LifeParameters) => {
-    const seed = simpleHash(p.nickname || '') + simpleHash(p.birthDate || '') + simpleHash(p.birthCity || '');
+    if (!p.nickname || !p.birthDate || !p.birthCity) return;
+
+    const seed = simpleHash(p.nickname) + simpleHash(p.birthDate) + simpleHash(p.birthCity);
     
     // 1. Generate Core Structure
     const lifeHexagramId = (seed % 9) + 1; // 1-9
@@ -144,9 +145,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       fire: ((seed >> 2) % 40) + 10,
       earth: ((seed >> 4) % 40) + 10,
       metal: ((seed >> 6) % 40) + 10,
-      water: 0
+      water: ((seed >> 8) % 40) + 10,
     };
-    elements.water = Math.max(0, 100 - (elements.wood + elements.fire + elements.earth + elements.metal));
+    
+    // Normalize to 100%
+    const total = Object.values(elements).reduce((a, b) => a + b, 0);
+    (Object.keys(elements) as ElementType[]).forEach(key => {
+      elements[key] = Math.round((elements[key] / total) * 100);
+    });
 
     const cultivationTypes = ['守心', '稳行', '自省', '顺势', '精进', '清明'] as const;
     const cultivationAxis = cultivationTypes[seed % 6];
@@ -158,43 +164,41 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       lifeHexagram: lifeHexagramId,
       lifeHexagramName,
       elements,
+      currentEnergy: { ...elements },
       cultivationAxis,
       temperament
     };
     setCoreStructure(newCore);
     localStorage.setItem('wanwu_core_structure', JSON.stringify(newCore));
 
-    // 2. Generate First Hexagram (Only if not exists)
-    if (!localStorage.getItem('wanwu_first_hexagram')) {
-      const hexId = (seed % 64) + 1;
-      const statusSeed = seed % 3;
-      const status = statusSeed === 0 ? '平' : statusSeed === 1 ? '吉' : '慎';
-      
-      // Get data from Knowledge Base
-      const kbData = getHexagram(hexId);
-      
-      const newFirstHex: FirstHexagram = {
-        id: hexId,
-        name: kbData.name,
-        status: status, // Override KB status with user-specific seed status for variety? Or stick to KB?
-                        // Requirement says: 状态 = seed % 3. So we use calculated status.
-        advice: status === '吉' ? kbData.advice.ji : status === '平' ? kbData.advice.ping : kbData.advice.shen,
-        action: kbData.action
-      };
-      setFirstHexagram(newFirstHex);
-      localStorage.setItem('wanwu_first_hexagram', JSON.stringify(newFirstHex));
-      
-      // Award merit for first generation
-      addMerit(3, 'first_ritual', '初次立命');
-    }
+    // 2. Generate First Hexagram (Only once)
+    const firstHexId = (seed % 64) + 1;
+    const statusTypes = ['平', '吉', '慎'] as const;
+    const status = statusTypes[seed % 3];
+    
+    // Get data from knowledge base
+    // HEXAGRAM_KNOWLEDGE_BASE is a Record<number, HexagramData>
+    const hexData = HEXAGRAM_KNOWLEDGE_BASE[firstHexId] || HEXAGRAM_KNOWLEDGE_BASE[1];
+    
+    const newFirstHex: FirstHexagram = {
+      id: firstHexId,
+      name: hexData.name,
+      status: status,
+      advice: hexData.judgment,
+      action: hexData.action
+    };
+    setFirstHexagram(newFirstHex);
+    localStorage.setItem('wanwu_first_hexagram', JSON.stringify(newFirstHex));
+    
+    // Initial Merit
+    addMerit(3, 'first_ritual', '初次结缘');
   };
 
-  // Actions
-  const login = (newProfile: LifeParameters) => {
-    setProfile(newProfile);
+  const login = (params: LifeParameters) => {
+    setProfile(params);
     setIsLoggedIn(true);
-    localStorage.setItem('wanwu_profile', JSON.stringify(newProfile));
-    generateCoreEngine(newProfile);
+    localStorage.setItem('wanwu_profile', JSON.stringify(params));
+    generateCoreEngine(params);
   };
 
   const logout = () => {
@@ -204,9 +208,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setFirstHexagram(null);
     localStorage.removeItem('wanwu_profile');
     localStorage.removeItem('wanwu_core_structure');
-    // We keep first hexagram in storage to persist "Once per user" logic if they relogin with same details?
-    // For simplicity, we clear it on logout to allow demo reset.
     localStorage.removeItem('wanwu_first_hexagram');
+    localStorage.removeItem('wanwu_is_member');
   };
 
   const toggleMember = () => {
@@ -216,12 +219,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addMerit = (amount: number, type: MeritRecord['type'], desc: string) => {
-    setMerit(prev => {
-      const newVal = prev + amount;
-      localStorage.setItem('wanwu_merit', newVal.toString());
-      return newVal;
-    });
-    
+    const newMerit = merit + amount;
+    setMerit(newMerit);
+    localStorage.setItem('wanwu_merit', newMerit.toString());
+
     const newRecord: MeritRecord = {
       id: Date.now().toString(),
       type,
@@ -229,36 +230,32 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       timestamp: Date.now(),
       desc
     };
-    setMeritHistory(prev => {
-      const newHistory = [newRecord, ...prev];
-      localStorage.setItem('wanwu_merit_history', JSON.stringify(newHistory));
-      return newHistory;
-    });
+    const newHistory = [newRecord, ...meritHistory];
+    setMeritHistory(newHistory);
+    localStorage.setItem('wanwu_merit_history', JSON.stringify(newHistory));
+    
+    // Energy feedback
+    updateEnergyState('merit_gain');
   };
 
   const consumeMerit = (amount: number, desc: string) => {
-    if (merit >= amount) {
-      setMerit(prev => {
-        const newVal = prev - amount;
-        localStorage.setItem('wanwu_merit', newVal.toString());
-        return newVal;
-      });
-      
-      const newRecord: MeritRecord = {
-        id: Date.now().toString(),
-        type: 'consume',
-        amount: -amount,
-        timestamp: Date.now(),
-        desc
-      };
-      setMeritHistory(prev => {
-        const newHistory = [newRecord, ...prev];
-        localStorage.setItem('wanwu_merit_history', JSON.stringify(newHistory));
-        return newHistory;
-      });
-      return true;
-    }
-    return false;
+    if (merit < amount) return false;
+    
+    const newMerit = merit - amount;
+    setMerit(newMerit);
+    localStorage.setItem('wanwu_merit', newMerit.toString());
+
+    const newRecord: MeritRecord = {
+      id: Date.now().toString(),
+      type: 'consume',
+      amount: -amount,
+      timestamp: Date.now(),
+      desc
+    };
+    const newHistory = [newRecord, ...meritHistory];
+    setMeritHistory(newHistory);
+    localStorage.setItem('wanwu_merit_history', JSON.stringify(newHistory));
+    return true;
   };
 
   const submitDailyRecord = (state: DailyState, energy: EnergyLevel, sleep: SleepQuality) => {
@@ -270,41 +267,32 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       completed: true
     };
     setDailyRecord(record);
-    localStorage.setItem('wanwu_daily_' + new Date().toDateString(), JSON.stringify(record));
     addMerit(5, 'reflection', '每日自省');
   };
 
-  const addInsightRecord = (recordData: Omit<InsightRecord, 'id' | 'timestamp'>) => {
+  const addInsightRecord = (record: Omit<InsightRecord, 'id' | 'timestamp'>) => {
     const newRecord: InsightRecord = {
+      ...record,
       id: Date.now().toString(),
-      timestamp: Date.now(),
-      ...recordData
+      timestamp: Date.now()
     };
-    
     const newHistory = [newRecord, ...insightHistory];
     setInsightHistory(newHistory);
     localStorage.setItem('wanwu_insight_history', JSON.stringify(newHistory));
-
-    // Update daily count if not member
-    if (!isMember) {
-      const newCount = insightCount + 1;
-      setInsightCount(newCount);
-      localStorage.setItem('wanwu_insight_count_' + new Date().toDateString(), newCount.toString());
-    }
     
-    // First insight reward
-    if (insightHistory.length === 0) {
-      addMerit(3, 'first_insight', '初次灵犀');
-    }
+    // Update daily count
+    const today = new Date().toDateString();
+    const newCount = insightCount + 1;
+    setInsightCount(newCount);
+    localStorage.setItem('wanwu_insight_count_' + today, newCount.toString());
   };
 
-  const addRitualRecord = (recordData: Omit<RitualRecord, 'id' | 'date'>) => {
+  const addRitualRecord = (record: Omit<RitualRecord, 'id' | 'date'>) => {
     const newRecord: RitualRecord = {
+      ...record,
       id: Date.now().toString(),
-      date: new Date().toISOString(),
-      ...recordData
+      date: Date.now()
     };
-    
     const newHistory = [newRecord, ...ritualHistory];
     setRitualHistory(newHistory);
     localStorage.setItem('wanwu_ritual_history', JSON.stringify(newHistory));
@@ -317,31 +305,59 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return { available: false, reason: 'none' };
   };
 
-  const guardianCheckIn = (): { success: boolean; reward: number; message: string } => {
-    const now = new Date();
-    const hour = now.getHours();
-    const minutes = now.getMinutes();
-    const timeVal = hour * 60 + minutes;
+  const guardianCheckIn = () => {
+    const now = Date.now();
+    const today = new Date().toDateString();
     
-    // 08:30 = 8*60 + 30 = 510
-    if (timeVal < 510) {
-      return { success: false, reward: 0, message: "未到点亮时间 (08:30 - 24:00)" };
-    }
-
-    // Check if already checked in today
     if (lastGuardianTime) {
       const lastDate = new Date(lastGuardianTime).toDateString();
-      if (lastDate === now.toDateString()) {
+      if (lastDate === today) {
         return { success: false, reward: 0, message: "今日已点亮" };
       }
     }
 
-    // Success
-    setLastGuardianTime(Date.now());
-    localStorage.setItem('wanwu_last_guardian', Date.now().toString());
+    setLastGuardianTime(now);
+    localStorage.setItem('wanwu_last_guardian', now.toString());
     addMerit(2, 'guardian', '守望点亮');
     
     return { success: true, reward: 2, message: "点亮成功，功德+2" };
+  };
+
+  const updateEnergyState = (action: 'guardian_early' | 'guardian_late' | 'ritual_late' | 'ritual_frequent' | 'merit_gain') => {
+    if (!coreStructure) return;
+
+    setCoreStructure(prev => {
+      if (!prev) return null;
+      const newEnergy = { ...prev.currentEnergy };
+
+      // Energy Logic
+      switch (action) {
+        case 'guardian_early': // Morning check-in: Boost Wood (Growth) & Fire (Yang)
+          newEnergy.wood = Math.min(100, newEnergy.wood + 2);
+          newEnergy.fire = Math.min(100, newEnergy.fire + 1);
+          break;
+        case 'guardian_late': // Late check-in: Stabilize Earth
+          newEnergy.earth = Math.min(100, newEnergy.earth + 1);
+          break;
+        case 'ritual_late': // Late night ritual: Boost Water (Introspection)
+          newEnergy.water = Math.min(100, newEnergy.water + 2);
+          break;
+        case 'ritual_frequent': // Frequent ritual: Boost Metal (Anxiety/Rigidity)
+          newEnergy.metal = Math.min(100, newEnergy.metal + 2);
+          break;
+        case 'merit_gain': // Good deeds: Balance all, Boost Earth
+          newEnergy.earth = Math.min(100, newEnergy.earth + 2);
+          // Decay extremes slightly
+          (Object.keys(newEnergy) as ElementType[]).forEach(key => {
+            if (newEnergy[key] > 60) newEnergy[key] -= 1;
+          });
+          break;
+      }
+
+      const newCore = { ...prev, currentEnergy: newEnergy };
+      localStorage.setItem('wanwu_core_structure', JSON.stringify(newCore));
+      return newCore;
+    });
   };
 
   return (
@@ -357,10 +373,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       insightCount,
       insightHistory,
       ritualHistory,
-      archives: [
-        ...insightHistory.map(h => ({ ...h, type: 'insight', title: h.question, content: h.answer })),
-        ...ritualHistory.map(h => ({ ...h, type: 'ritual', title: h.title, content: h.content })),
-      ],
+      archives: [...ritualHistory.map(r => ({...r, type: 'ritual'})), ...insightHistory.map(i => ({...i, type: 'insight'}))] as any,
       lastGuardianTime,
       login,
       logout,
@@ -371,17 +384,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       addInsightRecord,
       addRitualRecord,
       checkInsightAvailability,
-      guardianCheckIn
+      guardianCheckIn,
+      updateEnergyState
     }}>
       {children}
     </UserContext.Provider>
   );
 }
 
-export function useUser() {
+export const useUser = () => {
   const context = useContext(UserContext);
   if (context === undefined) {
     throw new Error('useUser must be used within a UserProvider');
   }
   return context;
-}
+};

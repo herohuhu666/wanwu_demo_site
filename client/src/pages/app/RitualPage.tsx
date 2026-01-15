@@ -10,7 +10,7 @@ import RitualCanvas from "@/components/RitualCanvas";
 type Yao = 0 | 1;
 
 export default function RitualPage() {
-  const { isMember, addRitualRecord } = useUser();
+  const { isMember, addRitualRecord, updateEnergyState, coreStructure } = useUser();
   const [mode, setMode] = useState<'manual' | 'auto' | null>(null);
   const [isShaking, setIsShaking] = useState(false);
   const [show3D, setShow3D] = useState(false);
@@ -74,12 +74,37 @@ export default function RitualPage() {
   };
 
   const handle3DFinish = () => {
-    const newYao: Yao = Math.random() > 0.5 ? 1 : 0;
+    // Weighted Yao Generation based on Energy
+    let yangProb = 0.5;
+    if (coreStructure?.currentEnergy) {
+      const e = coreStructure.currentEnergy;
+      const total = e.wood + e.fire + e.earth + e.metal + e.water;
+      if (total > 0) {
+        // Yang elements: Wood, Fire, Metal (Active/Hard)
+        // Yin elements: Water, Earth (Passive/Soft)
+        const yangScore = e.wood + e.fire + e.metal;
+        yangProb = yangScore / total;
+        // Clamp probability to keep it somewhat random (0.2 - 0.8)
+        yangProb = Math.max(0.2, Math.min(0.8, yangProb));
+      }
+    }
+
+    const newYao: Yao = Math.random() < yangProb ? 1 : 0;
     const newYaos: Yao[] = [...yaos, newYao];
     setYaos(newYaos);
 
     if (newYaos.length === 6) {
       generateResult(newYaos);
+      
+      // Update Energy State
+      const now = new Date();
+      const hour = now.getHours();
+      if (hour >= 22 || hour < 5) {
+        updateEnergyState('ritual_late');
+      } else {
+        updateEnergyState('ritual_frequent');
+      }
+
       // Hide 3D after a short delay to show result
       setTimeout(() => setShow3D(false), 1000);
     } else {
@@ -133,10 +158,11 @@ export default function RitualPage() {
     
     // Save to archive
     addRitualRecord({
-      title: newResult.name,
-      content: newResult.desc,
-      tags: ["每日一卦", newResult.tag],
-      isDeep: isMember
+      hexagramId: hexagram.id,
+      hexagramName: hexagram.name,
+      yaos: finalYaos,
+      question: "每日一卦",
+      note: newResult.desc
     });
   };
 
