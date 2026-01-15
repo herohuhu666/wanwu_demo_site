@@ -59,6 +59,36 @@ export const appRouter = router({
         }
       }),
     
+    // Vision API for "看人识人" (Person Recognition) feature
+    vision: publicProcedure
+      .input(
+        z.object({
+          imageUrl: z.string(),
+          prompt: z.string(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        try {
+          const response = await callQwenVision(
+            input.imageUrl,
+            input.prompt
+          );
+
+          return {
+            success: true,
+            message: response.choices[0]?.message.content || "",
+            usage: response.usage,
+          };
+        } catch (error) {
+          console.error("[Qwen Vision Error]", error);
+          return {
+            success: false,
+            message: "抱歉，无法完成分析。请稍后再试。",
+            error: error instanceof Error ? error.message : "Unknown error",
+          };
+        }
+      }),
+    
     // Divination API for "指物断事" (Object-based Divination) feature
     divination: publicProcedure
       .input(

@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ChevronRight, Lock, MessageCircle, Mic, History, X, Sparkles, Trash2, Camera, Upload } from "lucide-react";
+import { Send, ChevronRight, Lock, MessageCircle, Mic, History, X, Sparkles, Trash2, Camera, Upload, User, Eye } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 import { AudioAnchor } from "@/components/AudioAnchor";
 import { GenerativeArtCard } from "@/components/GenerativeArtCard";
 import { WorryShredder } from "@/components/WorryShredder";
 import { trpc } from "@/lib/trpc";
+
 
 // Categories for "所念" (what to ask about)
 const CATEGORIES = [
@@ -16,6 +17,15 @@ const CATEGORIES = [
   { id: 'emotion', label: '情感', icon: '💭' },
   { id: 'life', label: '生活', icon: '🏠' },
   { id: 'random', label: '随心', icon: '✨' },
+];
+
+// Categories for "看人识人"
+const PERSON_CATEGORIES = [
+  { id: 'personality', label: '性格', icon: '🎭' },
+  { id: 'strength', label: '优势', icon: '💪' },
+  { id: 'challenge', label: '挑战', icon: '🌊' },
+  { id: 'relationship', label: '人际', icon: '🤝' },
+  { id: 'growth', label: '成长', icon: '🌱' },
 ];
 
 export default function LingxiPage() {
@@ -31,15 +41,19 @@ export default function LingxiPage() {
     insightHistory
   } = useUser();
 
-  // Step: 'see' (select what you see) -> 'ask' (select what to ask) -> 'result'
-  const [step, setStep] = useState<'see' | 'ask' | 'result'>('see');
-  const [seenThing, setSeenThing] = useState(""); // What user sees
+  // Mode: 'choose' (select看物/看人) -> 'see' (describe object) -> 'ask' -> 'result'
+  // Or: 'choose' -> 'person' (upload photo) -> 'person-ask' -> 'result'
+  const [mode, setMode] = useState<'choose' | 'see' | 'ask' | 'person' | 'person-ask' | 'result'>('choose');
+  const [currentMode, setCurrentMode] = useState<'object' | 'person' | null>(null); // Track which mode we're in
+  const [seenThing, setSeenThing] = useState(""); // What user sees (for object mode)
+  const [personImage, setPersonImage] = useState<string | null>(null); // Image URL for person mode
+  const [personImageFile, setPersonImageFile] = useState<File | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>(""); // What user wants to ask
   const [result, setResult] = useState<null | {
     answer: string;
     isDeep: boolean;
     question: string;
-    seenThing: string;
+    seenThing?: string;
     timestamp: number;
   }>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,25 +62,66 @@ export default function LingxiPage() {
   const [showDeepReading, setShowDeepReading] = useState(false);
   const [deepReadingContent, setDeepReadingContent] = useState("");
 
+  // File input refs
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // tRPC mutation for Qwen API
   const qwenChatMutation = trpc.qwen.chat.useMutation();
+  const qwenVisionMutation = trpc.qwen.vision.useMutation();
 
-  // Step 1: User describes what they see
+  // Handle mode selection
+  const handleModeSelect = (selectedMode: 'object' | 'person') => {
+    setCurrentMode(selectedMode);
+    if (selectedMode === 'object') {
+      setMode('see');
+    } else {
+      setMode('person');
+    }
+  };
+
+  // Handle camera/file upload for person mode
+  const handleImageCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Preview image
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setPersonImage(event.target?.result as string);
+      setPersonImageFile(file);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handlePersonImageSubmit = () => {
+    if (!personImage) {
+      toast.error("请上传对方的照片");
+      return;
+    }
+    setMode('person-ask');
+  };
+
+  // Step 1: User describes what they see (object mode)
   const handleSeenThingSubmit = () => {
     if (!seenThing.trim()) {
       toast.error("请描述你所见的事物");
       return;
     }
-    setStep('ask');
+    setMode('ask');
   };
 
   // Step 2: User selects what to ask about
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId);
-    handleAsk(categoryId);
+    if (currentMode === 'object') {
+      handleAsk(categoryId);
+    } else {
+      handlePersonAsk(categoryId);
+    }
   };
 
-  // Step 3: Generate insight based on both dimensions
+  // Generate insight for object mode
   const handleAsk = async (categoryId: string) => {
     const availability = checkInsightAvailability();
     
@@ -86,7 +141,6 @@ export default function LingxiPage() {
       const state = dailyRecord?.state || 'steady';
       const isDeep = isMember;
       
-      // Build system prompt based on both "所见" and "所念"
       const categoryLabel = CATEGORIES.find(c => c.id === categoryId)?.label || '随心';
       let systemPrompt = `你是"万物"App 中的"灵犀"智慧导师，擅长以东方哲学和禅意语言提供人生指引。
 用户所见：${seenThing}
@@ -97,15 +151,12 @@ export default function LingxiPage() {
 2. 使用诗意、禅意的语言，避免说教
 3. 根据用户所见的事物和所念的问题，提供启发性的思考角度
 4. 根据用户当前状态（${state === 'advance' ? '进（行）' : state === 'retreat' ? '收（省）' : '稳（守）'}）调整建议
-5. 将所见事物与所念问题相联系，提供"所见即所得，所念即回响"的启示
-
-当前用户状态：${state === 'advance' ? '势头向上，能量充沛' : state === 'retreat' ? '势头收敛，能量内藏' : '势头平稳，能量均衡'}`;
+5. 将所见事物与所念问题相联系，提供"所见即所得，所念即回响"的启示`;
 
       if (isDeep && profile.birthCity) {
         systemPrompt += `\n用户出生地：${profile.birthCity}`;
       }
 
-      // Call Qwen API via tRPC
       const response = await qwenChatMutation.mutateAsync({
         messages: [
           { role: "system", content: systemPrompt },
@@ -117,7 +168,7 @@ export default function LingxiPage() {
 
       const answer = response.message;
       
-      // Generate deep reading content for members - plain language direct reply
+      // Generate deep reading for members
       let deepContent = "";
       if (isDeep) {
         try {
@@ -146,7 +197,7 @@ export default function LingxiPage() {
       setResult(newResult);
       setDeepReadingContent(deepContent);
       setShowDeepReading(false);
-      setStep('result');
+      setMode('result');
       addInsightRecord({
         answer,
         isDeep,
@@ -162,9 +213,84 @@ export default function LingxiPage() {
     }
   };
 
+  // Generate insight for person mode (看人识人)
+  const handlePersonAsk = async (categoryId: string) => {
+    const availability = checkInsightAvailability();
+    
+    if (!availability.available) {
+      toast.error("今日免费次数已尽，且功德不足兑换");
+      return;
+    }
+
+    if (availability.reason === 'merit') {
+      if (!confirm("今日免费次数已尽，是否消耗 50 功德进行问询？")) return;
+      consumeMerit(50, '灵犀问询');
+    }
+
+    setIsLoading(true);
+    
+    try {
+      if (!personImage) {
+        toast.error("图片丢失，请重新上传");
+        return;
+      }
+
+      const categoryLabel = PERSON_CATEGORIES.find(c => c.id === categoryId)?.label || '性格';
+      
+      // Call Qwen Vision API to analyze the person
+      const visionResponse = await qwenVisionMutation.mutateAsync({
+        imageUrl: personImage,
+        prompt: `请根据这张照片，从"${categoryLabel}"的角度分析这个人可能面临的问题、特点或建议。用大白话、简洁的语言回答，不超过150字。`
+      });
+
+      const answer = visionResponse.message;
+      
+      // Generate deep reading for members
+      let deepContent = "";
+      if (isMember) {
+        try {
+          const deepResponse = await qwenVisionMutation.mutateAsync({
+            imageUrl: personImage,
+            prompt: `请根据这张照片，从"${categoryLabel}"的角度给出更深层的分析和建议。用大白话、亲切的语言，给出实用的建议，不超过300字。`
+          });
+          deepContent = deepResponse.message;
+        } catch (error) {
+          deepContent = "深度解读暂时无法生成，请稍后再试";
+        }
+      }
+      
+      const newResult = {
+        answer,
+        isDeep: isMember,
+        question: `看人识人 - ${categoryLabel}`,
+        timestamp: Date.now()
+      };
+      
+      setResult(newResult);
+      setDeepReadingContent(deepContent);
+      setShowDeepReading(false);
+      setMode('result');
+      addInsightRecord({
+        answer,
+        isDeep: isMember,
+        category: 'random',
+        question: `看人识人 - ${categoryLabel}`
+      });
+      
+    } catch (error) {
+      console.error("Error calling Qwen Vision API:", error);
+      toast.error("灵犀暂时失语，请稍后再试");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleReset = () => {
-    setStep('see');
+    setMode('choose');
+    setCurrentMode(null);
     setSeenThing("");
+    setPersonImage(null);
+    setPersonImageFile(null);
     setSelectedCategory("");
     setResult(null);
     setShowDeepReading(false);
@@ -173,24 +299,23 @@ export default function LingxiPage() {
 
   return (
     <div className="h-full flex flex-col bg-black relative overflow-hidden">
-      {/* 背景图片 */}
+      {/* Background */}
       <div className="absolute inset-0 z-0">
         <img 
           src="/images/lingxi_bg.png" 
           alt="Lingxi Background" 
           className="w-full h-full object-cover opacity-80"
         />
-        {/* 渐变遮罩，确保文字可读性 */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
       </div>
 
-      {/* 听觉锚点：雨打芭蕉 */}
+      {/* Audio Anchor */}
       <AudioAnchor src="/sounds/rain_banana.mp3" volume={0.15} />
 
-      {/* 内容区域 */}
+      {/* Content Area */}
       <div className="relative z-20 flex-1 flex flex-col px-6 pt-16 pb-24 overflow-y-auto scrollbar-hide">
         
-        {/* 顶部栏 */}
+        {/* Top Bar */}
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-2xl text-white font-medium tracking-[0.2em]">灵犀</h1>
@@ -213,10 +338,10 @@ export default function LingxiPage() {
         </div>
 
         <AnimatePresence mode="wait">
-          {/* 步骤1: 所见 - 描述你看到的事物 */}
-          {step === 'see' && (
+          {/* Mode Selection */}
+          {mode === 'choose' && (
             <motion.div
-              key="see"
+              key="choose"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -224,9 +349,59 @@ export default function LingxiPage() {
             >
               <div className="text-center mb-12">
                 <div className="w-16 h-16 mx-auto bg-[#FFD700]/10 rounded-full flex items-center justify-center mb-6 border border-[#FFD700]/20">
-                  <Camera className="w-8 h-8 text-[#FFD700]" />
+                  <Sparkles className="w-8 h-8 text-[#FFD700]" />
                 </div>
                 <h2 className="text-xl text-white tracking-widest font-light">所见即所得，所念即回响</h2>
+                <p className="text-xs text-white/60 mt-3 tracking-wider">选择你的问询方式</p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                <button
+                  onClick={() => handleModeSelect('object')}
+                  className="p-6 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-[#FFD700]/30 transition-all backdrop-blur-sm flex items-center gap-4"
+                >
+                  <Eye className="w-8 h-8 text-[#FFD700]" />
+                  <div className="text-left">
+                    <p className="text-sm text-white font-medium">看物识事</p>
+                    <p className="text-xs text-white/60">描述所见事物，获得智慧指引</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => handleModeSelect('person')}
+                  className="p-6 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-[#FFD700]/30 transition-all backdrop-blur-sm flex items-center gap-4"
+                >
+                  <User className="w-8 h-8 text-[#FFD700]" />
+                  <div className="text-left">
+                    <p className="text-sm text-white font-medium">看人识人</p>
+                    <p className="text-xs text-white/60">上传照片，了解对方特点</p>
+                  </div>
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Object Mode: Step 1 - Describe what you see */}
+          {mode === 'see' && (
+            <motion.div
+              key="see"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="flex-1 flex flex-col justify-center"
+            >
+              <button 
+                onClick={() => setMode('choose')}
+                className="self-start mb-6 text-xs text-white/60 flex items-center gap-1 hover:text-white"
+              >
+                <ChevronRight className="w-3 h-3 rotate-180" /> 返回
+              </button>
+
+              <div className="text-center mb-12">
+                <div className="w-16 h-16 mx-auto bg-[#FFD700]/10 rounded-full flex items-center justify-center mb-6 border border-[#FFD700]/20">
+                  <Eye className="w-8 h-8 text-[#FFD700]" />
+                </div>
+                <h2 className="text-xl text-white tracking-widest font-light">看物识事</h2>
                 <p className="text-xs text-white/60 mt-3 tracking-wider">请描述你所见的事物</p>
               </div>
 
@@ -250,8 +425,94 @@ export default function LingxiPage() {
             </motion.div>
           )}
 
-          {/* 步骤2: 所念 - 选择问询方向 */}
-          {step === 'ask' && (
+          {/* Person Mode: Step 1 - Upload photo */}
+          {mode === 'person' && (
+            <motion.div
+              key="person"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="flex-1 flex flex-col justify-center"
+            >
+              <button 
+                onClick={() => setMode('choose')}
+                className="self-start mb-6 text-xs text-white/60 flex items-center gap-1 hover:text-white"
+              >
+                <ChevronRight className="w-3 h-3 rotate-180" /> 返回
+              </button>
+
+              <div className="text-center mb-12">
+                <div className="w-16 h-16 mx-auto bg-[#FFD700]/10 rounded-full flex items-center justify-center mb-6 border border-[#FFD700]/20">
+                  <User className="w-8 h-8 text-[#FFD700]" />
+                </div>
+                <h2 className="text-xl text-white tracking-widest font-light">看人识人</h2>
+                <p className="text-xs text-white/60 mt-3 tracking-wider">请上传对方的照片</p>
+              </div>
+
+              <div className="bg-white/5 backdrop-blur-md rounded-2xl p-8 border border-white/10 shadow-lg">
+                {personImage ? (
+                  <div className="mb-6">
+                    <img src={personImage} alt="Person" className="w-full h-48 object-cover rounded-lg mb-4" />
+                    <button
+                      onClick={() => {
+                        setPersonImage(null);
+                        setPersonImageFile(null);
+                        if (cameraInputRef.current) cameraInputRef.current.value = '';
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      className="w-full text-xs text-white/60 hover:text-white transition-colors"
+                    >
+                      更换照片
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-3 mb-6">
+                    <button
+                      onClick={() => cameraInputRef.current?.click()}
+                      className="flex-1 bg-white/10 hover:bg-white/20 text-white py-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Camera className="w-5 h-5" />
+                      <span className="text-sm">拍照</span>
+                    </button>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex-1 bg-white/10 hover:bg-white/20 text-white py-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Upload className="w-5 h-5" />
+                      <span className="text-sm">上传</span>
+                    </button>
+                  </div>
+                )}
+
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleImageCapture}
+                  className="hidden"
+                />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageCapture}
+                  className="hidden"
+                />
+
+                <button
+                  onClick={handlePersonImageSubmit}
+                  disabled={!personImage || isLoading}
+                  className="w-full bg-[#FFD700] text-black font-medium py-3 rounded-lg hover:bg-[#FFD700]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isLoading ? "处理中..." : "下一步"}
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Ask Category - Object Mode */}
+          {mode === 'ask' && currentMode === 'object' && (
             <motion.div
               key="ask"
               initial={{ opacity: 0, x: 20 }}
@@ -260,7 +521,7 @@ export default function LingxiPage() {
               className="flex-1 flex flex-col justify-center"
             >
               <button 
-                onClick={() => setStep('see')}
+                onClick={() => setMode('see')}
                 className="self-start mb-6 text-xs text-white/60 flex items-center gap-1 hover:text-white"
               >
                 <ChevronRight className="w-3 h-3 rotate-180" /> 返回
@@ -290,8 +551,47 @@ export default function LingxiPage() {
             </motion.div>
           )}
 
-          {/* 步骤3: 结果 */}
-          {step === 'result' && result && (
+          {/* Ask Category - Person Mode */}
+          {mode === 'person-ask' && currentMode === 'person' && (
+            <motion.div
+              key="person-ask"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="flex-1 flex flex-col justify-center"
+            >
+              <button 
+                onClick={() => setMode('person')}
+                className="self-start mb-6 text-xs text-white/60 flex items-center gap-1 hover:text-white"
+              >
+                <ChevronRight className="w-3 h-3 rotate-180" /> 返回
+              </button>
+
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 mx-auto bg-[#FFD700]/10 rounded-full flex items-center justify-center mb-6 border border-[#FFD700]/20">
+                  <MessageCircle className="w-8 h-8 text-[#FFD700]" />
+                </div>
+                <p className="text-xs text-white/60 mt-3 tracking-wider">请选择你想了解对方的方面</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {PERSON_CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => handleCategorySelect(cat.id)}
+                    disabled={isLoading}
+                    className="p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-[#FFD700]/30 transition-all group flex flex-col items-center gap-2 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="text-2xl filter grayscale group-hover:grayscale-0 transition-all">{cat.icon}</span>
+                    <span className="text-sm text-white/80 tracking-widest group-hover:text-[#FFD700]">{cat.label}</span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Result */}
+          {mode === 'result' && result && (
             <motion.div
               key="result"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -300,7 +600,7 @@ export default function LingxiPage() {
               className="flex-1 flex flex-col justify-center"
             >
               <button 
-                onClick={() => setStep('ask')}
+                onClick={() => setMode(currentMode === 'object' ? 'ask' : 'person-ask')}
                 className="self-start mb-6 text-xs text-white/60 flex items-center gap-1 hover:text-white"
               >
                 <ChevronRight className="w-3 h-3 rotate-180" /> 返回
@@ -308,7 +608,6 @@ export default function LingxiPage() {
 
               <div className="bg-white/5 backdrop-blur-md rounded-2xl p-8 border border-white/10 shadow-lg">
                 <div className="text-center mb-8">
-                  <p className="text-xs text-[#FFD700] tracking-widest mb-4">所见：{result.seenThing}</p>
                   <Sparkles className="w-8 h-8 text-[#FFD700] mx-auto mb-4" />
                 </div>
 
@@ -358,7 +657,7 @@ export default function LingxiPage() {
         </AnimatePresence>
       </div>
 
-      {/* 历史记录模态框 */}
+      {/* History Modal */}
       <AnimatePresence>
         {showHistory && (
           <motion.div
@@ -405,7 +704,7 @@ export default function LingxiPage() {
         )}
       </AnimatePresence>
 
-      {/* 烦恼粉碎机 */}
+      {/* Worry Shredder */}
       {showWorryShredder && (
         <WorryShredder onClose={() => setShowWorryShredder(false)} />
       )}
