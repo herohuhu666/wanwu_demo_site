@@ -7,9 +7,19 @@ import axios from "axios";
  * The API key is stored as an environment variable for security.
  */
 
+export type QwenMessageContent = 
+  | string 
+  | Array<{
+      type: "text" | "image_url";
+      text?: string;
+      image_url?: {
+        url: string;
+      };
+    }>;
+
 export interface QwenMessage {
   role: "system" | "user" | "assistant";
-  content: string;
+  content: QwenMessageContent;
 }
 
 export interface QwenChatOptions {
@@ -87,4 +97,38 @@ export async function callQwen(options: QwenChatOptions): Promise<QwenChatRespon
     }
     throw error;
   }
+}
+
+/**
+ * Call Qwen VL (Vision-Language) API for image recognition and interpretation
+ * @param imageUrl URL of the image to analyze
+ * @param prompt Optional custom prompt for image analysis
+ * @returns Chat completion response with image interpretation
+ */
+export async function callQwenVision(
+  imageUrl: string,
+  prompt: string = "请识别这个物品，并从东方哲学和禅意的角度，提供简洁的智慧解读。回答应该富有诗意、启发性，不超过150字。"
+): Promise<QwenChatResponse> {
+  return callQwen({
+    model: "qwen-vl-plus",
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "image_url",
+            image_url: {
+              url: imageUrl,
+            },
+          },
+          {
+            type: "text",
+            text: prompt,
+          },
+        ],
+      },
+    ],
+    temperature: 0.8,
+    max_tokens: 500,
+  });
 }

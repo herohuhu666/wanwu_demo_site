@@ -8,6 +8,7 @@ import MeritPage from "./app/MeritPage";
 import MemberPage from "./app/MemberPage";
 import TodayImagePage from "./app/TodayImagePage";
 import LibraryPage from "./app/LibraryPage";
+import ZhiwuPage from "./app/ZhiwuPage";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 
 export default function Home() {
@@ -179,6 +180,9 @@ export default function Home() {
                 </div>
                 <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'library' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <LibraryPage onBack={() => setActiveTab('member')} />
+                </div>
+                <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeTab === 'zhiwu' ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}>
+                  <ZhiwuPage onBack={() => setActiveTab('member')} />
                 </div>
               </motion.div>
               <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />

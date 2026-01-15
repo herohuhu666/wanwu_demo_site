@@ -2,7 +2,8 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
-import { callQwen } from "./_core/qwen";
+import { callQwen, callQwenVision } from "./_core/qwen";
+import { storagePut } from "./storage";
 import { z } from "zod";
 
 export const appRouter = router({
@@ -52,6 +53,54 @@ export const appRouter = router({
           return {
             success: false,
             message: "抱歉，灵犀暂时无法回应。请稍后再试。",
+            error: error instanceof Error ? error.message : "Unknown error",
+          };
+        }
+      }),
+    
+    // Vision API for "指物寻物" (Object Recognition) feature
+    vision: publicProcedure
+      .input(
+        z.object({
+          imageData: z.string(), // Base64 encoded image data
+          customPrompt: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        try {
+          // Convert base64 to buffer
+          const base64Data = input.imageData.replace(/^data:image\/\w+;base64,/, "");
+          const buffer = Buffer.from(base64Data, "base64");
+          
+          // Upload to S3
+          const timestamp = Date.now();
+          const randomSuffix = Math.random().toString(36).substring(7);
+          const fileKey = `zhiwu/${timestamp}-${randomSuffix}.jpg`;
+          
+          const { url: imageUrl } = await storagePut(
+            fileKey,
+            buffer,
+            "image/jpeg"
+          );
+
+          // Call Qwen Vision API
+          const response = await callQwenVision(
+            imageUrl,
+            input.customPrompt
+          );
+
+          return {
+            success: true,
+            imageUrl,
+            interpretation: response.choices[0]?.message.content || "",
+            usage: response.usage,
+          };
+        } catch (error) {
+          console.error("[Qwen Vision Error]", error);
+          return {
+            success: false,
+            imageUrl: "",
+            interpretation: "抱歉，无法识别此物。请稍后再试。",
             error: error instanceof Error ? error.message : "Unknown error",
           };
         }

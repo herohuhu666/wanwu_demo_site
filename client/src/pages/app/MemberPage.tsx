@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Crown, Settings, ChevronRight, Star, Moon, Sun, Wind, Cloud, Droplets, Flame, X, Check, Hexagon, Heart, Shield, LogOut, BookOpen } from "lucide-react";
+import { User, Crown, Settings, ChevronRight, Star, Moon, Sun, Wind, Cloud, Droplets, Flame, X, Check, Hexagon, Heart, Shield, LogOut, BookOpen, Camera } from "lucide-react";
 import { useUser } from "../../contexts/UserContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -117,6 +117,16 @@ export default function MemberPage({ onNavigate }: MemberPageProps) {
           </div>
           
           <div className="flex items-center gap-2">
+            {/* 指物寻物快捷入口 */}
+            <button 
+              onClick={() => onNavigate && onNavigate('zhiwu')}
+              className="p-2 rounded-full hover:bg-white/5 transition-colors group relative"
+              title="指物寻物"
+            >
+              <div className="absolute inset-0 bg-amber-500/10 rounded-full scale-0 group-hover:scale-100 transition-transform" />
+              <Camera className="w-5 h-5 text-white/60 group-hover:text-amber-500 transition-colors" />
+            </button>
+            
             {/* 万物藏经快捷入口 */}
             <button 
               onClick={() => onNavigate && onNavigate('library')}
