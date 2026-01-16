@@ -100,7 +100,7 @@ export default function LingxiPage() {
   };
 
   return (
-    <div className="h-screen overflow-y-auto bg-cover bg-center p-4 pb-20" style={{
+    <div className="h-full overflow-y-auto bg-cover bg-center p-4 pb-24 scrollbar-hide" style={{
       backgroundImage: 'url("/images/lingxi_bg.png")',
       backgroundAttachment: 'fixed'
     }}>

@@ -406,9 +406,9 @@ export default function RitualPage() {
                     )}
                   </div>
 
-                  {/* 爷辞解析 */}
+                  {/* 大师解读 */}
                   <div className="mt-6 pt-6 border-t border-white/10 text-left">
-                    <p className="text-xs text-white/60 tracking-widest uppercase mb-3">爷辞解析</p>
+                    <p className="text-xs text-white/60 tracking-widest uppercase mb-3">大师解读</p>
                     {isMember && result.lines && result.lines.length > 0 ? (
                       <div className="space-y-3">
                         {result.lines.map((line, i) => (
@@ -421,7 +421,7 @@ export default function RitualPage() {
                     ) : !isMember ? (
                       <div className="flex items-center gap-2 p-3 rounded-lg bg-white/5 border border-white/10">
                         <Lock className="w-4 h-4 text-white/60" />
-                        <span className="text-xs text-white/60">升级为会员查看爷辞解析</span>
+                        <span className="text-xs text-white/60">升级为会员查看大师解读</span>
                       </div>
                     ) : null}
                   </div>

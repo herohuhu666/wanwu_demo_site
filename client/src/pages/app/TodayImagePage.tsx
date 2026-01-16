@@ -82,19 +82,25 @@ export default function TodayImagePage({ onBack, onNavigate }: TodayImagePagePro
   const isPersonalizedReady = isLoggedIn && baseHex && dailyHex && elements;
 
   return (
-    <div className="h-full flex flex-col relative overflow-hidden font-serif text-[#2C2C2C] bg-[#FAF9F6]">
-      {/* 背景纹理 */}
-      <div className="absolute inset-0 z-0 opacity-15 pointer-events-none" 
-           style={{ backgroundImage: 'url(/images/paper_texture.jpg)' }} />
+    <div className="h-full flex flex-col relative overflow-hidden font-serif text-white bg-black">
+      {/* 背景图片 */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="/images/today_image_bg.png" 
+          alt="Today Image Background" 
+          className="w-full h-full object-cover opacity-60"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black/90" />
+      </div>
       
       {/* 顶部栏 */}
       <div className="relative z-20 px-6 pt-6 pb-4 flex justify-between items-center">
-        <button onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-[#2C2C2C]/5 transition-colors">
-          <ArrowLeft className="w-5 h-5 text-[#2C2C2C]" />
+        <button onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
+          <ArrowLeft className="w-5 h-5 text-white" />
         </button>
-        <h1 className="text-lg font-medium tracking-[0.2em] font-kai">今日之象</h1>
-        <button onClick={handleShare} className="p-2 -mr-2 rounded-full hover:bg-[#2C2C2C]/5 transition-colors">
-          <Share2 className="w-5 h-5 text-[#2C2C2C]" />
+        <h1 className="text-lg font-medium tracking-[0.2em] font-kai text-white">今日之象</h1>
+        <button onClick={handleShare} className="p-2 -mr-2 rounded-full hover:bg-white/10 transition-colors">
+          <Share2 className="w-5 h-5 text-white" />
         </button>
       </div>
 
@@ -105,14 +111,14 @@ export default function TodayImagePage({ onBack, onNavigate }: TodayImagePagePro
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-[#FAF9F6] rounded-2xl p-8 border border-[#789262]/20 shadow-sm mb-6 relative overflow-hidden text-center"
+            className="bg-black/40 backdrop-blur-md rounded-2xl p-8 border border-white/10 shadow-sm mb-6 relative overflow-hidden text-center"
           >
             <div className="absolute top-0 right-0 p-4 opacity-5">
               <Wind className="w-32 h-32 text-[#789262]" />
             </div>
             
             <p className="text-xs text-[#8C8478] tracking-widest mb-4">当前节气</p>
-            <h2 className="text-4xl font-medium text-[#2C2C2C] font-kai mb-4">{solarTerm.name}</h2>
+            <h2 className="text-4xl font-medium text-white font-kai mb-4">{solarTerm.name}</h2>
             <p className="text-sm text-[#789262] font-medium mb-6 tracking-widest uppercase">{solarTerm.meaning}</p>
             
             {/* Main Compass Display */}
@@ -144,7 +150,7 @@ export default function TodayImagePage({ onBack, onNavigate }: TodayImagePagePro
             
             <div className="w-12 h-px bg-[#2C2C2C]/10 mx-auto mb-6" />
             
-            <p className="text-sm text-[#2C2C2C]/80 leading-relaxed font-kai">
+            <p className="text-sm text-white/80 leading-relaxed font-kai">
               {solarTerm.wisdom}
             </p>
 
@@ -210,7 +216,7 @@ export default function TodayImagePage({ onBack, onNavigate }: TodayImagePagePro
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-[#FAF9F6] rounded-2xl p-6 border border-[#789262]/20 shadow-sm mb-6 relative overflow-hidden"
+              className="bg-black/40 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-sm mb-6 relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 p-4 opacity-10">
                 <div className="text-8xl font-serif text-[#789262]">{dailyHex.name[0]}</div>
@@ -218,8 +224,8 @@ export default function TodayImagePage({ onBack, onNavigate }: TodayImagePagePro
               
               <div className="relative z-10 text-center py-4">
                 <p className="text-xs text-[#8C8478] tracking-widest mb-2">今日状态卦</p>
-                <h2 className="text-3xl font-medium text-[#2C2C2C] font-kai mb-4">{dailyHex.name}</h2>
-                <p className="text-sm text-[#2C2C2C]/80 leading-relaxed font-kai">{dailyHex.nature}</p>
+                <h2 className="text-3xl font-medium text-white font-kai mb-4">{dailyHex.name}</h2>
+                <p className="text-sm text-white/80 leading-relaxed font-kai">{dailyHex.nature}</p>
               </div>
 
               <div className="mt-6 grid grid-cols-2 gap-4 border-t border-[#2C2C2C]/5 pt-4">
@@ -239,7 +245,7 @@ export default function TodayImagePage({ onBack, onNavigate }: TodayImagePagePro
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-[#FAF9F6] rounded-2xl p-6 border border-[#2C2C2C]/5 mb-6"
+              className="bg-black/40 backdrop-blur-md rounded-2xl p-6 border border-white/10 mb-6"
             >
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-sm font-medium tracking-widest font-kai">五行偏向</h3>

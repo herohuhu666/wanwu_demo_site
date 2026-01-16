@@ -111,7 +111,7 @@ export default function DivinationPage({ onBack }: { onBack?: () => void }) {
               </button>
             )}
             <div>
-              <h1 className="text-2xl text-white font-medium tracking-[0.2em]">指物断事</h1>
+              <h1 className="text-2xl text-white font-medium tracking-[0.2em]">指物寻物</h1>
               <p className="text-[10px] text-white/60 tracking-[0.3em] uppercase mt-1">Qimen Divination</p>
             </div>
           </div>
@@ -131,11 +131,11 @@ export default function DivinationPage({ onBack }: { onBack?: () => void }) {
                 <div className="w-16 h-16 mx-auto bg-amber-500/10 rounded-full flex items-center justify-center mb-6 border border-amber-500/20">
                   <Sparkles className="w-8 h-8 text-amber-500" />
                 </div>
-                <h2 className="text-xl text-white tracking-widest font-light">指物断事</h2>
+                <h2 className="text-xl text-white tracking-widest font-light">指物寻物</h2>
                 <p className="text-xs text-white/60 mt-3 tracking-wider leading-relaxed">
                   拍摄或选择一张图片<br />
                   结合五行九宫奇门遁甲<br />
-                  为你分析事件吉凶
+                  为你分析事件吉凶与失物方位
                 </p>
               </div>
 
